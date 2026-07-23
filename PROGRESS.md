@@ -1046,6 +1046,49 @@ Added kaymen.dev domains alongside existing kahalany.dev for all 7 production ap
 
 ---
 
+## 2026-07-23 — Portfolio Refresh (Q2/Q3 developments)
+
+### Context
+The public portfolio content had not been updated since the 2026-04-06 rebrand. A workspace-wide survey found ~10 projects that shipped or materially changed since April. Refreshed the `index.html` project grid to reflect the current state of the practice.
+
+### Hero stats
+- Production Apps: 15+ → **20+**
+- Tech Stacks: 6 → **8**
+- Live Platforms: 6 → **12+** (now shows a `+`)
+
+### New project cards (7)
+Placed with the flagship first, then interleaved by category:
+- **Thrive Platform** *(flagship, first card)* — multi-tenant Laravel/Filament/PostgreSQL CRM that replaced the 135K-line legacy OLAMI Master Manager WordPress plugin. Powers the live OLAMI mobile app; productized per client (OLAMI Herzliya, Nitzavim). Live link → olamiherzliya.org. New teal accent + `.mockup-thrive` (org switcher + stat cards + table + activity, reuses shared primitives).
+- **BridgeMortgage** — Next.js bilingual (EN/HE RTL) mortgage-broker CRM; Kanban deal pipeline, 6-step journey, digital application, doc vault; 310 clients / 313 deals imported. "Launching Soon" badge, **Preview** link → staging.bridgemtg.kaymen.dev. New `.mockup-kanban`.
+- **Kartov** — React Native + Gemini shared shopping-list & meal-planning app (Snap & Add, scan-a-list, recipe parsing); iOS/Android/web freemium. Live → kartov.kaymen.dev. New `.mockup-kartov` (shopping list + floating snap button).
+- **Temani Chacham** — React Native smart Yemenite (Baladi) siddur with dynamic prayer assembly, zmanim, Jerusalem compass, offline, dedications. Live → temani.kaymen.dev. New `.mockup-temani` (RTL siddur + zmanim bar + compass).
+- **Horse & Harmony** — Astro/Express bilingual equine-therapy booking site (availability calendar, weekly templates, hebcal holiday blocking, R2 media). "Launching Soon" badge, **no live link** (staging returned 000 at build time). New `.mockup-calendar`.
+- **MSP Metrics Portal** — FastAPI dashboard syncing the Autotask REST API (technician billable/compliance metrics, per-engineer status, alerts). Live → autotask.kaymen.dev (login page, same pattern as ShipHero). New `.mockup-metrics` (bar chart + status list) + cyan accent.
+- **Richmount Capital** — static marketing site for a U.S.-equities investment firm. Live → richmountcapital.com. New `.mockup-richmount` (marketing hero) + gold accent.
+
+### Updated existing cards (4)
+- **NodeAI** — repositioned as a same-day, on-demand **multi-carrier courier rate-shop** (Uber Direct + DoorDash Drive + Nash), dynamic Shopify checkout pricing, human-in-the-loop approval gate, iPad Node Terminal PWA.
+- **Predictable** — search-grounded AI (Gemini news + Grok/X social) and the new **Polymarket calibration probe** (Brier / skill score).
+- **Claude Code UI** — now a **desktop + mobile PWA** companion (Whisper voice transcription, live model picker, named multi-window sessions, remote over Cloudflare tunnel). Badge → "Desktop · PWA".
+- Kept **OLAMI Master Manager** card as-is (per request) — it remains a legitimate WordPress capability showcase; Thrive tells the migration story alongside it.
+
+### Global
+- Added Open Graph / Twitter share meta tags + canonical + theme-color to `<head>` (long-standing TODO).
+- All new "View Live"/Preview links verified reachable before wiring (Horse & Harmony's dead staging URL caught and left unlinked).
+
+### Files Modified
+| File | Changes |
+|------|---------|
+| `index.html` | 7 new cards, 4 updated cards, hero counters (20/8/12), OG/social `<head>` tags |
+| `styles.css` | New mockup components (kanban, calendar, shopping list, siddur, metrics bars, marketing hero), teal/cyan badge + accent variants |
+| `APP-MAP.md` | Portfolio count + hero stats + tech stack updated |
+| `PROGRESS.md` | This entry |
+
+### Not yet on the site (candidates for later)
+Nitzavim (folded into Thrive copy), Finplan, TapSend, Sefaradidur, Kaymen Group LLC holding site. All CSS mockups reuse the `m-` system (accent-recolored) — real screenshots remain a future enhancement.
+
+---
+
 ## Future Enhancements
 - [ ] Add real screenshots alongside or replacing CSS mockups
 - [x] ~~Add more contact methods (phone, WhatsApp, Calendly)~~ — Added WhatsApp + contact form

@@ -1393,6 +1393,160 @@ img { max-width: 100%; display: block; }
 .m-ji-photo.p8 { background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(139,92,246,0.12)); }
 .m-ji-photo.p9 { background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(236,72,153,0.08)); }
 
+/* =============================================
+   MOCKUP: New accents & components (2026 refresh)
+   ============================================= */
+/* Extra badge + accent colors */
+.project-badge.teal { background: rgba(20,184,166,0.15); color: #2dd4bf; border-color: rgba(20,184,166,0.25); }
+.project-badge.cyan { background: rgba(6,182,212,0.15); color: #22d3ee; border-color: rgba(6,182,212,0.25); }
+.m-sidebar.teal .m-nav-item.active { background: #14b8a6; }
+.m-stat-card.teal { border-color: rgba(20,184,166,0.3); background: rgba(20,184,166,0.06); }
+.m-stat-card.cyan { border-color: rgba(6,182,212,0.3); background: rgba(6,182,212,0.06); }
+
+/* Thrive — multi-tenant org switcher */
+.m-org-tabs { display: flex; gap: 6px; margin-bottom: 2px; }
+.m-org-pill { height: 12px; width: 34px; border-radius: 100px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.06); }
+.m-org-pill.active { background: rgba(20,184,166,0.18); border-color: rgba(20,184,166,0.35); }
+
+/* BridgeMortgage — Kanban deal pipeline */
+.mockup-kanban .m-main.full { padding: 12px; }
+.m-kanban { display: flex; gap: 6px; height: 100%; }
+.m-kanban-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 6px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.m-kanban-head { height: 7px; border-radius: 2px; background: rgba(99,102,241,0.45); margin-bottom: 2px; }
+.m-kanban-head.b { background: rgba(59,130,246,0.45); }
+.m-kanban-head.g { background: rgba(34,197,94,0.45); }
+.m-kanban-head.a { background: rgba(245,158,11,0.45); }
+.m-kanban-card {
+    height: 24px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Horse & Harmony — booking calendar */
+.mockup-calendar .m-main.full { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.m-cal-head { display: flex; align-items: center; justify-content: space-between; }
+.m-cal-title { height: 9px; width: 45%; border-radius: 3px; background: rgba(255,255,255,0.12); }
+.m-cal-nav { display: flex; gap: 6px; }
+.m-cal-nav span { width: 12px; height: 12px; border-radius: 3px; background: rgba(5,150,105,0.25); }
+.m-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; flex: 1; }
+.m-cal-dow { height: 5px; border-radius: 2px; background: rgba(255,255,255,0.06); }
+.m-cal-day { border-radius: 3px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); }
+.m-cal-day.booked { background: rgba(5,150,105,0.3); border-color: rgba(5,150,105,0.45); }
+.m-cal-day.blocked { background: rgba(255,255,255,0.02); opacity: 0.35; }
+.m-cal-day.today { border-color: #059669; box-shadow: inset 0 0 0 1px rgba(5,150,105,0.5); }
+
+/* Kartov — shopping list phone */
+.mockup-kartov { position: relative; }
+.m-shop { flex: 1; display: flex; flex-direction: column; gap: 5px; padding: 4px 0; overflow: hidden; }
+.m-shop-cat { height: 6px; width: 40%; border-radius: 2px; background: rgba(34,197,94,0.35); margin: 4px 0 2px; }
+.m-shop-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 6px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.m-shop-check { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.2); flex-shrink: 0; }
+.m-shop-check.checked { background: #22c55e; border-color: #22c55e; }
+.m-snap-btn {
+    position: absolute;
+    bottom: 46px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 300;
+    line-height: 1;
+    box-shadow: 0 4px 12px rgba(34,197,94,0.4);
+}
+.mockup-kartov .m-tab.active { background: #22c55e; }
+
+/* Temani Chacham — siddur phone */
+.m-zmanim-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    border-radius: 6px;
+    background: rgba(212,160,23,0.08);
+    border: 1px solid rgba(212,160,23,0.15);
+    margin-bottom: 8px;
+}
+.m-zman { flex: 1; height: 8px; border-radius: 2px; background: rgba(212,160,23,0.25); }
+.m-compass { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid rgba(212,160,23,0.5); position: relative; flex-shrink: 0; }
+.m-compass::after { content: ''; position: absolute; top: 2px; left: 50%; width: 2px; height: 6px; background: #d4a017; transform: translateX(-50%); border-radius: 1px; }
+.m-siddur-body { flex: 1; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; overflow: hidden; }
+.m-siddur-h { height: 8px; width: 45%; border-radius: 2px; background: rgba(212,160,23,0.3); margin: 4px 0; }
+.m-siddur-body .m-line { background: rgba(255,255,255,0.1); margin-bottom: 0; }
+.m-siddur-body .m-line.gold { background: rgba(212,160,23,0.4); }
+.mockup-temani .m-tab.active { background: #d4a017; }
+
+/* MSP Metrics — dashboard bars + status list */
+.m-bars {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+    padding: 8px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    min-height: 60px;
+}
+.m-bar { flex: 1; border-radius: 3px 3px 0 0; background: rgba(6,182,212,0.4); }
+.m-bar.ok { background: rgba(34,197,94,0.45); }
+.m-bar.warn { background: rgba(245,158,11,0.45); }
+.m-status-list { width: 42%; display: flex; flex-direction: column; gap: 5px; }
+.m-status-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 6px;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.04);
+}
+.m-status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.m-status-dot.ok { background: #22c55e; }
+.m-status-dot.warn { background: #f59e0b; }
+.m-status-dot.bad { background: #ef4444; }
+
+/* Richmount Capital — marketing hero */
+.mockup-richmount .m-main.full { display: flex; flex-direction: column; }
+.m-rc-hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    background: linear-gradient(180deg, rgba(201,162,39,0.08) 0%, transparent 100%);
+}
+.m-rc-title { height: 14px; width: 65%; border-radius: 4px; background: rgba(255,255,255,0.14); }
+.m-rc-sub { height: 6px; width: 80%; border-radius: 2px; background: rgba(255,255,255,0.06); }
+.m-rc-cta { height: 18px; width: 72px; border-radius: 5px; background: linear-gradient(135deg, #c9a227, #9a7b1a); }
+.m-rc-row { display: flex; gap: 8px; padding: 12px; }
+.m-rc-card { flex: 1; height: 46px; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+
 /* --- CAPABILITIES --- */
 .capabilities {
     background: var(--bg-elevated);
