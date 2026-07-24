@@ -1072,6 +1072,11 @@ Placed with the flagship first, then interleaved by category:
 - **Claude Code UI** — now a **desktop + mobile PWA** companion (Whisper voice transcription, live model picker, named multi-window sessions, remote over Cloudflare tunnel). Badge → "Desktop · PWA".
 - Kept **OLAMI Master Manager** card as-is (per request) — it remains a legitimate WordPress capability showcase; Thrive tells the migration story alongside it.
 
+### App Store apps surfaced (same session)
+- **OLAMI Herzliya** — new dedicated card for the live React Native/Expo app (App Store `id6769781161` + Google Play), Thrive-backed, featuring location-based auto check-in. New `.mockup-olami-app` phone mockup (magenta `#B41F51`). Store URL resolved via Apple's `itunes.apple.com/lookup?bundleId=com.olami.herzliya`.
+- **Davenen** — existing card upgraded from web-only to web + mobile: added the `mobile` filter tag, Expo/iOS tech tags, native-app copy, and an **App Store** link (`id6761419326`) beside the web link.
+- Grid is now **19 cards**.
+
 ### Global
 - Added Open Graph / Twitter share meta tags + canonical + theme-color to `<head>` (long-standing TODO).
 - All new "View Live"/Preview links verified reachable before wiring (Horse & Harmony's dead staging URL caught and left unlinked).

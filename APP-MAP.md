@@ -1,7 +1,7 @@
 # kaymen.dev — Application Map
 
 ## Overview
-Portfolio/showcase website for kaymen.dev (Kaymen Group LLC) — a custom software development practice. Node.js/Express backend with SQLite analytics database, admin panel, client portal, and visitor tracking. Deployed via Docker on Coolify. Showcases 18 project cards with CSS device mockups, project filtering, and responsive design. Both admin and portal are installable PWAs with mobile-first bottom navigation.
+Portfolio/showcase website for kaymen.dev (Kaymen Group LLC) — a custom software development practice. Node.js/Express backend with SQLite analytics database, admin panel, client portal, and visitor tracking. Deployed via Docker on Coolify. Showcases 19 project cards with CSS device mockups, project filtering, and responsive design. Both admin and portal are installable PWAs with mobile-first bottom navigation.
 
 - **Live URL**: https://kaymen.dev (also https://kahalany.dev — legacy, parallel)
 - **Repo**: https://github.com/kahalanydev/kahalany.dev
@@ -205,7 +205,7 @@ Client → Traefik (SSL) → Express (:8080)
 
 ### 3. Portfolio (Work)
 - **Filter bar**: All / Web Apps / Mobile / AI·ML / WordPress (tracked)
-- **18 project cards** (flagship Thrive first), each with CSS device mockup, tech tags, status badge
+- **19 project cards** (flagship Thrive first), each with CSS device mockup, tech tags, status badge
 - "View Live" links for deployed projects (tracked)
 - Filter uses `data-tags` attributes, JS toggles `.hidden` class
 

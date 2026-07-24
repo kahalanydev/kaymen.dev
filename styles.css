@@ -1547,6 +1547,14 @@ img { max-width: 100%; display: block; }
 .m-rc-row { display: flex; gap: 8px; padding: 12px; }
 .m-rc-card { flex: 1; height: 46px; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
 
+/* OLAMI Herzliya — app (event ticket + auto check-in) */
+.m-ticket-banner { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 8px; background: rgba(180,31,81,0.1); border: 1px solid rgba(180,31,81,0.25); margin-bottom: 8px; }
+.m-ticket-dot { width: 10px; height: 10px; border-radius: 50%; background: #B41F51; box-shadow: 0 0 6px rgba(180,31,81,0.6); flex-shrink: 0; }
+.m-ticket-lines { flex: 1; }
+.m-ticket-badge { width: 16px; height: 16px; border-radius: 50%; background: #22c55e; flex-shrink: 0; }
+.m-dot.magenta { background: #B41F51; }
+.mockup-olami-app .m-tab.active { background: #B41F51; }
+
 /* --- CAPABILITIES --- */
 .capabilities {
     background: var(--bg-elevated);
