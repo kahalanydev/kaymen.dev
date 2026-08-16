@@ -240,6 +240,11 @@
     logo.onload = function () { logoReady = true; };
     logo.src = 'data:image/svg+xml;base64,PCEtLSBnZW5lcmF0ZWQgYnkgc2NyaXB0cy9idWlsZC1pY29ucy5qcyBmcm9tIGNvbnRlbnQvbG9nby5qczsgZG8gbm90IGhhbmQtZWRpdCAtLT4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iMTYiIGZpbGw9IiMxNjMwM2QiLz48cGF0aCBkPSJNNi4yNSAxNi4xOEExMi41IDEyLjUgMCAwIDEgMTEuNTcgMTIuMzFMMTMuODcgMTguMzlBNiA2IDAgMCAwIDExLjMyIDIwLjI0WiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC40MiIvPjxwYXRoIGQ9Ik0xMi43MSAxMS45NEExMi41IDEyLjUgMCAwIDEgMTkuMjkgMTEuOTRMMTcuNTggMTguMjFBNiA2IDAgMCAwIDE0LjQyIDE4LjIxWiIgZmlsbD0iIzJiYmNiMyIvPjxwYXRoIGQ9Ik0yMC40MyAxMi4zMUExMi41IDEyLjUgMCAwIDEgMjUuNzUgMTYuMThMMjAuNjggMjAuMjRBNiA2IDAgMCAwIDE4LjEzIDE4LjM5WiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC40MiIvPjwvc3ZnPgo=';
 
+    /* Scaled to the canvas, not fixed. 52 filled a 1440px hero at ~144px
+       between nodes, but the same 52 across 2560px is ~200px apart and the
+       mesh reads as sparse at the edges. Area-based keeps the spacing even at
+       every width; the clamp stops a very tall or very wide window asking for
+       hundreds. Recomputed in size(), so it follows a resize. */
     var MAX_NODES = 52;
     var MIN_GAP = 58;          /* nodes never sit closer than this */
     var ACCENT = '43,188,179';
@@ -270,6 +275,7 @@
       w = r.width; h = r.height;
       cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      MAX_NODES = Math.max(34, Math.min(92, Math.round((w * h) / 21000)));
       locate(r);
       if (!nodes.length) seed();
       else { nodes[0].x = srcX; nodes[0].y = srcY; }   /* keep it in the corridor on resize */
@@ -369,7 +375,9 @@
       tick++;
 
       /* several spawns per beat, so it opens in every direction at once */
-      if (tick % 16 === 0) { grow(); grow(); }
+      /* three at a time while it is still filling, easing off once it is full,
+         so a 92-node canvas does not take three times as long to populate */
+      if (tick % 14 === 0) { grow(); grow(); if (nodes.length < MAX_NODES * 0.7) grow(); }
       if (tick % 70 === 0) weave();
       if (tick % 130 === 0) retire();
 
