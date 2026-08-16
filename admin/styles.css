@@ -11,13 +11,13 @@
 
    Two things that will bite:
 
-   1. THE LEGACY TOKEN BRIDGE below is load-bearing. admin/app.js carries several
-      hundred inline styles written against the old dark theme's variable names
-      (--surface-3, --text-dim, --danger …). Rewriting every one of them would be
-      a far larger and riskier diff than remapping the names, so the old names
-      are kept and pointed at the new palette. A page that has not been
-      restructured still lands on the right colours. Delete a bridge line only
-      after grepping app.js for it.
+   1. THE LEGACY TOKEN BRIDGE IS GONE (removed in the 2026-08-16 sweep). It used
+      to remap the old dark theme's variable names (--surface-3, --text-dim,
+      --danger …) onto this palette, because app.js carried several hundred
+      inline styles written against them. Those are classes now, and app.js
+      references none of the old names. If you find yourself wanting one back,
+      you are about to write an inline style — write a class instead.
+      portal/styles.css lost its own bridge in the same sweep.
 
    2. The dark/light toggle is GONE, on the same grounds the main site dropped
       it (handoff §5): the new palette is light-first and no dark variant is
@@ -25,16 +25,17 @@
       and left alone. Do not ship a half-working dark mode.
 
    Layout:
-     1. Tokens + the legacy bridge
+     1. Tokens
      2. Base, ambience, the glass rail, the mobile tabbar
      3. Shared atoms — card, badge, button, table, form, alert, metric
      4. Dashboard — "Continuity"
      5. Projects — "Dense console"
+     5b. Ticket detail, clients
      6. Login, invite, markdown
      7. Mobile
    ============================================================================ */
 
-/* ==================================================== 1. TOKENS + BRIDGE */
+/* ================================================================ 1. TOKENS */
 :root{
   /* --- the Kaymen Group palette, verbatim --- */
   --bg:#ffffff;
@@ -67,30 +68,18 @@
   --ease:cubic-bezier(.4,0,.2,1);
   --spring:cubic-bezier(.34,1.4,.64,1);
 
-  /* --- LEGACY TOKEN BRIDGE — see the header note. Every name below is still
-         referenced by inline styles in app.js. ----------------------------- */
-  --surface:#ffffff;
-  --surface-2:var(--bg-alt);
-  --surface-3:var(--line);
-  --border:var(--line);
-  --border-light:#eceef1;
-  --text:var(--ink);
-  --text-secondary:#42464c;
-  --text-dim:var(--muted);
-  --accent-dim:var(--accent-soft);
-  --accent-border:rgba(43,188,179,.32);
   --gradient:linear-gradient(150deg,var(--accent) 0%,var(--accent-dark) 100%);
-  --danger:var(--alert);       --danger-dim:var(--alert-soft);
-  --error:var(--alert);
-  --warning:var(--warn);       --warning-dim:var(--warn-soft);
-  --success:var(--accent-dark);--success-dim:var(--accent-soft);
-  --info:var(--accent-dark);   --info-dim:var(--accent-soft);
-  --font:var(--body);
+  /* JetBrains Mono went with the 2026-08-15 redesign; the system stack carries
+     key IDs, ports and pairing codes now */
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  --radius:11px;
-  --radius-lg:16px;
-  --sidebar-width:var(--rail-w);
 }
+
+/* THE LEGACY TOKEN BRIDGE IS GONE, as of the 2026-08-16 sweep. It existed
+   because app.js carried several hundred inline styles written against the old
+   dark theme's variable names; those inline styles are now classes in this
+   file, and `grep 'var(--surface\|--text-dim\|--danger\|--border)' admin/app.js`
+   returns nothing. Do not reintroduce a bridge name to make a new inline style
+   work — add a class here instead. */
 
 /* ======================================================= 2. BASE + RAIL */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -328,6 +317,79 @@ select{font-family:var(--body);color:var(--ink)}
 
 .bar{height:4px;border-radius:3px;background:var(--bg-alt);overflow:hidden}
 .bar i{display:block;height:100%;border-radius:3px;background:var(--gradient)}
+
+/* --- the small utility layer -------------------------------------------------
+   Not a framework. These exist because the same eight declarations were repeated
+   as inline style= across app.js — which meant every one of them was written
+   against the OLD theme's variable names and had to be found by grep rather than
+   changed in one place. Prefer a real component class where one fits.          */
+.hint{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+.hint.sm{font-size:12px;margin-bottom:12px}
+.hint code{font-family:var(--mono);font-size:11.5px;color:var(--accent-dark)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row.end{align-items:flex-end}
+.row.gap-lg{gap:16px}
+.meta{font-size:12px;color:var(--muted);white-space:nowrap}
+.dim{color:var(--muted)}
+.divide{border-top:1px solid var(--line);margin-top:20px;padding-top:20px}
+.sub-h{font-family:var(--display);font-size:13.5px;font-weight:700;letter-spacing:-.02em;margin-bottom:9px}
+.mt-s{margin-top:8px}
+.mt-m{margin-top:12px}
+.mt-0{margin-top:0}
+.mb-m{margin-bottom:16px}
+.mb-l{margin-bottom:20px}
+.mb-0{margin-bottom:0}
+.empty-cell{text-align:center;color:var(--muted);padding:28px}
+.ink{color:var(--ink)}
+.brk{word-break:break-all}
+.tiny{font-size:10px}
+.mr-s{margin-right:4px}
+.stack{display:grid;gap:12px}
+.ml-auto{margin-left:auto}
+.shrink0{flex:none;min-width:120px}
+.chart-h{height:250px}
+.chart-h.sm{height:220px}
+.pair-code{text-align:center;letter-spacing:5px;font-size:17px!important}
+.check{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px}
+.check input{width:auto;accent-color:var(--accent)}
+.codebox{
+  padding:12px 14px;background:var(--bg-alt);border-radius:11px;
+  font-size:12px;color:var(--muted);line-height:1.6;
+}
+.codebox code{font-family:var(--mono);color:var(--accent-dark);word-break:break-all}
+/* the "or" rule on the login card, between Google and the password form */
+.or{display:flex;align-items:center;gap:12px;margin-bottom:16px;color:var(--muted);font-size:12.5px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.btn-google{width:100%;background:#fff;color:var(--ink);border:1.5px solid var(--line);margin-bottom:16px}
+.btn-google:hover{border-color:var(--accent)}
+.btn-google svg{width:17px;height:17px}
+.link-quiet{
+  display:block;text-align:center;margin-top:16px;font-size:12.5px;
+  color:var(--muted);text-decoration:underline;text-underline-offset:3px;
+}
+.link-quiet:hover{color:var(--accent-dark)}
+.grow{flex:1;min-width:0}
+/* mono needs to out-specify `.form-group input`, which sets the body face */
+.form-group input.mono,.form-group textarea.mono,.form-group select.mono,
+.in.mono{font-family:var(--mono);font-size:12.5px}
+.badge.mini{height:17px;font-size:9.5px;padding:0 6px;margin-left:6px}
+/* a bare input outside .form-group — inline forms, search rows, token fields */
+.in{
+  width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;
+  background:#fff;color:var(--ink);font-family:var(--body);font-size:13px;
+  transition:border-color .2s var(--ease),box-shadow .2s var(--ease);
+}
+.in:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.in::placeholder{color:#9aa0a8}
+.in[readonly]{background:var(--bg-alt);cursor:text}
+.field-label{
+  display:block;font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:7px;
+}
+/* the internal-note button: a warn-toned secondary, the one place --warn is
+   allowed on a control, because "internal" IS the severity it encodes */
+.btn-warn{border:1.5px solid rgba(168,118,28,.4);color:var(--warn);background:#fff}
+.btn-warn:hover{background:var(--warn-soft);border-color:var(--warn)}
 
 .settings-section-label{
   font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;
@@ -588,6 +650,92 @@ select{font-family:var(--body);color:var(--ink)}
 .c-vr .sp{margin-left:auto;display:flex;gap:6px}
 
 [hidden]{display:none!important}
+
+/* ====================================== 5b. TICKET DETAIL, CLIENTS
+   The pages the console hands off to. Restructured onto the design system
+   rather than left riding the legacy bridge — these are where an operator
+   spends the rest of their time.                                             */
+.back{
+  display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);
+  margin-bottom:16px;transition:color .2s var(--ease);
+}
+.back:hover{color:var(--accent-dark)}
+
+.t-head{
+  display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;
+  padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:20px;
+}
+.t-head h1{font-size:23px;letter-spacing:-.035em;line-height:1.25}
+.t-head .sub{font-size:12.5px;color:var(--muted);margin-top:9px}
+.t-head .sp{margin-left:auto;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.t-desc{
+  font-size:14px;line-height:1.7;color:var(--muted);white-space:pre-wrap;
+  margin-bottom:22px;max-width:74ch;
+}
+
+.att{display:grid;gap:0}
+.att-row{
+  display:grid;grid-template-columns:20px minmax(0,1fr) auto auto auto auto;
+  gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;
+}
+.att-row:last-child{border-bottom:0}
+.att-row .ic{font-size:15px;line-height:1}
+.att-row .nm{
+  color:var(--accent-dark);font-weight:500;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;cursor:pointer;
+}
+.att-row .nm:hover{text-decoration:underline}
+.att-row .x{
+  background:none;border:0;padding:0 2px;color:var(--muted);font-size:11px;
+  cursor:pointer;transition:color .2s var(--ease);
+}
+.att-row .x:hover{color:var(--alert)}
+.drop{
+  border:1.5px dashed var(--line);border-radius:13px;padding:22px;text-align:center;
+  cursor:pointer;transition:all .22s var(--ease);
+}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop b{display:block;font-family:var(--body);font-size:13px;font-weight:600;color:var(--ink)}
+.drop b u{text-decoration:none;color:var(--accent-dark)}
+.drop span{display:block;font-size:11px;color:var(--muted);margin-top:5px}
+
+/* the internal-comment tone carries real information here: an internal note
+   reaching a client is the expensive mistake this styling exists to prevent */
+.cmt{
+  padding:14px 16px;border-radius:13px;border:1px solid var(--line);
+  border-left:3px solid var(--line);margin-bottom:10px;
+}
+.cmt.is-internal{background:var(--warn-soft);border-color:rgba(168,118,28,.22);border-left-color:var(--warn)}
+.cmt.is-client{border-left-color:var(--accent)}
+.cmt.is-team{border-left-color:var(--accent-dark)}
+.cmt-h{display:flex;align-items:center;gap:9px;margin-bottom:7px;flex-wrap:wrap}
+.cmt-h .who{font-size:12.5px;font-weight:600;letter-spacing:-.01em}
+.cmt-h .tm{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}
+.cmt-b{font-size:13.5px;line-height:1.7;color:var(--muted);white-space:pre-wrap}
+.cmt-form{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}
+.cmt-form textarea{
+  width:100%;min-height:80px;padding:12px 14px;border:1px solid var(--line);
+  border-radius:12px;background:#fff;color:var(--ink);font-family:var(--body);
+  font-size:13.5px;line-height:1.6;resize:vertical;
+}
+.cmt-form textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+/* clients — one block per org, its portal users nested inside it */
+.org .who{display:flex;flex-wrap:wrap;gap:6px 22px;font-size:12.5px;color:var(--muted);padding-bottom:14px}
+.org-users{display:grid;gap:0}
+.org-user{
+  display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) auto auto;
+  gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;
+}
+.org-user:last-child{border-bottom:0}
+.org-user .em{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.org-user .acts{display:flex;gap:6px;justify-content:flex-end}
+@media (max-width:700px){
+  .org-user{grid-template-columns:1fr;gap:4px}
+  .org-user .acts{justify-content:flex-start;margin-top:4px}
+  .att-row{grid-template-columns:20px minmax(0,1fr) auto;row-gap:2px}
+  .att-row .up,.att-row .wh{display:none}
+}
 
 /* ============================================ 6. LOGIN, INVITE, MARKDOWN */
 .login-page{

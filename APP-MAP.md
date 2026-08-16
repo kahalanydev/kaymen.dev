@@ -106,13 +106,13 @@ Kaymen.Dev Site/
 │                           # HTML; three of them did and drifted a whole palette behind.
 ├── admin/
 │   ├── index.html          # Admin panel shell (PWA-enabled, loads Chart.js + app.js)
-│   ├── styles.css          # Admin — locked design system + its own legacy token bridge
+│   ├── styles.css          # Admin — locked design system, no token bridge (deleted 2026-08-16)
 │   ├── app.js              # Admin SPA (dashboard, security, analytics, settings, projects console, clients, tickets)
 │   ├── manifest.json       # PWA manifest (standalone, light-first)
 │   └── sw.js               # Service worker (cache strategies, OAuth passthrough)
 ├── portal/
 │   ├── index.html          # Client portal shell (PWA-enabled)
-│   ├── styles.css          # Portal — locked design system + its own legacy token bridge
+│   ├── styles.css          # Portal — locked design system, no token bridge (deleted 2026-08-16)
 │   ├── app.js              # Portal SPA (login, dashboard, Reassurance overview, tickets, plans, activity)
 │   ├── manifest.json       # PWA manifest (standalone, light-first)
 │   └── sw.js               # Service worker (cache strategies)
@@ -465,12 +465,21 @@ the Desktop portal-sync service, both untouched.
 Both PWA manifests declare `#ffffff` for `theme_color` and `background_color`. They carried the old
 `#09090b` until 2026-08-16, which made an installed admin or portal flash dark on every launch.
 
-Admin and portal stylesheets carry a **legacy token bridge**: the old dark theme's variable names
-(`--surface-3`, `--text-dim`, `--danger` …) are kept and pointed at the new palette, because the
-SPAs carry several hundred inline styles written against them. Grep `app.js` before deleting one.
-The portal's bridge is the more dangerous: `progressRing()` emits `stroke="var(--surface-3)"` and
-`fill="var(--text)"` *inside SVG*, where a missing variable renders as nothing rather than as an
-obviously wrong colour.
+Admin and portal stylesheets **used to carry a legacy token bridge** — the old dark theme's variable
+names (`--surface-3`, `--text-dim`, `--danger` …) remapped onto the new palette, because the SPAs
+carried several hundred inline styles written against them. **Both bridges were deleted in the
+2026-08-16 sweep**: those inline styles are classes now, and
+`grep 'var(--surface|--text-dim|--danger|--border)' admin/app.js portal/app.js` returns nothing.
+Do not reintroduce a bridge name to make a new inline style work — add a class to the stylesheet.
+
+Each sheet instead carries a small **utility layer** (`.hint .row .meta .divide .in .mono .mt-s
+.field-label`) plus real components for the pages that earned them — admin ticket detail and clients
+(`.t-head .att .drop .cmt .org-user`), which the portal's ticket detail reuses.
+
+The last holdouts were inside the portal's `progressRing()`, which drew with
+`stroke="var(--surface-3)"` and `fill="var(--text)"` *inside SVG* — where a missing variable renders
+as nothing at all rather than as an obviously wrong colour. Worth remembering before putting a CSS
+variable inside an SVG attribute again.
 
 ## Deployment
 - **Docker**: `node:20-alpine` runs Express on port 8080

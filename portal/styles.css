@@ -10,12 +10,12 @@
 
    Three things that will bite:
 
-   1. THE LEGACY TOKEN BRIDGE below is load-bearing, exactly as in
-      admin/styles.css. portal/app.js carries inline styles written against the
-      old dark theme's variable names (--surface-3, --text-dim, --danger …), and
-      progressRing() emits stroke="var(--surface-3)" and fill="var(--text)"
-      *inside SVG*, where a missing variable is invisible rather than merely
-      wrong. Delete a bridge line only after grepping app.js for it.
+   1. THE LEGACY TOKEN BRIDGE IS GONE (removed in the 2026-08-16 sweep), as it is
+      in admin/styles.css. It used to remap the old dark theme's variable names
+      (--surface-3, --text-dim, --danger …) onto this palette. Those are classes
+      now. The last two holdouts were inside progressRing(), which drew with
+      var(--surface-3) and var(--text) *inside SVG* — where a missing variable
+      renders as nothing at all rather than as an obviously wrong colour.
 
    2. The dark/light toggle is GONE, on the same grounds the main site and the
       admin dropped theirs: the palette is light-first and no dark variant is
@@ -27,17 +27,17 @@
       red for normal work learns to ignore red.
 
    Layout:
-     1. Tokens + the legacy bridge
+     1. Tokens
      2. Base, ambience, the glass rail, the mobile tabbar
      3. Shared atoms — card, badge, button, table, form, alert
      4. Overview — "Reassurance": hero sentence, timeline, ring, story
      5. "Yours to do" — the Workspace block, shown only when it has contents
-     6. The screens nobody restructured — dashboard cards, plan, tickets, comments
+     6. Dashboard cards, plan, tickets, ticket detail, comments
      7. Login, invite, markdown
      8. Mobile
    ============================================================================ */
 
-/* ==================================================== 1. TOKENS + BRIDGE */
+/* ================================================================ 1. TOKENS */
 :root{
   /* --- the Kaymen Group palette, verbatim --- */
   --bg:#ffffff;
@@ -65,30 +65,21 @@
   --ease:cubic-bezier(.4,0,.2,1);
   --spring:cubic-bezier(.34,1.4,.64,1);
 
-  /* --- LEGACY TOKEN BRIDGE — see the header note. Every name below is still
-         referenced by inline styles or by progressRing() in app.js. ---------- */
-  --surface:#ffffff;
-  --surface-2:var(--bg-alt);
-  --surface-3:var(--line);
-  --border:var(--line);
-  --border-light:#eceef1;
-  --text:var(--ink);
-  --text-secondary:#42464c;
-  --text-dim:var(--muted);
-  --accent-dim:var(--accent-soft);
-  --accent-border:rgba(43,188,179,.32);
   --gradient:linear-gradient(150deg,var(--accent) 0%,var(--accent-dark) 100%);
-  --danger:var(--alert);       --danger-dim:var(--alert-soft);
-  --error:var(--alert);
-  --warning:var(--warn);       --warning-dim:var(--warn-soft);
-  --success:var(--accent-dark);--success-dim:var(--accent-soft);
-  --info:var(--accent-dark);   --info-dim:var(--accent-soft);
-  --font:var(--body);
+  /* JetBrains Mono went with the 2026-08-15 redesign; the system stack carries
+     the few monospace strings left */
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  --radius:11px;
-  --radius-lg:16px;
-  --sidebar-width:var(--rail-w);
 }
+
+/* THE LEGACY TOKEN BRIDGE IS GONE, as of the 2026-08-16 sweep. It existed
+   because app.js carried inline styles written against the old dark theme's
+   variable names; those are classes now, and
+   `grep 'var(--surface\|--text-dim\|--danger\|--border)' portal/app.js`
+   returns nothing. progressRing() was the dangerous one — it drew with
+   var(--surface-3) and var(--text) INSIDE svg, where a missing variable renders
+   as nothing at all rather than as an obviously wrong colour. It uses --line
+   and --ink now. Do not reintroduce a bridge name to make a new inline style
+   work; add a class here instead. */
 
 /* ======================================================= 2. BASE + RAIL */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -331,6 +322,113 @@ select{font-family:var(--body);color:var(--ink)}
   font-size:10px;font-weight:700;color:var(--muted);font-family:var(--display);
 }
 [hidden]{display:none!important}
+
+/* --- the small utility layer -------------------------------------------------
+   Not a framework. These exist because the same handful of declarations was
+   repeated as inline style= across app.js — which meant every one was written
+   against the OLD theme's variable names and had to be found by grep rather than
+   changed in one place. Prefer a real component class where one fits.        */
+.hint{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+.hint.sm{font-size:12px;margin-bottom:12px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row.center{justify-content:center}
+.stack{display:flex;flex-direction:column;gap:16px;align-items:center}
+.meta{font-size:12px;color:var(--muted);white-space:nowrap}
+.dim{color:var(--muted)}
+.divide{border-top:1px solid var(--line);margin-top:20px;padding-top:20px}
+.mt-s{margin-top:8px}
+.mt-m{margin-top:12px}
+.mt-l{margin-top:16px}
+.mb-m{margin-bottom:16px}
+.mb-l{margin-bottom:20px}
+.mb-0{margin-bottom:0}
+.grow{flex:1;min-width:0}
+.tiny{font-size:11px}
+.form-group input.mono,.form-group textarea.mono,.in.mono{font-family:var(--mono);font-size:12.5px}
+.badge.mini{height:17px;font-size:9.5px;padding:0 6px;margin-left:6px}
+.in{
+  width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;
+  background:#fff;color:var(--ink);font-family:var(--body);font-size:13px;
+  transition:border-color .2s var(--ease),box-shadow .2s var(--ease);
+}
+.in:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.in::placeholder{color:#9aa0a8}
+.empty-cell{text-align:center;color:var(--muted);padding:28px}
+/* the ticket rows navigate on click; they have to look like they do */
+#ticketTableBody tr[data-ticket-id]{cursor:pointer}
+.ink{color:var(--ink);font-weight:500}
+.lnk{color:var(--accent-dark);font-weight:600}
+.lnk:hover{text-decoration:underline}
+.or{display:flex;align-items:center;gap:12px;margin-bottom:16px;color:var(--muted);font-size:12.5px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.btn-google{width:100%;background:#fff;color:var(--ink);border:1.5px solid var(--line);margin-bottom:16px}
+.btn-google:hover{border-color:var(--accent)}
+.btn-google svg{width:17px;height:17px}
+.back{
+  display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);
+  margin-bottom:16px;transition:color .2s var(--ease);
+}
+.back:hover{color:var(--accent-dark)}
+
+/* ticket detail — the same components the admin's ticket page uses, because a
+   ticket looks the same from both sides; only the internal notes differ, and a
+   client never receives one */
+.t-head{
+  display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;
+  padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:20px;
+}
+.t-head h1{font-size:23px;letter-spacing:-.035em;line-height:1.25}
+.t-head .sub{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:10px}
+.t-desc{
+  font-size:14px;line-height:1.7;color:var(--muted);white-space:pre-wrap;
+  margin-bottom:22px;max-width:74ch;
+}
+.att{display:grid;gap:0}
+.att-row{
+  display:grid;grid-template-columns:20px minmax(0,1fr) auto auto auto;
+  gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:12.5px;
+}
+.att-row:last-child{border-bottom:0}
+.att-row .ic{font-size:15px;line-height:1}
+.att-row .nm{
+  color:var(--accent-dark);font-weight:500;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;cursor:pointer;
+}
+.att-row .nm:hover{text-decoration:underline}
+.att-row .x{
+  background:none;border:0;padding:0 2px;color:var(--muted);font-size:11px;
+  cursor:pointer;transition:color .2s var(--ease);
+}
+.att-row .x:hover{color:var(--alert)}
+.drop{
+  border:1.5px dashed var(--line);border-radius:13px;padding:22px;text-align:center;
+  cursor:pointer;transition:all .22s var(--ease);
+}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop b{display:block;font-family:var(--body);font-size:13px;font-weight:600;color:var(--ink)}
+.drop b u{text-decoration:none;color:var(--accent-dark)}
+.drop span{display:block;font-size:11px;color:var(--muted);margin-top:5px}
+.cmt{
+  padding:14px 16px;border-radius:13px;border:1px solid var(--line);
+  border-left:3px solid var(--line);margin-bottom:10px;
+}
+.cmt.is-you{border-left-color:var(--accent)}
+.cmt.is-team{border-left-color:var(--accent-dark);background:var(--accent-soft)}
+.cmt-h{display:flex;align-items:center;gap:9px;margin-bottom:7px;flex-wrap:wrap}
+.cmt-h .who{font-size:12.5px;font-weight:600;letter-spacing:-.01em}
+.cmt-h .tm{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap}
+.cmt-b{font-size:13.5px;line-height:1.7;color:var(--muted);white-space:pre-wrap}
+.cmt-form{border-top:1px solid var(--line);padding-top:16px;margin-top:16px}
+.cmt-form textarea{
+  width:100%;min-height:80px;padding:12px 14px;border:1px solid var(--line);
+  border-radius:12px;background:#fff;color:var(--ink);font-family:var(--body);
+  font-size:13.5px;line-height:1.6;resize:vertical;
+}
+.cmt-form textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+@media (max-width:700px){
+  .att-row{grid-template-columns:20px minmax(0,1fr) auto;row-gap:2px}
+  .att-row .wh{display:none}
+}
 
 /* ================================================= 4. OVERVIEW — REASSURANCE
    Answer the question before the client has to scroll: is my thing on track,

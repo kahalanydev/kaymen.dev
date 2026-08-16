@@ -293,6 +293,10 @@ function writePreview(file, storageKey, tokenValue, target) {
   fs.writeFileSync(file, `<!doctype html>
 <meta charset="utf-8">
 <title>preview</title>
+<!-- the icon link is not decoration: without it the browser falls back to
+     /favicon.ico, which 404s, and that 404 shows up in every console check
+     you run against this page looking like a real bug -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <!-- written by scripts/seed-preview.js; deleted when that script stops -->
 <script>
   localStorage.setItem(${JSON.stringify(storageKey)}, ${JSON.stringify(tokenValue)});

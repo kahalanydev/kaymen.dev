@@ -145,12 +145,12 @@ if ('serviceWorker' in navigator) {
   }
 
   function priorityBadge(priority) {
-    const map = { urgent: 'badge-red', high: 'badge-red', medium: 'badge-yellow', low: 'badge-gray' };
+    const map = { urgent: 'badge-red', high: 'badge-yellow', medium: 'badge-gray', low: 'badge-gray' };
     return `<span class="badge ${map[priority] || 'badge-gray'}">${priority}</span>`;
   }
 
   function typeBadge(type) {
-    const map = { bug: 'badge-red', feature_request: 'badge-purple', modification: 'badge-yellow', question: 'badge-blue', task: 'badge-gray', maintenance: 'badge-green' };
+    const map = { bug: 'badge-gray', feature_request: 'badge-gray', modification: 'badge-gray', question: 'badge-gray', task: 'badge-gray', maintenance: 'badge-gray' };
     return `<span class="badge ${map[type] || 'badge-gray'}">${type.replace(/_/g, ' ')}</span>`;
   }
 
@@ -163,14 +163,14 @@ if ('serviceWorker' in navigator) {
     const r = (size - stroke) / 2;
     const c = 2 * Math.PI * r;
     const offset = c - (percent / 100) * c;
-    const color = percent >= 100 ? 'var(--success)' : 'var(--accent)';
+    const color = percent >= 100 ? 'var(--accent-dark)' : 'var(--accent)';
     return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" class="progress-ring">
-      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--surface-3)" stroke-width="${stroke}"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--line)" stroke-width="${stroke}"/>
       <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="${stroke}"
         stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}"
         transform="rotate(-90 ${size/2} ${size/2})" style="transition:stroke-dashoffset 0.8s ease"/>
       <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central"
-        style="font-size:${size * 0.24}px;font-weight:800;letter-spacing:-.04em;fill:var(--text);font-family:var(--display)">${percent}%</text>
+        style="font-size:${size * 0.24}px;font-weight:800;letter-spacing:-.04em;fill:var(--ink);font-family:var(--display)">${percent}%</text>
     </svg>`;
   }
 
@@ -288,11 +288,11 @@ if ('serviceWorker' in navigator) {
           <h2 class="login-title">Client Portal</h2>
           <div id="loginMsg">${oauthError ? `<div class="alert alert-error">${escapeHtml(errorMessages[oauthError] || 'Sign-in failed')}</div>` : ''}</div>
           ${googleEnabled ? `
-            <a href="/api/auth/google?target=portal" class="btn btn-google" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;margin-bottom:16px;background:#fff;color:#333;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;transition:background 0.2s">
+            <a href="/api/auth/google?target=portal" class="btn btn-google">
               <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
               Sign in with Google
             </a>
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;color:var(--text-dim);font-size:13px"><div style="flex:1;height:1px;background:var(--border)"></div>or<div style="flex:1;height:1px;background:var(--border)"></div></div>
+            <div class="or">or</div>
           ` : ''}
           <form id="loginForm">
             <div class="form-group">
@@ -510,7 +510,7 @@ if ('serviceWorker' in navigator) {
               ${p.next_milestone ? `<div class="hero-card-next">Up next: <strong>${escapeHtml(p.next_milestone)}</strong></div>` : ''}
               <div class="hero-card-footer">
                 ${p.days_remaining !== null ? `<span class="hero-card-countdown ${p.days_remaining < 0 ? 'overdue' : ''}">${p.days_remaining < 0 ? Math.abs(p.days_remaining) + 'd overdue' : p.days_remaining + 'd remaining'}</span>` : ''}
-                ${p.open_tickets > 0 ? `<span class="badge badge-yellow" style="font-size:11px">${p.open_tickets} open ticket${p.open_tickets !== 1 ? 's' : ''}</span>` : ''}
+                ${p.open_tickets > 0 ? `<span class="badge badge-yellow tiny" >${p.open_tickets} open ticket${p.open_tickets !== 1 ? 's' : ''}</span>` : ''}
               </div>
             </div>
           </div>
@@ -567,7 +567,7 @@ if ('serviceWorker' in navigator) {
                     </a>
                   `).join('')}
                 </div>
-              ` : `<p style="color:var(--text-dim);font-size:13px;margin-top:8px">No tickets yet</p>`}
+              ` : `<p class="hint mt-s mb-0">No tickets yet</p>`}
             </div>
 
             <!-- Quick Actions -->
@@ -592,7 +592,7 @@ if ('serviceWorker' in navigator) {
                     </li>
                   `).join('')}
                 </ul>
-              ` : `<p style="color:var(--text-dim);font-size:13px">No activity yet</p>`}
+              ` : `<p class="hint mb-0">No activity yet</p>`}
             </div>
           </div>
         </div>
@@ -796,7 +796,7 @@ if ('serviceWorker' in navigator) {
 
         <div class="p-grid">
           <div>
-            <p class="eyebrow" style="margin-bottom:18px">Where it stands</p>
+            <p class="eyebrow mb-l" >Where it stands</p>
             ${milestones.length ? `
               <div class="tl" style="--lit:${lit}%">
                 ${milestones.map(m => {
@@ -815,7 +815,7 @@ if ('serviceWorker' in navigator) {
                     </div>`;
                 }).join('')}
               </div>
-            ` : '<p style="font-size:13px;color:var(--muted)">The stages will appear here once the plan is agreed.</p>'}
+            ` : '<p class="hint mb-0">The stages will appear here once the plan is agreed.</p>'}
           </div>
 
           <div class="ring-wrap">
@@ -850,7 +850,7 @@ if ('serviceWorker' in navigator) {
                 </div>
               `).join('')}
             </div>
-          ` : '<p style="font-size:13px;color:var(--muted);margin-top:12px">Nothing yet — this fills in as work happens.</p>'}
+          ` : '<p class="hint mt-m mb-0">Nothing yet — this fills in as work happens.</p>'}
         </div>
       `, 'project');
     } catch (err) {
@@ -877,34 +877,34 @@ if ('serviceWorker' in navigator) {
         <div class="card">
           <div class="card-header">
             <span class="card-title">Plan v${plan.version}</span>
-            <span style="font-size:12px;color:var(--text-dim)">Last updated: ${formatDate(plan.updated_at)}</span>
+            <span class="meta">Last updated: ${formatDate(plan.updated_at)}</span>
           </div>
           <div class="plan-content md-rendered">${renderMarkdown(escapeHtml(plan.content))}</div>
         </div>
 
         ${project_status === 'proposed' ? `
-          <div class="approve-section" style="display:flex;flex-direction:column;gap:16px;align-items:center">
+          <div class="approve-section stack" >
             <p>If you're happy with this plan, approve it to begin development.</p>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
-              <button class="btn btn-success" id="approveBtn" style="width:auto;padding:14px 40px;font-size:16px">
+            <div class="row center">
+              <button class="btn btn-success" id="approveBtn" style="padding:14px 40px;font-size:15px">
                 Approve Project
               </button>
-              <button class="btn btn-secondary" id="feedbackBtn" style="width:auto;padding:14px 24px;font-size:14px">
+              <button class="btn btn-secondary" id="feedbackBtn" style="padding:14px 24px">
                 Request Changes
               </button>
             </div>
           </div>
 
-          <div id="feedbackForm" style="display:none;margin-top:16px">
+          <div id="feedbackForm" class="mt-l" hidden>
             <div class="card">
               <div class="card-header"><span class="card-title">Plan Feedback</span></div>
-              <p style="color:var(--text-dim);font-size:13px;margin-bottom:12px">Describe what changes you'd like. This will create a ticket for our team.</p>
-              <textarea id="feedbackText" placeholder="What would you like changed in the plan?" style="width:100%;min-height:120px;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:14px;resize:vertical;line-height:1.5"></textarea>
-              <div style="display:flex;gap:8px;margin-top:8px">
-                <button class="btn btn-primary" id="submitFeedbackBtn" style="width:auto">Submit Feedback</button>
-                <button class="btn btn-secondary" id="cancelFeedbackBtn" style="width:auto">Cancel</button>
+              <p class="hint sm">Describe what changes you'd like. This will create a ticket for our team.</p>
+              <textarea id="feedbackText" placeholder="What would you like changed in the plan?" class="in" style="min-height:120px;resize:vertical;line-height:1.6"></textarea>
+              <div class="row mt-s">
+                <button class="btn btn-primary" id="submitFeedbackBtn">Submit Feedback</button>
+                <button class="btn btn-secondary" id="cancelFeedbackBtn">Cancel</button>
               </div>
-              <div id="feedbackMsg" style="margin-top:8px"></div>
+              <div id="feedbackMsg" class="mt-s"></div>
             </div>
           </div>
         ` : plan.approved_at ? `
@@ -931,12 +931,12 @@ if ('serviceWorker' in navigator) {
       const feedbackBtn = $('#feedbackBtn');
       if (feedbackBtn) {
         feedbackBtn.addEventListener('click', () => {
-          $('#feedbackForm').style.display = 'block';
-          feedbackBtn.style.display = 'none';
+          $('#feedbackForm').hidden = false;
+          feedbackBtn.hidden = true;
         });
         $('#cancelFeedbackBtn').addEventListener('click', () => {
-          $('#feedbackForm').style.display = 'none';
-          feedbackBtn.style.display = 'inline-flex';
+          $('#feedbackForm').hidden = true;
+          feedbackBtn.hidden = false;
         });
         $('#submitFeedbackBtn').addEventListener('click', async () => {
           const text = $('#feedbackText').value.trim();
@@ -977,12 +977,12 @@ if ('serviceWorker' in navigator) {
       const tickets = res.data.tickets;
 
       $('#mainContent').innerHTML = `
-        <div class="page-header" style="display:flex;justify-content:space-between;align-items:start">
+        <div class="page-header row"  style="justify-content:space-between;align-items:flex-start">
           <div>
             <h1>Tickets</h1>
             <p>Track requests, bugs, and changes</p>
           </div>
-          <a href="#/project/${projectId}/tickets/new" class="btn btn-primary" style="width:auto">New Ticket</a>
+          <a href="#/project/${projectId}/tickets/new" class="btn btn-primary">New Ticket</a>
         </div>
 
         <div class="filter-tabs" id="statusFilter">
@@ -993,15 +993,15 @@ if ('serviceWorker' in navigator) {
           <button class="filter-tab" data-status="closed">Closed</button>
         </div>
 
-        <div class="card" style="padding:0">
+        <div class="card no-pad" >
           <div class="table-wrap">
             <table class="mobile-cards">
               <thead><tr><th>#</th><th>Title</th><th>Type</th><th>Priority</th><th>Status</th><th>Updated</th></tr></thead>
               <tbody id="ticketTableBody">
-                ${tickets.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">No tickets yet</td></tr>' :
+                ${tickets.length === 0 ? '<tr><td colspan="6" class="empty-cell">No tickets yet</td></tr>' :
                   tickets.map(t => `<tr data-ticket-id="${t.id}" data-status="${t.status}">
-                    <td data-label="#" style="font-family:var(--mono);font-size:12px">${t.ticket_number}</td>
-                    <td data-label="Title" style="color:var(--text);font-weight:500">${escapeHtml(t.title)}</td>
+                    <td data-label="#" class="mono">${t.ticket_number}</td>
+                    <td data-label="Title" class="ink">${escapeHtml(t.title)}</td>
                     <td data-label="Type">${typeBadge(t.type)}</td>
                     <td data-label="Priority">${priorityBadge(t.priority)}</td>
                     <td data-label="Status">${statusBadge(t.status)}</td>
@@ -1075,9 +1075,9 @@ if ('serviceWorker' in navigator) {
             <label>Description</label>
             <textarea id="ticketDescription" placeholder="Describe what you need in detail..." maxlength="10000"></textarea>
           </div>
-          <div style="display:flex;gap:12px">
-            <a href="#/project/${projectId}/tickets" class="btn btn-secondary" style="flex:1;text-align:center">Cancel</a>
-            <button type="submit" class="btn btn-primary" style="flex:1">Submit Ticket</button>
+          <div class="row">
+            <a href="#/project/${projectId}/tickets" class="btn btn-secondary grow"  style="text-align:center">Cancel</a>
+            <button type="submit" class="btn btn-primary grow" >Submit Ticket</button>
           </div>
         </form>
       </div>
@@ -1133,49 +1133,50 @@ if ('serviceWorker' in navigator) {
       };
 
       $('#mainContent').innerHTML = `
-        <div style="margin-bottom:16px">
-          <a href="#/project/${projectId}/tickets" style="color:var(--text-secondary);text-decoration:none;font-size:13px">\u2190 Back to Tickets</a>
-        </div>
+        <a href="#/project/${projectId}/tickets" class="back">&larr; Back to your tickets</a>
 
-        <div class="ticket-header">
-          <div class="ticket-title">#${ticket.ticket_number} — ${escapeHtml(ticket.title)}</div>
-          <div class="ticket-meta">
-            ${statusBadge(ticket.status)}
-            ${typeBadge(ticket.type)}
-            ${priorityBadge(ticket.priority)}
-            <span>Created ${timeAgo(ticket.created_at)} by ${escapeHtml(ticket.created_by_name || 'Unknown')}</span>
-            ${ticket.assigned_to_name ? `<span>Assigned to ${escapeHtml(ticket.assigned_to_name)}</span>` : ''}
+        <div class="t-head">
+          <div>
+            <h1>#${ticket.ticket_number} — ${escapeHtml(ticket.title)}</h1>
+            <div class="sub">
+              ${statusBadge(ticket.status)}
+              ${typeBadge(ticket.type)}
+              ${priorityBadge(ticket.priority)}
+              <span>opened ${timeAgo(ticket.created_at)} by ${escapeHtml(ticket.created_by_name || 'Unknown')}</span>
+              ${ticket.assigned_to_name ? `<span>&middot; with ${escapeHtml(ticket.assigned_to_name)}</span>` : ''}
+            </div>
           </div>
         </div>
 
-        ${ticket.description ? `<div class="ticket-body">${escapeHtml(ticket.description)}</div>` : ''}
+        ${ticket.description ? `<div class="t-desc">${escapeHtml(ticket.description)}</div>` : ''}
 
-        <div class="card" style="margin-bottom:24px">
+        <div class="card">
           <div class="card-header"><span class="card-title">Attachments (${attachments.length}/10)</span></div>
           <div id="attachmentsList">
-            ${attachments.length === 0 ? '<p style="color:var(--text-dim);font-size:13px;margin:0">No files attached.</p>' : `
-              <div style="display:flex;flex-direction:column;gap:6px">
+            ${attachments.length === 0 ? '<p class="hint mb-0">No files attached.</p>' : `
+              <div class="att">
                 ${attachments.map(a => `
-                  <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border-radius:var(--radius);font-size:13px" data-att-id="${a.id}">
-                    <span style="font-size:18px">${fileIcon(a.mimetype)}</span>
-                    <a href="#" class="att-download" data-id="${a.id}" data-name="${escapeHtml(a.filename)}" style="color:var(--accent);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(a.filename)}">${escapeHtml(a.filename)}</a>
-                    <span style="color:var(--text-dim);font-size:12px;white-space:nowrap">${formatFileSize(a.size)}</span>
-                    <span style="color:var(--text-dim);font-size:12px;white-space:nowrap">${timeAgo(a.uploaded_at)}</span>
-                    <button class="btn btn-secondary btn-sm att-delete" data-id="${a.id}" style="padding:2px 8px;font-size:11px;color:var(--danger);border-color:var(--danger)">\u2715</button>
+                  <div class="att-row" data-att-id="${a.id}">
+                    <span class="ic">${fileIcon(a.mimetype)}</span>
+                    <a href="#" class="nm att-download" data-id="${a.id}" data-name="${escapeHtml(a.filename)}"
+                       title="${escapeHtml(a.filename)}">${escapeHtml(a.filename)}</a>
+                    <span class="meta">${formatFileSize(a.size)}</span>
+                    <span class="meta wh">${timeAgo(a.uploaded_at)}</span>
+                    <button class="x att-delete" data-id="${a.id}" title="Delete attachment" aria-label="Delete attachment">&#10005;</button>
                   </div>
                 `).join('')}
               </div>
             `}
           </div>
           ${!['closed', 'completed'].includes(ticket.status) && attachments.length < 10 ? `
-            <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
-              <div id="uploadDropZone" style="border:2px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s">
-                <div style="color:var(--text-secondary);font-size:13px">Drop files here or <label for="fileInput" style="color:var(--accent);cursor:pointer;text-decoration:underline">browse</label></div>
-                <div style="color:var(--text-dim);font-size:11px;margin-top:4px">Max 10MB per file. Images, PDFs, docs, spreadsheets, CSV, ZIP.</div>
-                <input type="file" id="fileInput" multiple style="display:none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip">
+            <div class="divide">
+              <div id="uploadDropZone" class="drop">
+                <b>Drop files here, or <u>browse</u></b>
+                <span>Max 10MB each. Images, PDFs, docs, spreadsheets, CSV, ZIP.</span>
+                <input type="file" id="fileInput" multiple hidden accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip">
               </div>
-              <div id="uploadProgress" style="margin-top:8px"></div>
-              <div id="uploadMsg" style="margin-top:8px"></div>
+              <div id="uploadProgress" class="mt-s"></div>
+              <div id="uploadMsg" class="mt-s"></div>
             </div>
           ` : ''}
         </div>
@@ -1183,33 +1184,26 @@ if ('serviceWorker' in navigator) {
         <div class="card">
           <div class="card-header"><span class="card-title">Comments (${comments.length})</span></div>
 
-          ${comments.length === 0 ? '<p style="color:var(--text-dim);font-size:14px">No comments yet.</p>' : `
-            <div class="comment-list">
-              ${comments.map(c => `
-                <div class="comment ${c.user_role === 'client' ? 'client' : 'staff'}">
-                  <div class="comment-header">
-                    <span class="comment-author">${escapeHtml(c.user_name || 'Unknown')}
-                      <span class="badge ${c.user_role === 'client' ? 'badge-green' : 'badge-blue'}" style="margin-left:6px">${c.user_role}</span>
-                    </span>
-                    <span class="comment-date">${timeAgo(c.created_at)}</span>
-                  </div>
-                  <div class="comment-body">${escapeHtml(c.body)}</div>
-                </div>
-              `).join('')}
+          ${comments.length === 0 ? '<p class="hint mb-0">No comments yet.</p>' : comments.map(c => `
+            <div class="cmt ${c.user_role === 'client' ? 'is-you' : 'is-team'}">
+              <div class="cmt-h">
+                <span class="who">${escapeHtml(c.user_name || 'Unknown')}</span>
+                <span class="badge ${c.user_role === 'client' ? 'badge-green' : 'badge-blue'}">${c.user_role === 'client' ? 'you' : 'kaymen.dev'}</span>
+                <span class="tm">${timeAgo(c.created_at)}</span>
+              </div>
+              <div class="cmt-b">${escapeHtml(c.body)}</div>
             </div>
-          `}
+          `).join('')}
 
           ${!['closed', 'completed'].includes(ticket.status) ? `
-            <div style="border-top:1px solid var(--border);padding-top:20px">
+            <div class="cmt-form">
               <form id="commentForm">
-                <div class="form-group" style="margin-bottom:12px">
-                  <textarea id="commentBody" placeholder="Add a comment..." required maxlength="5000" style="min-height:80px"></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width:auto">Post Comment</button>
+                <textarea id="commentBody" placeholder="Add a comment&hellip;" required maxlength="5000"></textarea>
+                <button type="submit" class="btn btn-primary btn-sm mt-m">Post comment</button>
               </form>
-              <div id="commentMsg" style="margin-top:8px"></div>
+              <div id="commentMsg" class="mt-s"></div>
             </div>
-          ` : '<div style="color:var(--text-dim);font-size:13px;margin-top:16px;border-top:1px solid var(--border);padding-top:16px">This ticket is closed.</div>'}
+          ` : '<p class="hint mb-0 divide">This ticket is closed. Open a new one and we will pick it up.</p>'}
         </div>
       `;
 
@@ -1220,7 +1214,7 @@ if ('serviceWorker' in navigator) {
         for (const f of files) formData.append('files', f);
         const progressEl = $('#uploadProgress');
         const msgEl = $('#uploadMsg');
-        if (progressEl) progressEl.innerHTML = '<div style="color:var(--text-secondary);font-size:13px">Uploading...</div>';
+        if (progressEl) progressEl.innerHTML = '<div class="hint mb-0">Uploading&hellip;</div>';
         if (msgEl) msgEl.innerHTML = '';
         try {
           const uploadRes = await fetch(`/api/uploads/tickets/${ticket.id}`, {
@@ -1241,9 +1235,9 @@ if ('serviceWorker' in navigator) {
       const fileInput = $('#fileInput');
       if (dropZone) {
         dropZone.addEventListener('click', () => fileInput && fileInput.click());
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
-        dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'var(--border)'; });
-        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--border)'; uploadFiles(e.dataTransfer.files); });
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('over'); });
+        dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('over'); });
+        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('over'); uploadFiles(e.dataTransfer.files); });
       }
       if (fileInput) {
         fileInput.addEventListener('change', () => { uploadFiles(fileInput.files); });
@@ -1383,7 +1377,7 @@ if ('serviceWorker' in navigator) {
           <div class="login-logo"><span class="mark">K</span><span>kaymen<span class="accent">.</span>dev</span></div>
           <h2 class="login-title">Set Up Your Password</h2>
           <div id="inviteMsg"><div class="loading"><div class="spinner"></div> Validating invite...</div></div>
-          <form id="inviteForm" style="display:none">
+          <form id="inviteForm" hidden>
             <div id="inviteInfo"></div>
             <div class="form-group">
               <label>New Password</label>
@@ -1404,11 +1398,11 @@ if ('serviceWorker' in navigator) {
       if (!res.success) throw new Error(res.error);
       const user = res.data.user;
       $('#inviteMsg').innerHTML = '';
-      $('#inviteInfo').innerHTML = `<p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">Welcome${user.name ? ', <strong>' + escapeHtml(user.name) + '</strong>' : ''}! Set your password to get started.</p>`;
-      $('#inviteForm').style.display = 'block';
+      $('#inviteInfo').innerHTML = `<p class="hint">Welcome${user.name ? ', <strong>' + escapeHtml(user.name) + '</strong>' : ''}! Set your password to get started.</p>`;
+      $('#inviteForm').hidden = false;
       $('#invitePass').focus();
     } catch (err) {
-      $('#inviteMsg').innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div><p style="margin-top:16px"><a href="#/login" style="color:var(--accent)">Go to login</a></p>`;
+      $('#inviteMsg').innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div><p class="mt-l"><a href="#/login" class="lnk">Go to login</a></p>`;
       return;
     }
 

@@ -1569,3 +1569,86 @@ in the preview client's *own* org, the plan-approval path could not be exercised
   new-ticket, ticket detail, activity. All render coherently through their bridges; all still
   carry inline styles. This is the sweep, and it is what is next.
 - Ohav's main-site rail tweaks remain queued — cause diagnosed, fix not written. Handoff §6.
+
+---
+
+## 2026-08-16 — The sweep: every remaining page, and both token bridges deleted
+
+### What it was
+
+The last item on the back-office handoff: the pages nobody restructured. Admin — Security,
+Analytics, Settings, Clients, ticket detail, login, invite. Portal — plan, tickets, new-ticket,
+ticket detail, activity. They rendered coherently through their legacy token bridges but still
+carried inline styles written against the old dark theme's variable names.
+
+**188 inline `style=` attributes in `admin/app.js` became 12. 68 in `portal/app.js` became 10.**
+What survives is genuinely inline: data-driven widths (`width:${progress}%`), the portal timeline's
+`--lit`, and four column widths on the console's ticket table.
+
+### The point of it — both bridges are gone
+
+With the inline styles gone, **neither app references a single old-theme variable name**, so the
+legacy token bridge has been deleted from both stylesheets.
+`grep 'var(--surface\|--text-dim\|--danger\|--border)' admin/app.js portal/app.js` returns nothing.
+
+A bridge was always a way of not doing this work. It was the right call at the time — remapping
+twenty names is a smaller, safer diff than rewriting several hundred inline styles mid-redesign —
+but it is exactly the kind of scaffolding that becomes permanent if nobody takes it down.
+
+The last two holdouts were inside the portal's `progressRing()`, which drew with
+`stroke="var(--surface-3)"` and `fill="var(--text)"` **inside SVG**. That is the dangerous place for
+a CSS variable: a missing one renders as nothing at all rather than as an obviously wrong colour,
+so deleting the bridge would have silently blanked every progress ring in the portal.
+
+### What replaced them
+
+A small **utility layer** in each sheet — `.hint .row .meta .divide .in .mono .mt-s .field-label` —
+plus real components for the two pages that earned them: ticket detail (`.t-head .t-desc .att
+.att-row .drop .cmt .cmt-form`) and clients (`.org .org-user`). Both ticket detail pages, admin and
+portal, now use the same components, because a ticket looks the same from both sides; the only
+difference is internal notes, which a client never receives.
+
+### Four bugs found on the way, none of them the task
+
+- **The staff role badge was hardcoded `#c084fc` on `rgba(168,85,247,.15)`** — a raw colour from the
+  old dark theme sitting in the Settings user table, months after the palette changed.
+- **Bulk-replacing inline styles produced duplicate `class` attributes** (`class="card" class="mb-l"`).
+  A browser uses the first and silently drops the second, so the utility class looked applied in the
+  diff and did nothing on screen. Nineteen of them, caught only because the verification pass
+  counted `[style]` nodes and screenshotted the result. If this is ever done again:
+  `grep 'class="[^"]*"[^<>]*class="'` afterwards.
+- **The portal painted every `bug` ticket alert-red** through `typeBadge`. Type is a category, not a
+  severity — and `portal/styles.css`'s own header says a client shown red for normal work learns to
+  ignore red. Types are neutral now; priority carries severity, and `high` moved from red to warn to
+  match the admin console.
+- **Portal ticket rows navigate on click and had no `cursor:pointer`.**
+
+Also: the throwaway `_preview.html` files now carry an icon link, because without one the browser
+falls back to `/favicon.ico`, that 404s, and the 404 shows up in every console check looking like a
+real bug.
+
+### Verification
+
+Driven over CDP against the seeded server: every admin page (dashboard, clients, security,
+analytics, settings) and every portal page (plan, tickets, new-ticket, activity, ticket detail)
+rendered, with the count of inline-styled DOM nodes reported per page — 0 for most, 1–4 for the
+data-driven ones. Posted an internal note from the admin and confirmed both that it renders
+warn-toned *and* that the client's view of the same ticket still shows zero comments. No console
+errors, no exceptions.
+
+### Files
+
+| File | Change |
+|------|--------|
+| `admin/app.js` | 188 → 12 inline styles; ticket detail and clients restructured; hardcoded staff badge |
+| `admin/styles.css` | Bridge deleted; utility layer; §5b ticket detail + clients components |
+| `portal/app.js` | 68 → 10 inline styles; ticket detail restructured; badge severity corrected |
+| `portal/styles.css` | Bridge deleted; utility layer; ticket detail components |
+| `scripts/seed-preview.js` | Preview files carry an icon link so the console stays honest |
+
+### Not done
+
+- The compose box on the portal landing screen — an open decision, handoff §6. `.compose` CSS was
+  deliberately not ported; writing CSS for something that does not exist is how the admin carried an
+  unused `.c-k` rule for a day.
+- Ohav's main-site rail tweaks. Cause diagnosed, fix not written. Handoff §6.

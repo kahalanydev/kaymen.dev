@@ -13,11 +13,14 @@ no API contract changes except where noted below.
 
 ## 0. State in one line
 
-Email, the admin **dashboard**, the admin **projects console** and the **portal overview** are
-done and on the design system. What is left is a sweep, not a rebuild: the admin's Security,
-Analytics, Settings, Clients and ticket-detail pages, and the portal's plan, tickets, ticket-detail
-and activity pages, all render coherently through their token bridges but still carry inline styles
-written against the old dark theme.
+**This work is done.** Email, the admin dashboard, the admin projects console, the portal overview
+and the sweep of every remaining page are all on the design system and live. **Both legacy token
+bridges have been deleted** — neither `admin/app.js` nor `portal/app.js` references a single
+old-theme variable name, which is the thing that proves the sweep actually finished rather than
+merely looked finished.
+
+What is left is not this project: Ohav's main-site rail tweaks (§6), and the open decisions in §6
+that need his call rather than code.
 
 ---
 
@@ -208,37 +211,62 @@ Also fixed while in there: **both PWA manifests still declared `#09090b`** for `
 Both are `#ffffff` now. And `renderPlan()` passed `'project'` to `renderLayout`, so the rail lit
 Overview while you were sitting on the plan.
 
+### The sweep — every remaining page, and both bridges deleted
+
+Admin (Security, Analytics, Settings, Clients, ticket detail, login, invite) and portal (plan,
+tickets, new-ticket, ticket detail, activity) came off their inline styles. **188 inline `style=`
+attributes in `admin/app.js` became 12; 68 in `portal/app.js` became 10.** What is left is
+genuinely inline — data-driven widths (`width:${progress}%`), the timeline's `--lit`, and four
+column widths on the console's ticket table.
+
+That was the point, and the proof is the deletion: with the inline styles gone, **neither app
+references an old-theme variable name**, so both legacy token bridges are gone from the stylesheets.
+`grep 'var(--surface\|--text-dim\|--danger\|--border)' admin/app.js portal/app.js` returns nothing.
+A bridge was always a way of not doing this work; it is not needed now, and reintroducing one of
+those names is the signal that somebody is about to write an inline style instead of a class.
+
+The replacement is a small **utility layer** in each sheet (`.hint .row .meta .divide .in .mono
+.mt-s …`) plus real components for the two pages that deserved them — ticket detail (`.t-head
+.att .drop .cmt`) and clients (`.org .org-user`). It is not a framework; those eight declarations
+were being repeated inline, which meant every one was written against the old names and had to be
+found by grep rather than changed in one place.
+
+Four real bugs surfaced during the sweep, none of them the task:
+
+- **The staff role badge was hardcoded `#c084fc` on `rgba(168,85,247,.15)`** — a raw colour from
+  the old dark theme, months after the palette changed, sitting in the Settings user table.
+- **Bulk-replacing inline styles produced duplicate `class` attributes** (`class="card" class="mb-l"`),
+  and a browser silently uses the first and drops the second — so the utility class looked applied
+  in the diff and did nothing on screen. Nineteen of them. If you ever do a pass like this again,
+  `grep 'class="[^"]*"[^<>]*class="'` afterwards; it is invisible otherwise.
+- **The portal painted every `bug` ticket alert-red** via `typeBadge`. Type is a category, not a
+  severity, and this sheet's own header says a client shown red for normal work learns to ignore
+  red. Types are neutral now; priority carries severity, and `high` moved from red to warn to match
+  the admin.
+- **Portal ticket rows navigate on click and had no `cursor:pointer`.**
+
 ---
 
-## 3. What is next, in order
+## 3. What is next
 
-1. **Sweep the pages nobody restructured.** Admin: Security, Analytics, Settings, Clients, ticket
-   detail, invite. Portal: plan, tickets, new-ticket, ticket detail, activity. They all render
-   coherently through their bridges (§4); this is a pass to remove inline styles and old-theme
-   leftovers, not a rebuild.
-
-   Two worth doing first, both for the same reason — they are the screens you reach *out* to:
-   the admin's **ticket detail** (the only way out of the console) and the portal's
-   **new-ticket form** (the "Tell us something" button on the overview goes straight to it, and
-   Workspace's argument is that reporting something should cost one action).
-
-2. **Decide on the compose box.** Workspace puts a compose textarea on the portal's landing
+1. **Decide on the compose box.** Workspace puts a compose textarea on the portal's landing
    screen; the shipped overview links to the new-ticket page instead. `.compose` CSS was *not*
-   ported — writing dead CSS is how the admin ended up with an unused `.c-k` for a day. Decide
-   before building.
+   ported — writing dead CSS is how the admin ended up with an unused `.c-k` rule for a day.
+   Decide before building.
+2. Everything else worth doing is in §6, and most of it needs Ohav's call rather than code.
 
 ---
 
 ## 4. Traps — read before touching anything
 
-- **The legacy token bridges are load-bearing, in both stylesheets.** `admin/app.js` and
-  `portal/app.js` carry inline styles written against the old dark theme's variable names
-  (`--surface-3`, `--text-dim`, `--danger`, `--gradient` …). Rather than rewrite every one, the old
-  names are kept and pointed at the new palette, so pages that have not been restructured still
-  land on the right colours. **Grep the matching `app.js` before deleting a bridge line.**
-  The portal's bridge is the more dangerous of the two: `progressRing()` emits
-  `stroke="var(--surface-3)"` and `fill="var(--text)"` *inside SVG*, where a missing variable
-  renders as nothing at all rather than as an obviously wrong colour.
+- **Both legacy token bridges are GONE — do not bring one back.** They existed because the SPAs
+  carried inline styles written against the old dark theme's names (`--surface-3`, `--text-dim`,
+  `--danger` …). Those are classes now. If you catch yourself wanting `var(--surface-2)` to make
+  something work, you are about to write an inline style; write a class in the stylesheet instead.
+  The last two holdouts were inside the portal's `progressRing()`, which drew with
+  `stroke="var(--surface-3)"` and `fill="var(--text)"` **inside SVG** — where a missing variable
+  renders as *nothing at all* rather than as an obviously wrong colour. That is the failure mode to
+  watch for if you ever put a CSS variable inside an SVG attribute again.
 - **Class-name collisions are silent and expensive.** The icon-chip tone class `alert` picked up
   the `.alert` message-box rule and its `padding:13px 16px`, squeezing the glyph out of a 26px box.
   Nothing errored; the icon was simply gone. Tone classes are `t-alert` / `t-warn` / `t-ok` now.

@@ -423,11 +423,11 @@ if ('serviceWorker' in navigator) {
           <h2 class="login-title">Admin Login</h2>
           <div id="loginMsg">${oauthError ? `<div class="alert alert-error">${escapeHtml(errorMessages[oauthError] || 'Sign-in failed')}</div>` : ''}</div>
           ${googleEnabled ? `
-            <a href="/api/auth/google?target=admin" class="btn btn-google" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;margin-bottom:16px;background:#fff;color:#333;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;transition:background 0.2s">
+            <a href="/api/auth/google?target=admin" class="btn btn-google">
               <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
               Sign in with Google
             </a>
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;color:var(--text-dim);font-size:13px"><div style="flex:1;height:1px;background:var(--border)"></div>or<div style="flex:1;height:1px;background:var(--border)"></div></div>
+            <div class="or">or</div>
           ` : ''}
           <form id="loginForm">
             <div class="form-group">
@@ -440,16 +440,14 @@ if ('serviceWorker' in navigator) {
             </div>
             <button type="submit" class="btn btn-primary">Sign In</button>
           </form>
-          <div style="text-align:center;margin-top:16px">
-            <a href="#" id="forgotLink" style="color:var(--text-secondary);font-size:13px;text-decoration:underline">Forgot password?</a>
-          </div>
-          <div id="resetSection" style="display:none;margin-top:20px;padding-top:20px;border-top:1px solid var(--border)">
-            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">Enter your email to reset your password. The new password will appear in the server logs.</p>
-            <form id="resetForm" style="display:flex;gap:8px">
-              <input type="email" id="resetEmail" placeholder="Your admin email" required style="flex:1;padding:10px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:14px">
-              <button type="submit" class="btn btn-secondary" style="width:auto;white-space:nowrap">Reset</button>
+          <a href="#" id="forgotLink" class="link-quiet">Forgot password?</a>
+          <div id="resetSection" class="divide" hidden>
+            <p class="hint sm">Enter your email to reset your password. The new password will appear in the server logs.</p>
+            <form id="resetForm" class="row">
+              <input type="email" id="resetEmail" placeholder="Your admin email" required class="in grow">
+              <button type="submit" class="btn btn-secondary" >Reset</button>
             </form>
-            <div id="resetMsg" style="margin-top:10px"></div>
+            <div id="resetMsg" class="mt-s"></div>
           </div>
         </div>
       </div>
@@ -470,7 +468,7 @@ if ('serviceWorker' in navigator) {
     $('#forgotLink').addEventListener('click', (e) => {
       e.preventDefault();
       const section = $('#resetSection');
-      section.style.display = section.style.display === 'none' ? 'block' : 'none';
+      section.hidden = !section.hidden;
     });
     $('#resetForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -824,9 +822,9 @@ if ('serviceWorker' in navigator) {
                         <span class="ln">${escapeHtml(c.name)}</span>
                         <span class="le">${timeAgo(c.created_at)}</span>
                       </div>
-                      <div class="le">${escapeHtml(c.email)}${c.project_name ? ` &middot; <b style="color:var(--ink)">${escapeHtml(c.project_name)}</b>` : ''}</div>
+                      <div class="le">${escapeHtml(c.email)}${c.project_name ? ` &middot; <b class="ink">${escapeHtml(c.project_name)}</b>` : ''}</div>
                       <div class="lm">${escapeHtml(truncate(c.message, 130))}</div>
-                      <div style="display:flex;gap:7px;margin-top:10px">
+                      <div class="row mt-s">
                         ${c.converted_at
                           ? '<span class="badge badge-green">Converted</span>'
                           : `<button class="btn btn-primary btn-sm contact-convert" data-id="${c.id}" data-name="${escapeHtml(c.name).replace(/"/g, '&quot;')}" data-email="${escapeHtml(c.email).replace(/"/g, '&quot;')}" data-project="${escapeHtml(c.project_name || '').replace(/"/g, '&quot;')}">Make a client</button>
@@ -855,7 +853,7 @@ if ('serviceWorker' in navigator) {
               <table class="mobile-cards">
                 <thead><tr><th>IP</th><th>Location</th><th>Device</th><th>When</th></tr></thead>
                 <tbody>
-                  ${d.recentVisitors.length === 0 ? '<tr><td colspan="4" style="text-align:center;color:var(--muted)">No visitors yet</td></tr>' :
+                  ${d.recentVisitors.length === 0 ? '<tr><td colspan="4" class="empty-cell">No visitors yet</td></tr>' :
                     d.recentVisitors.map(v => `<tr>
                       <td data-label="IP"><span class="mono">${escapeHtml(v.ip)}</span> ${v.is_bot ? '<span class="badge badge-yellow">bot</span>' : ''}</td>
                       <td data-label="Location">${escapeHtml(v.country ? `${v.city || ''}, ${v.country}` : 'Unknown')}</td>
@@ -968,7 +966,7 @@ if ('serviceWorker' in navigator) {
             <table class="mobile-cards">
               <thead><tr><th>Severity</th><th>IP</th><th>Reason</th><th>Details</th><th>When</th></tr></thead>
               <tbody>
-                ${d.suspicious.length === 0 ? '<tr><td colspan="5" style="text-align:center;color:var(--text-dim)">No suspicious activity detected</td></tr>' :
+                ${d.suspicious.length === 0 ? '<tr><td colspan="5" class="empty-cell">No suspicious activity detected</td></tr>' :
                   d.suspicious.slice(0, 50).map(s => `<tr>
                     <td data-label="Severity">${severityBadge(s.severity)}</td>
                     <td data-label="IP"><span class="mono">${escapeHtml(s.ip)}</span></td>
@@ -1004,7 +1002,7 @@ if ('serviceWorker' in navigator) {
               <table class="mobile-cards">
                 <thead><tr><th>IP</th><th>Incidents</th><th>Max Severity</th></tr></thead>
                 <tbody>
-                  ${d.suspiciousIPs.length === 0 ? '<tr><td colspan="3" style="text-align:center;color:var(--text-dim)">No flagged IPs</td></tr>' :
+                  ${d.suspiciousIPs.length === 0 ? '<tr><td colspan="3" class="empty-cell">No flagged IPs</td></tr>' :
                     d.suspiciousIPs.map(ip => `<tr>
                       <td data-label="IP"><span class="mono">${escapeHtml(ip.ip)}</span></td>
                       <td data-label="Incidents"><strong>${ip.incidents}</strong></td>
@@ -1077,11 +1075,11 @@ if ('serviceWorker' in navigator) {
         <div class="grid-2">
           <div class="card">
             <div class="card-header"><span class="card-title">Section Engagement</span></div>
-            <div class="chart-container" style="height:250px"><canvas id="sectionsChart"></canvas></div>
+            <div class="chart-container chart-h" ><canvas id="sectionsChart"></canvas></div>
           </div>
           <div class="card">
             <div class="card-header"><span class="card-title">Visits by Hour</span></div>
-            <div class="chart-container" style="height:250px"><canvas id="hourlyChart"></canvas></div>
+            <div class="chart-container chart-h" ><canvas id="hourlyChart"></canvas></div>
           </div>
         </div>
 
@@ -1092,7 +1090,7 @@ if ('serviceWorker' in navigator) {
               <table class="mobile-cards">
                 <thead><tr><th>Element</th><th>Clicks</th></tr></thead>
                 <tbody>
-                  ${d.clickEvents.length === 0 ? '<tr><td colspan="2" style="text-align:center;color:var(--text-dim)">No click data yet</td></tr>' :
+                  ${d.clickEvents.length === 0 ? '<tr><td colspan="2" class="empty-cell">No click data yet</td></tr>' :
                     d.clickEvents.map(c => `<tr>
                       <td data-label="Element">${escapeHtml(c.target)}</td>
                       <td data-label="Clicks"><strong>${c.clicks}</strong></td>
@@ -1107,7 +1105,7 @@ if ('serviceWorker' in navigator) {
               <table class="mobile-cards">
                 <thead><tr><th>Source</th><th>Visits</th></tr></thead>
                 <tbody>
-                  ${d.referrers.length === 0 ? '<tr><td colspan="2" style="text-align:center;color:var(--text-dim)">No referrer data yet</td></tr>' :
+                  ${d.referrers.length === 0 ? '<tr><td colspan="2" class="empty-cell">No referrer data yet</td></tr>' :
                     d.referrers.map(r => `<tr>
                       <td data-label="Source">${escapeHtml(truncate(r.source, 50))}</td>
                       <td data-label="Visits"><strong>${r.count}</strong></td>
@@ -1121,7 +1119,7 @@ if ('serviceWorker' in navigator) {
         <div class="grid-2">
           <div class="card">
             <div class="card-header"><span class="card-title">Devices</span></div>
-            <div class="chart-container" style="height:220px"><canvas id="devicesChart"></canvas></div>
+            <div class="chart-container chart-h sm" ><canvas id="devicesChart"></canvas></div>
           </div>
           <div class="card">
             <div class="card-header"><span class="card-title">Browsers</span></div>
@@ -1254,7 +1252,7 @@ if ('serviceWorker' in navigator) {
           <p>Manage your account, administrators, and integrations</p>
         </div>
 
-        <div class="settings-section-label" style="margin-top:0">Account & Security</div>
+        <div class="settings-section-label mt-0" >Account & Security</div>
         <div class="grid-2">
           <div class="card">
             <div class="card-header"><span class="card-title">Change Password</span></div>
@@ -1272,34 +1270,34 @@ if ('serviceWorker' in navigator) {
                 <label>Confirm New Password</label>
                 <input type="password" id="sConfirm" required minlength="8" autocomplete="new-password">
               </div>
-              <button type="submit" class="btn btn-primary" style="width:auto">Update Password</button>
+              <button type="submit" class="btn btn-primary">Update Password</button>
             </form>
           </div>
 
           <div class="card">
             <div class="card-header"><span class="card-title">Google OAuth</span></div>
-            <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px">
+            <p class="hint">
               Allow clients (and admins) to sign in with their Google account. Users must be created first — Google login only works for existing accounts.
             </p>
             <div id="oauthMsg"></div>
             <form id="oauthForm">
               <div class="form-group">
                 <label>Google Client ID</label>
-                <input type="text" id="oauthClientId" value="${escapeHtml(oauth.google_client_id)}" placeholder="xxxx.apps.googleusercontent.com" style="font-family:var(--mono);font-size:12px">
+                <input type="text" id="oauthClientId" value="${escapeHtml(oauth.google_client_id)}" placeholder="xxxx.apps.googleusercontent.com" class="mono">
               </div>
               <div class="form-group">
-                <label>Client Secret ${oauth.google_client_secret_set ? '<span class="badge badge-green" style="margin-left:6px;font-size:10px">set</span>' : '<span class="badge badge-gray" style="margin-left:6px;font-size:10px">not set</span>'}</label>
-                <input type="password" id="oauthClientSecret" placeholder="${oauth.google_client_secret_set ? 'Leave blank to keep current' : 'Enter client secret'}" style="font-family:var(--mono);font-size:12px">
+                <label>Client Secret ${oauth.google_client_secret_set ? '<span class="badge badge-green mini">set</span>' : '<span class="badge badge-gray mini">not set</span>'}</label>
+                <input type="password" id="oauthClientSecret" placeholder="${oauth.google_client_secret_set ? 'Leave blank to keep current' : 'Enter client secret'}" class="mono">
               </div>
-              <div style="display:flex;align-items:center;gap:16px">
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px">
-                  <input type="checkbox" id="oauthEnabled" ${oauth.google_oauth_enabled ? 'checked' : ''} style="width:auto">
+              <div class="row gap-lg">
+                <label class="check">
+                  <input type="checkbox" id="oauthEnabled" ${oauth.google_oauth_enabled ? 'checked' : ''}>
                   Enable Google Sign-In
                 </label>
-                <button type="submit" class="btn btn-primary" style="width:auto">Save OAuth Settings</button>
+                <button type="submit" class="btn btn-primary">Save OAuth Settings</button>
               </div>
             </form>
-            ${oauth.google_oauth_enabled ? '<div style="margin-top:12px;padding:12px;background:var(--surface-2);border-radius:var(--radius);font-size:12px;color:var(--text-dim)"><strong>Authorized redirect URI</strong> (add this in Google Cloud Console):<br><code style="color:var(--accent);font-family:var(--mono)">' + window.location.origin + '/api/auth/google/callback</code></div>' : ''}
+            ${oauth.google_oauth_enabled ? '<div class="codebox mt-m"><strong>Authorized redirect URI</strong> (add this in Google Cloud Console):<br><code >' + window.location.origin + '/api/auth/google/callback</code></div>' : ''}
           </div>
         </div>
 
@@ -1310,74 +1308,74 @@ if ('serviceWorker' in navigator) {
               <span class="card-title">Claude Code</span>
               ${cc.isConnected() ? '<span class="badge badge-green">Connected</span>' : '<span class="badge badge-gray">Not connected</span>'}
             </div>
-            <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px">
+            <p class="hint">
               Connect your Claude Code server to get AI assistance directly from project pages.
             </p>
             <div id="ccMsg"></div>
             ${cc.isConnected() ? `
-              <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius)">
-                <span style="color:var(--success);font-size:8px">&#11044;</span>
-                <code style="font-family:var(--mono);font-size:13px;color:var(--text-secondary);flex:1">${escapeHtml(cc.getServer())}</code>
+              <div class="row" style="padding:12px;background:var(--bg-alt);border-radius:11px">
+                <span class="pulse">&#11044;</span>
+                <code class="mono grow dim">${escapeHtml(cc.getServer())}</code>
                 <button class="btn btn-danger btn-sm" id="ccDisconnectBtn">Disconnect</button>
               </div>
             ` : `
               <form id="ccPairForm">
                 <div class="form-group">
                   <label>Server URL</label>
-                  <input type="url" id="ccServerUrl" value="https://code.kaymen.dev" placeholder="https://code.kaymen.dev" style="font-family:var(--mono);font-size:12px">
+                  <input type="url" id="ccServerUrl" value="https://code.kaymen.dev" placeholder="https://code.kaymen.dev" class="mono">
                 </div>
                 <div class="form-group">
                   <label>Pairing Code</label>
-                  <input type="text" id="ccPairCode" placeholder="000000" maxlength="6" style="font-family:var(--mono);font-size:16px;text-align:center;letter-spacing:4px">
+                  <input type="text" id="ccPairCode" placeholder="000000" maxlength="6" class="mono pair-code">
                 </div>
-                <p style="color:var(--text-dim);font-size:12px;margin-bottom:12px">
+                <p class="hint sm">
                   Open Claude Code Desktop &rarr; the 6-digit pairing code is shown on startup or in the health endpoint.
                 </p>
-                <button type="submit" class="btn btn-primary" style="width:auto">Connect</button>
+                <button type="submit" class="btn btn-primary">Connect</button>
               </form>
             `}
           </div>
 
           <div class="card">
             <div class="card-header"><span class="card-title">Notifications</span></div>
-            <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px">
+            <p class="hint">
               Configure email (SMTP) for invites and ticket alerts, and an optional webhook for ticket events.
             </p>
             <div id="smtpMsg"></div>
             <form id="smtpForm">
               <div class="form-group">
                 <label>SMTP Host</label>
-                <input type="text" id="smtpHost" value="${escapeHtml(smtp.smtp_host)}" placeholder="smtp.gmail.com" style="font-family:var(--mono);font-size:12px">
+                <input type="text" id="smtpHost" value="${escapeHtml(smtp.smtp_host)}" placeholder="smtp.gmail.com" class="mono">
               </div>
               <div class="form-group">
                 <label>Port</label>
-                <input type="text" id="smtpPort" value="${escapeHtml(smtp.smtp_port)}" placeholder="587" style="font-family:var(--mono);font-size:12px;max-width:100px">
+                <input type="text" id="smtpPort" value="${escapeHtml(smtp.smtp_port)}" placeholder="587" class="mono" style="max-width:110px">
               </div>
               <div class="form-group">
                 <label>Username</label>
-                <input type="text" id="smtpUser" value="${escapeHtml(smtp.smtp_user)}" placeholder="you@gmail.com" style="font-family:var(--mono);font-size:12px">
+                <input type="text" id="smtpUser" value="${escapeHtml(smtp.smtp_user)}" placeholder="you@gmail.com" class="mono">
               </div>
               <div class="form-group">
-                <label>Password ${smtp.smtp_pass_set ? '<span class="badge badge-green" style="margin-left:6px;font-size:10px">set</span>' : ''}</label>
-                <input type="password" id="smtpPass" placeholder="${smtp.smtp_pass_set ? 'Leave blank to keep' : 'App password'}" style="font-family:var(--mono);font-size:12px">
+                <label>Password ${smtp.smtp_pass_set ? '<span class="badge badge-green mini">set</span>' : ''}</label>
+                <input type="password" id="smtpPass" placeholder="${smtp.smtp_pass_set ? 'Leave blank to keep' : 'App password'}" class="mono">
               </div>
               <div class="form-group">
                 <label>From Address</label>
-                <input type="text" id="smtpFrom" value="${escapeHtml(smtp.smtp_from)}" placeholder='"kaymen.dev" <hello@kaymen.dev>' style="font-family:var(--mono);font-size:12px">
+                <input type="text" id="smtpFrom" value="${escapeHtml(smtp.smtp_from)}" placeholder='"kaymen.dev" <hello@kaymen.dev>' class="mono">
               </div>
-              <div style="display:flex;gap:8px">
-                <button type="submit" class="btn btn-primary" style="width:auto">Save SMTP</button>
-                <button type="button" class="btn btn-secondary" id="smtpTestBtn" style="width:auto">Send Test Email</button>
+              <div class="row">
+                <button type="submit" class="btn btn-primary">Save SMTP</button>
+                <button type="button" class="btn btn-secondary" id="smtpTestBtn">Send Test Email</button>
               </div>
             </form>
-            <div style="border-top:1px solid var(--border);margin-top:20px;padding-top:20px">
-              <h4 style="font-size:14px;margin-bottom:8px">Ticket Webhook</h4>
-              <p style="color:var(--text-dim);font-size:12px;margin-bottom:12px">POST a JSON payload to this URL when a client creates a ticket. Works with Slack, Discord, or custom endpoints.</p>
-              <form id="webhookForm" style="display:flex;gap:8px">
-                <input type="url" id="webhookUrl" value="${escapeHtml(smtp.ticket_webhook_url)}" placeholder="https://hooks.slack.com/services/..." style="flex:1;padding:8px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--mono);font-size:12px">
-                <button type="submit" class="btn btn-primary" style="width:auto">Save</button>
+            <div class="divide">
+              <h4 class="sub-h">Ticket Webhook</h4>
+              <p class="hint sm">POST a JSON payload to this URL when a client creates a ticket. Works with Slack, Discord, or custom endpoints.</p>
+              <form id="webhookForm" class="row">
+                <input type="url" id="webhookUrl" value="${escapeHtml(smtp.ticket_webhook_url)}" placeholder="https://hooks.slack.com/services/..." class="in mono grow">
+                <button type="submit" class="btn btn-primary">Save</button>
               </form>
-              <div id="webhookMsg" style="margin-top:8px"></div>
+              <div id="webhookMsg" class="mt-s"></div>
             </div>
           </div>
         </div>
@@ -1387,17 +1385,17 @@ if ('serviceWorker' in navigator) {
             <div class="card-header">
               <span class="card-title">Dev Keys</span>
             </div>
-            <p style="color:var(--text-dim);font-size:13px;margin-bottom:16px">
+            <p class="hint">
               HMAC API keys for Claude Code integration. Use these to connect the portal sync service.
             </p>
             <div id="devKeysMsg"></div>
             ${devKeys.length ? `
-            <div class="table-wrap" style="margin-bottom:20px">
+            <div class="table-wrap mb-l" >
               <table class="mobile-cards">
                 <thead><tr><th>Key ID</th><th>Label</th><th>Status</th><th>Last Used</th><th></th></tr></thead>
                 <tbody>
                   ${devKeys.map(k => `<tr>
-                    <td data-label="Key ID"><code style="font-family:var(--mono);font-size:12px">${escapeHtml(k.key_id)}</code></td>
+                    <td data-label="Key ID"><code class="mono">${escapeHtml(k.key_id)}</code></td>
                     <td data-label="Label">${escapeHtml(k.label || '-')}</td>
                     <td data-label="Status">${k.revoked ? '<span class="badge badge-red">revoked</span>' : (k.expires_at && new Date(k.expires_at) < new Date() ? '<span class="badge badge-yellow">expired</span>' : '<span class="badge badge-green">active</span>')}</td>
                     <td data-label="Last Used">${k.last_used_at ? new Date(k.last_used_at).toLocaleDateString() : 'never'}</td>
@@ -1405,26 +1403,26 @@ if ('serviceWorker' in navigator) {
                   </tr>`).join('')}
                 </tbody>
               </table>
-            </div>` : '<p style="color:var(--text-dim);font-size:13px;margin-bottom:16px">No dev keys yet.</p>'}
-            <div style="border-top:1px solid var(--border);padding-top:20px">
-              <h4 style="font-size:14px;margin-bottom:12px">Create New Key</h4>
-              <form id="createDevKeyForm" style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
-                <div style="flex:1;min-width:200px">
-                  <label style="font-size:12px;color:var(--text-dim);display:block;margin-bottom:4px">Label</label>
-                  <input type="text" id="devKeyLabel" placeholder="e.g. Claude Code Desktop" style="width:100%;padding:8px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font)">
+            </div>` : '<p class="hint">No dev keys yet.</p>'}
+            <div class="divide mt-0" >
+              <h4 class="sub-h">Create New Key</h4>
+              <form id="createDevKeyForm" class="row end">
+                <div class="grow">
+                  <label class="field-label">Label</label>
+                  <input type="text" id="devKeyLabel" placeholder="e.g. Claude Code Desktop" class="in">
                 </div>
-                <div style="min-width:120px">
-                  <label style="font-size:12px;color:var(--text-dim);display:block;margin-bottom:4px">Expires</label>
-                  <select id="devKeyExpiry" style="width:100%;padding:8px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font)">
+                <div class="shrink0">
+                  <label class="field-label">Expires</label>
+                  <select id="devKeyExpiry" class="in">
                     <option value="">Never</option>
                     <option value="30">30 days</option>
                     <option value="90" selected>90 days</option>
                     <option value="365">1 year</option>
                   </select>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width:auto">Generate Key</button>
+                <button type="submit" class="btn btn-primary">Generate Key</button>
               </form>
-              <div id="devKeyResult" style="margin-top:12px"></div>
+              <div id="devKeyResult" class="mt-m"></div>
             </div>
           </div>
 
@@ -1433,7 +1431,7 @@ if ('serviceWorker' in navigator) {
               <span class="card-title">Dev API Diagnostics</span>
               <button class="btn btn-secondary btn-sm" id="runDevDiagBtn">Run Check</button>
             </div>
-            <div id="devDiagResult" style="font-size:13px;color:var(--text-secondary)">Click "Run Check" to verify the dev API is working and see recent ticket resolution activity.</div>
+            <div id="devDiagResult" class="hint mb-0">Click "Run Check" to verify the dev API is working and see recent ticket resolution activity.</div>
           </div>
         </div>
 
@@ -1443,33 +1441,33 @@ if ('serviceWorker' in navigator) {
             <span class="card-title">Users</span>
           </div>
           <div id="usersMsg"></div>
-          <div class="table-wrap" style="margin-bottom:20px">
+          <div class="table-wrap mb-l" >
             <table class="mobile-cards">
               <thead><tr><th>Email</th><th>Name</th><th>Role</th><th>Status</th><th></th></tr></thead>
               <tbody>
                 ${users.map(u => {
                   const roleBadge = u.role === 'admin' ? '<span class="badge badge-blue">admin</span>'
-                    : u.role === 'staff' ? '<span class="badge badge-purple" style="background:rgba(168,85,247,0.15);color:#c084fc">staff</span>'
+                    : u.role === 'staff' ? '<span class="badge badge-gray">staff</span>'
                     : '<span class="badge badge-green">client</span>';
                   return `<tr>
                   <td data-label="Email">${escapeHtml(u.email)}</td>
                   <td data-label="Name">${escapeHtml(u.name || '-')}</td>
                   <td data-label="Role">${roleBadge}</td>
                   <td data-label="Status">${u.must_change_password ? '<span class="badge badge-yellow">pending</span>' : '<span class="badge badge-green">active</span>'}</td>
-                  <td data-label="">${u.id !== state.user.id ? `<button class="btn btn-secondary btn-sm" data-reset-user="${u.id}" style="margin-right:4px">Reset PW</button><button class="btn btn-danger btn-sm" data-delete-user="${u.id}">Remove</button>` : '<span class="badge badge-blue">you</span>'}</td>
+                  <td data-label="">${u.id !== state.user.id ? `<button class="btn btn-secondary btn-sm mr-s" data-reset-user="${u.id}" >Reset PW</button><button class="btn btn-danger btn-sm" data-delete-user="${u.id}">Remove</button>` : '<span class="badge badge-blue">you</span>'}</td>
                 </tr>`;
                 }).join('')}
               </tbody>
             </table>
           </div>
-          <div style="border-top:1px solid var(--border);padding-top:20px">
-            <h4 style="font-size:14px;margin-bottom:12px">Add New Admin</h4>
-            <form id="addUserForm" style="display:flex;gap:8px;flex-wrap:wrap">
-              <input type="email" id="newUserEmail" placeholder="Email" required style="flex:1;min-width:200px;padding:8px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font)">
-              <input type="text" id="newUserName" placeholder="Name (optional)" style="flex:1;min-width:150px;padding:8px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font)">
-              <button type="submit" class="btn btn-primary" style="width:auto">Add Admin</button>
+          <div class="divide mt-0" >
+            <h4 class="sub-h">Add New Admin</h4>
+            <form id="addUserForm" class="row">
+              <input type="email" id="newUserEmail" placeholder="Email" required class="in grow">
+              <input type="text" id="newUserName" placeholder="Name (optional)" class="in grow">
+              <button type="submit" class="btn btn-primary">Add Admin</button>
             </form>
-            <div id="newUserResult" style="margin-top:12px"></div>
+            <div id="newUserResult" class="mt-m"></div>
           </div>
         </div>
       `;
@@ -1505,7 +1503,7 @@ if ('serviceWorker' in navigator) {
             <div class="alert alert-success">
               Admin created! Invite link sent via email.<br>
               <small>You can also share this link directly:</small><br>
-              <input type="text" value="${escapeHtml(res.data.invite_url)}" readonly onclick="this.select()" style="width:100%;margin-top:8px;padding:8px;font-family:var(--mono);font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">
+              <input type="text" value="${escapeHtml(res.data.invite_url)}" readonly onclick="this.select()" class="in mono mt-s">
             </div>
           `;
           e.target.reset();
@@ -1520,7 +1518,7 @@ if ('serviceWorker' in navigator) {
         if (!confirm('Reset this user\'s password?')) return;
         try {
           const res = await api(`/auth/users/${btn.dataset.resetUser}/reset`, { method: 'POST' });
-          $('#usersMsg').innerHTML = `<div class="alert alert-success">Password reset! Invite link sent via email.<br><small>Or share directly:</small><br><input type="text" value="${escapeHtml(res.data.invite_url)}" readonly onclick="this.select()" style="width:100%;margin-top:8px;padding:8px;font-family:var(--mono);font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)"></div>`;
+          $('#usersMsg').innerHTML = `<div class="alert alert-success">Password reset! Invite link sent via email.<br><small>Or share directly:</small><br><input type="text" value="${escapeHtml(res.data.invite_url)}" readonly onclick="this.select()" class="in mono mt-s"></div>`;
         } catch (err) {
           $('#usersMsg').innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
         }
@@ -1621,10 +1619,10 @@ if ('serviceWorker' in navigator) {
           const res = await api('/admin/dev-keys', { method: 'POST', body: JSON.stringify(body) });
           const d = res.data;
           $('#devKeyResult').innerHTML = `
-            <div class="alert alert-success" style="word-break:break-all">
+            <div class="alert alert-success brk" >
               Key created! Copy these now — the secret will not be shown again.<br><br>
-              <strong>Key ID:</strong> <code style="font-family:var(--mono)">${escapeHtml(d.key_id)}</code><br>
-              <strong>Secret:</strong> <code style="font-family:var(--mono)">${escapeHtml(d.secret)}</code>
+              <strong>Key ID:</strong> <code class="mono">${escapeHtml(d.key_id)}</code><br>
+              <strong>Secret:</strong> <code class="mono">${escapeHtml(d.secret)}</code>
             </div>
           `;
           e.target.reset();
@@ -1654,23 +1652,23 @@ if ('serviceWorker' in navigator) {
           const res = await api('/admin/dev-api-status');
           const d = res.data;
           el.innerHTML = `
-            <div style="display:grid;gap:12px">
+            <div class="stack">
               <div><strong>Active dev keys:</strong> ${d.active_keys}${d.active_keys === 0 ? ' <span class="badge badge-red">No keys!</span> — create one above' : ''}</div>
-              ${d.keys.map(k => `<div style="padding:8px;background:var(--surface-2);border-radius:var(--radius);font-size:12px">
+              ${d.keys.map(k => `<div class="codebox" style="padding:8px 10px">
                 <code>${escapeHtml(k.key_id)}</code> (${escapeHtml(k.label || 'no label')})
-                — Last used: <strong>${k.last_used ? timeAgo(k.last_used) : '<span style="color:var(--danger)">never</span>'}</strong>
+                — Last used: <strong>${k.last_used ? timeAgo(k.last_used) : '<span class="t-alert">never</span>'}</strong>
                 ${k.expires ? ` — Expires: ${new Date(k.expires).toLocaleDateString()}` : ''}
               </div>`).join('')}
               <div><strong>Recent ticket resolutions (via dev API):</strong></div>
-              ${d.recent_resolves.length === 0 ? '<div style="color:var(--text-dim)">None — the dev API resolve endpoint has never been called successfully.</div>' :
-                d.recent_resolves.map(r => `<div style="padding:6px 8px;background:var(--surface-2);border-radius:var(--radius);font-size:12px">
+              ${d.recent_resolves.length === 0 ? '<div class="dim">None — the dev API resolve endpoint has never been called successfully.</div>' :
+                d.recent_resolves.map(r => `<div class="codebox" style="padding:7px 10px">
                   Ticket #${r.details.ticket_number || '?'} resolved by ${r.details.resolved_by || '?'} — ${timeAgo(r.at)}
                 </div>`).join('')}
               <div><strong>Open tickets (${d.open_tickets.length}):</strong></div>
-              ${d.open_tickets.length === 0 ? '<div style="color:var(--success)">All tickets are closed!</div>' :
-                d.open_tickets.map(t => `<div style="padding:6px 8px;background:var(--surface-2);border-radius:var(--radius);font-size:12px">
-                  <a href="#/tickets/${t.id}" style="color:var(--accent)">#${t.ticket_number}</a> ${escapeHtml(t.title)}
-                  <span class="badge badge-blue" style="font-size:10px">${t.status}</span>
+              ${d.open_tickets.length === 0 ? '<div class="t-ok">All tickets are closed!</div>' :
+                d.open_tickets.map(t => `<div class="codebox" style="padding:7px 10px">
+                  <a href="#/tickets/${t.id}" class="t-ok">#${t.ticket_number}</a> ${escapeHtml(t.title)}
+                  <span class="badge badge-blue tiny" >${t.status}</span>
                   — ${escapeHtml(t.project_name)} — updated ${timeAgo(t.updated_at)}
                 </div>`).join('')}
             </div>
@@ -2212,7 +2210,7 @@ if ('serviceWorker' in navigator) {
           out.innerHTML = available.map(u => `
             <div class="c-vr member-search-row" data-user-id="${u.id}">
               <span class="avatar">${initials(u.name || u.email)}</span>
-              <span>${escapeHtml(u.name || '')} <span style="color:var(--muted)">${escapeHtml(u.email)}</span></span>
+              <span>${escapeHtml(u.name || '')} <span class="dim">${escapeHtml(u.email)}</span></span>
               <span class="sp"><button class="btn btn-secondary btn-sm">Add</button></span>
             </div>`).join('');
           $$('.member-search-row').forEach(row => row.addEventListener('click', async () => {
@@ -2317,7 +2315,7 @@ if ('serviceWorker' in navigator) {
             ? versions.map(v => `
                 <div class="c-vr">
                   <b>v${v.version}</b>
-                  <span style="color:var(--muted)">${escapeHtml(v.saved_by_name || 'Unknown')} &middot; ${timeAgo(v.created_at)}</span>
+                  <span class="dim">${escapeHtml(v.saved_by_name || 'Unknown')} &middot; ${timeAgo(v.created_at)}</span>
                   <span class="sp">
                     <button class="btn btn-secondary btn-sm" data-view-version="${v.id}">View</button>
                     <button class="btn btn-secondary btn-sm" data-restore-version="${v.id}" data-ver="${v.version}">Restore</button>
@@ -2440,83 +2438,82 @@ if ('serviceWorker' in navigator) {
       };
 
       $('#mainContent').innerHTML = `
-        <div style="margin-bottom:16px">
-          <a href="#/projects/${ticket.project_id || ''}" style="color:var(--text-secondary);text-decoration:none;font-size:13px">\u2190 Back to Project</a>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:24px">
+        <a href="#/projects/${ticket.project_id || ''}" class="back">&larr; Back to the project</a>
+
+        <div class="t-head">
           <div>
-            <h1 style="font-size:22px;margin-bottom:8px">#${ticket.ticket_number} — ${escapeHtml(ticket.title)}</h1>
-            <div style="font-size:13px;color:var(--text-secondary)">
-              ${escapeHtml(ticket.project_name || '')} \u2022 Created by ${escapeHtml(ticket.created_by_name || ticket.created_by_email)} \u2022 ${timeAgo(ticket.created_at)}
+            <h1>#${ticket.ticket_number} — ${escapeHtml(ticket.title)}</h1>
+            <div class="sub">
+              ${escapeHtml(ticket.project_name || '')} &middot;
+              opened by ${escapeHtml(ticket.created_by_name || ticket.created_by_email)} &middot;
+              ${timeAgo(ticket.created_at)}
             </div>
           </div>
-          <div style="display:flex;gap:8px">
-            <select id="ticketStatus" style="padding:6px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:12px">
-              ${statusOpts.map(s => `<option value="${s}" ${s===ticket.status?'selected':''}>${s.replace(/_/g,' ')}</option>`).join('')}
+          <div class="sp">
+            <select class="c-sel" id="ticketPriority" aria-label="Priority">
+              ${priorityOpts.map(p => `<option value="${p}"${p === ticket.priority ? ' selected' : ''}>${p}</option>`).join('')}
             </select>
-            <select id="ticketPriority" style="padding:6px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:12px">
-              ${priorityOpts.map(p => `<option value="${p}" ${p===ticket.priority?'selected':''}>${p}</option>`).join('')}
+            <select class="c-sel" id="ticketStatus" aria-label="Status">
+              ${statusOpts.map(s => `<option value="${s}"${s === ticket.status ? ' selected' : ''}>${s.replace(/_/g, ' ')}</option>`).join('')}
             </select>
           </div>
         </div>
         <div id="ticketUpdateMsg"></div>
 
-        ${ticket.description ? `<div style="padding:16px;background:var(--surface-2);border-radius:var(--radius);font-size:14px;line-height:1.6;color:var(--text-secondary);margin-bottom:24px;white-space:pre-wrap">${escapeHtml(ticket.description)}</div>` : ''}
+        ${ticket.description ? `<div class="t-desc">${escapeHtml(ticket.description)}</div>` : ''}
 
-        <div class="card" style="margin-bottom:24px">
-          <div class="card-header">
-            <span class="card-title">Attachments (${attachments.length}/10)</span>
-          </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Attachments (${attachments.length}/10)</span></div>
           <div id="attachmentsList">
-            ${attachments.length === 0 ? '<p style="color:var(--text-dim);font-size:13px;margin:0">No files attached.</p>' : `
-              <div style="display:flex;flex-direction:column;gap:6px">
+            ${attachments.length === 0 ? '<p class="hint mb-0">No files attached.</p>' : `
+              <div class="att">
                 ${attachments.map(a => `
-                  <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--surface-2);border-radius:var(--radius);font-size:13px" data-att-id="${a.id}">
-                    <span style="font-size:18px">${fileIcon(a.mimetype)}</span>
-                    <a href="#" class="att-download" data-id="${a.id}" data-name="${escapeHtml(a.filename)}" style="color:var(--accent);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(a.filename)}">${escapeHtml(a.filename)}</a>
-                    <span style="color:var(--text-dim);font-size:12px;white-space:nowrap">${formatFileSize(a.size)}</span>
-                    <span style="color:var(--text-dim);font-size:12px;white-space:nowrap">${escapeHtml(a.uploaded_by_name || '')}</span>
-                    <span style="color:var(--text-dim);font-size:12px;white-space:nowrap">${timeAgo(a.uploaded_at)}</span>
-                    <button class="btn btn-secondary btn-sm att-delete" data-id="${a.id}" style="padding:2px 8px;font-size:11px;color:var(--danger);border-color:var(--danger)">\u2715</button>
+                  <div class="att-row" data-att-id="${a.id}">
+                    <span class="ic">${fileIcon(a.mimetype)}</span>
+                    <a href="#" class="nm att-download" data-id="${a.id}" data-name="${escapeHtml(a.filename)}"
+                       title="${escapeHtml(a.filename)}">${escapeHtml(a.filename)}</a>
+                    <span class="meta">${formatFileSize(a.size)}</span>
+                    <span class="meta up">${escapeHtml(a.uploaded_by_name || '')}</span>
+                    <span class="meta wh">${timeAgo(a.uploaded_at)}</span>
+                    <button class="x att-delete" data-id="${a.id}" title="Delete attachment" aria-label="Delete attachment">&#10005;</button>
                   </div>
                 `).join('')}
               </div>
             `}
           </div>
           ${attachments.length < 10 ? `
-            <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px">
-              <div id="uploadDropZone" style="border:2px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:border-color 0.2s">
-                <div style="color:var(--text-secondary);font-size:13px">Drop files here or <label for="fileInput" style="color:var(--accent);cursor:pointer;text-decoration:underline">browse</label></div>
-                <div style="color:var(--text-dim);font-size:11px;margin-top:4px">Max 10MB per file. Images, PDFs, docs, spreadsheets, CSV, ZIP.</div>
-                <input type="file" id="fileInput" multiple style="display:none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip">
+            <div class="divide">
+              <div id="uploadDropZone" class="drop">
+                <b>Drop files here, or <u>browse</u></b>
+                <span>Max 10MB each. Images, PDFs, docs, spreadsheets, CSV, ZIP.</span>
+                <input type="file" id="fileInput" multiple hidden accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip">
               </div>
-              <div id="uploadProgress" style="margin-top:8px"></div>
-              <div id="uploadMsg" style="margin-top:8px"></div>
+              <div id="uploadProgress" class="mt-s"></div>
+              <div id="uploadMsg" class="mt-s"></div>
             </div>
           ` : ''}
         </div>
 
         <div class="card">
           <div class="card-header"><span class="card-title">Comments (${comments.length})</span></div>
-          ${comments.map(c => `
-            <div style="padding:12px;background:${c.is_internal?'rgba(245,158,11,0.05)':'var(--surface-2)'};border-radius:var(--radius);margin-bottom:8px;border-left:3px solid ${c.is_internal?'var(--warning)':c.user_role==='client'?'var(--success)':'var(--accent)'}">
-              <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:12px">
-                <span style="font-weight:600;color:var(--text)">${escapeHtml(c.user_name || c.user_email)} <span class="badge ${c.user_role==='client'?'badge-green':c.is_internal?'badge-yellow':'badge-blue'}">${c.is_internal?'internal':c.user_role}</span></span>
-                <span style="color:var(--text-dim)">${timeAgo(c.created_at)}</span>
+          ${comments.length ? comments.map(c => `
+            <div class="cmt ${c.is_internal ? 'is-internal' : c.user_role === 'client' ? 'is-client' : 'is-team'}">
+              <div class="cmt-h">
+                <span class="who">${escapeHtml(c.user_name || c.user_email)}</span>
+                <span class="badge ${c.is_internal ? 'badge-yellow' : c.user_role === 'client' ? 'badge-green' : 'badge-blue'}">${c.is_internal ? 'internal' : c.user_role}</span>
+                <span class="tm">${timeAgo(c.created_at)}</span>
               </div>
-              <div style="font-size:14px;color:var(--text-secondary);white-space:pre-wrap">${escapeHtml(c.body)}</div>
+              <div class="cmt-b">${escapeHtml(c.body)}</div>
             </div>
-          `).join('')}
+          `).join('') : '<p class="hint mb-0">No comments yet.</p>'}
 
-          <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:16px">
-            <div style="display:flex;gap:12px;margin-bottom:8px">
-              <textarea id="newComment" placeholder="Add a comment..." style="flex:1;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:13px;min-height:60px;resize:vertical"></textarea>
+          <div class="cmt-form">
+            <textarea id="newComment" placeholder="Add a comment&hellip;"></textarea>
+            <div class="row mt-m">
+              <button class="btn btn-primary btn-sm" id="postPublicBtn">Post — the client sees this</button>
+              <button class="btn btn-warn btn-sm" id="postInternalBtn">Post internal note</button>
             </div>
-            <div style="display:flex;gap:8px">
-              <button class="btn btn-primary btn-sm" id="postPublicBtn">Post (visible to client)</button>
-              <button class="btn btn-secondary btn-sm" id="postInternalBtn" style="border-color:var(--warning);color:var(--warning)">Post Internal Note</button>
-            </div>
-            <div id="commentMsg" style="margin-top:8px"></div>
+            <div id="commentMsg" class="mt-s"></div>
           </div>
         </div>
       `;
@@ -2527,7 +2524,7 @@ if ('serviceWorker' in navigator) {
           const res = await api(`/admin/tickets/${ticketId}`, { method: 'PATCH', body: JSON.stringify({ [field]: value }) });
           // Verify the server actually persisted the change
           if (res.data.ticket && field === 'status' && res.data.ticket.status !== value) {
-            $('#ticketUpdateMsg').innerHTML = `<div class="alert alert-error" style="margin-bottom:12px">Status change failed — server still reports: ${res.data.ticket.status}</div>`;
+            $('#ticketUpdateMsg').innerHTML = `<div class="alert alert-error mb-m" >Status change failed — server still reports: ${res.data.ticket.status}</div>`;
             return;
           }
           // Re-render to confirm the change is reflected
@@ -2544,7 +2541,7 @@ if ('serviceWorker' in navigator) {
         for (const f of files) formData.append('files', f);
         const progressEl = $('#uploadProgress');
         const msgEl = $('#uploadMsg');
-        if (progressEl) progressEl.innerHTML = '<div style="color:var(--text-secondary);font-size:13px">Uploading...</div>';
+        if (progressEl) progressEl.innerHTML = '<div class="hint mb-0">Uploading...</div>';
         if (msgEl) msgEl.innerHTML = '';
         try {
           const uploadRes = await fetch(`/api/uploads/tickets/${ticket.id}`, {
@@ -2564,10 +2561,12 @@ if ('serviceWorker' in navigator) {
       const dropZone = $('#uploadDropZone');
       const fileInput = $('#fileInput');
       if (dropZone) {
+        // .over rather than an inline borderColor, so the hover and drag states
+        // are one rule in the stylesheet instead of two colours in two places
         dropZone.addEventListener('click', () => fileInput && fileInput.click());
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent)'; });
-        dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'var(--border)'; });
-        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--border)'; uploadFiles(e.dataTransfer.files); });
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('over'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+        dropZone.addEventListener('drop', (e) => { e.preventDefault(); dropZone.classList.remove('over'); uploadFiles(e.dataTransfer.files); });
       }
       if (fileInput) {
         fileInput.addEventListener('change', () => { uploadFiles(fileInput.files); });
@@ -2637,47 +2636,50 @@ if ('serviceWorker' in navigator) {
       const orgs = res.data.organizations;
 
       $('#mainContent').innerHTML = `
-        <div class="page-header" style="display:flex;justify-content:space-between;align-items:start">
-          <div><h1>Clients</h1><p>Manage client organizations</p></div>
-          <button class="btn btn-primary" id="newOrgBtn" style="width:auto">New Client</button>
+        <div class="c-top">
+          <h1>Clients</h1>
+          <span class="badge badge-gray">${orgs.length} organisation${orgs.length !== 1 ? 's' : ''}</span>
+          <button class="btn btn-secondary btn-sm ml-auto" id="newOrgBtn" >New client</button>
         </div>
 
-        <div id="newOrgForm" style="display:none;margin-bottom:24px" class="card">
-          <div class="card-header"><span class="card-title">Create Organization</span></div>
-          <div id="newOrgMsg"></div>
-          <form id="createOrgForm" style="display:flex;gap:8px;flex-wrap:wrap">
-            <input type="text" id="orgName" placeholder="Company name" required style="flex:1;min-width:200px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font)">
-            <input type="email" id="orgEmail" placeholder="Primary email" required style="flex:1;min-width:200px;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font)">
-            <button type="submit" class="btn btn-primary" style="width:auto">Create</button>
-          </form>
+        <div class="c-new" id="newOrgForm" hidden>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Create organisation</span></div>
+            <div id="newOrgMsg"></div>
+            <form id="createOrgForm" class="row">
+              <input type="text" id="orgName" class="in grow" placeholder="Company name" required>
+              <input type="email" id="orgEmail" class="in grow" placeholder="Primary email" required>
+              <button type="submit" class="btn btn-primary btn-sm">Create</button>
+            </form>
+          </div>
         </div>
 
-        ${orgs.length === 0 ? '<div class="empty-state"><p>No clients yet. Create one to get started!</p></div>' :
+        ${orgs.length === 0 ? '<div class="empty-state"><p>No clients yet. Create one to get started.</p></div>' :
           orgs.map(o => `
-            <div class="card client-card" style="margin-bottom:16px;overflow:hidden">
-              <div class="card-header" style="flex-wrap:wrap;gap:4px 12px">
-                <span class="card-title" style="word-break:break-word">${escapeHtml(o.name)}</span>
-                <span style="font-size:12px;color:var(--text-dim);word-break:break-all;min-width:0">${escapeHtml(o.primary_email)}</span>
+            <div class="card org">
+              <div class="card-header">
+                <span class="card-title">${escapeHtml(o.name)}</span>
+                <span class="meta">${escapeHtml(o.primary_email)}</span>
               </div>
-              <div style="display:flex;flex-wrap:wrap;gap:8px 24px;font-size:13px;color:var(--text-secondary);margin-bottom:16px">
-                <span>${o.project_count} project${o.project_count!==1?'s':''}</span>
-                <span>${o.user_count} portal user${o.user_count!==1?'s':''}</span>
-                <span>Created ${timeAgo(o.created_at)}</span>
+              <div class="who">
+                <span>${o.project_count} project${o.project_count !== 1 ? 's' : ''}</span>
+                <span>${o.user_count} portal user${o.user_count !== 1 ? 's' : ''}</span>
+                <span>created ${timeAgo(o.created_at)}</span>
               </div>
-              <div style="border-top:1px solid var(--border);padding-top:12px">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                  <span style="font-size:13px;font-weight:600">Portal Users</span>
-                  <button class="btn btn-secondary btn-sm add-user-btn" data-org-id="${o.id}">+ Add User</button>
+              <div class="divide mt-0" >
+                <div class="row mb-m">
+                  <span class="sub-h mb-0">Portal users</span>
+                  <button class="btn btn-secondary btn-sm add-user-btn ml-auto" data-org-id="${o.id}" >Add user</button>
                 </div>
-                <div id="addUserForm-${o.id}" style="display:none;margin-bottom:12px">
-                  <div style="display:flex;gap:8px;flex-wrap:wrap">
-                    <input type="email" placeholder="Email" class="new-client-email" style="flex:1;min-width:0;padding:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:13px;box-sizing:border-box">
-                    <input type="text" placeholder="Name" class="new-client-name" style="flex:1;min-width:0;padding:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:13px;box-sizing:border-box">
-                    <button class="btn btn-primary btn-sm save-client-btn" data-org-id="${o.id}" style="flex-shrink:0">Create</button>
+                <div id="addUserForm-${o.id}" class="mb-m" hidden>
+                  <div class="row">
+                    <input type="email" placeholder="Email" class="in grow new-client-email">
+                    <input type="text" placeholder="Name" class="in grow new-client-name">
+                    <button class="btn btn-primary btn-sm save-client-btn" data-org-id="${o.id}">Create</button>
                   </div>
-                  <div class="new-client-result" style="margin-top:8px"></div>
+                  <div class="new-client-result mt-s"></div>
                 </div>
-                <div id="usersList-${o.id}" style="font-size:13px;color:var(--text-dim)">Loading...</div>
+                <div id="usersList-${o.id}" class="hint mb-0">Loading&hellip;</div>
               </div>
             </div>
           `).join('')}
@@ -2686,7 +2688,8 @@ if ('serviceWorker' in navigator) {
       // New org toggle + handler
       $('#newOrgBtn').addEventListener('click', () => {
         const form = $('#newOrgForm');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        form.hidden = !form.hidden;
+        if (!form.hidden) $('#orgName').focus();
       });
       $('#createOrgForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -2703,23 +2706,28 @@ if ('serviceWorker' in navigator) {
           const users = usersRes.data.users;
           const el = $(`#usersList-${o.id}`);
           if (!el) continue;
-          el.innerHTML = users.length === 0 ? 'No portal users yet.' :
-            `<table class="mobile-cards" style="width:100%;font-size:13px"><thead><tr><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)">Email</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)">Name</th><th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)">Status</th><th style="padding:6px 8px;border-bottom:1px solid var(--border)"></th></tr></thead><tbody>${users.map(u => `<tr>
-              <td data-label="Email" style="padding:6px 8px;word-break:break-all;min-width:0">${escapeHtml(u.email)}${u.is_cross_org ? ' <span class="badge badge-blue" style="font-size:10px">cross-org</span>' : ''}</td>
-              <td data-label="Name" style="padding:6px 8px">${escapeHtml(u.name || '-')}</td>
-              <td data-label="Status" style="padding:6px 8px">${u.must_change_password ? '<span class="badge badge-yellow">pending</span>' : '<span class="badge badge-green">active</span>'}</td>
-              <td data-label="" style="padding:6px 8px;text-align:right">
-                <button class="btn btn-secondary btn-sm client-reset-pw" data-org-id="${o.id}" data-user-id="${u.id}" data-email="${escapeHtml(u.email).replace(/"/g, '&quot;')}" style="margin-right:4px">Reset PW</button>
-                <button class="btn btn-danger btn-sm client-delete-user" data-org-id="${o.id}" data-user-id="${u.id}" data-email="${escapeHtml(u.email).replace(/"/g, '&quot;')}" data-cross-org="${u.is_cross_org ? 1 : 0}">Remove</button>
-              </td>
-            </tr>`).join('')}</tbody></table>`;
-        } catch(e) {}
+          el.className = 'org-users';
+          el.innerHTML = users.length === 0 ? '<p class="hint mb-0">No portal users yet.</p>' :
+            users.map(u => `
+              <div class="org-user" data-user-row="${u.id}">
+                <span class="em">${escapeHtml(u.email)}${u.is_cross_org ? ' <span class="badge badge-blue mini">cross-org</span>' : ''}</span>
+                <span class="dim">${escapeHtml(u.name || '—')}</span>
+                <span>${u.must_change_password ? '<span class="badge badge-yellow">pending</span>' : '<span class="badge badge-green">active</span>'}</span>
+                <span class="acts">
+                  <button class="btn btn-secondary btn-sm client-reset-pw" data-org-id="${o.id}" data-user-id="${u.id}"
+                          data-email="${escapeHtml(u.email).replace(/"/g, '&quot;')}">Reset</button>
+                  <button class="btn btn-danger btn-sm client-delete-user" data-org-id="${o.id}" data-user-id="${u.id}"
+                          data-email="${escapeHtml(u.email).replace(/"/g, '&quot;')}" data-cross-org="${u.is_cross_org ? 1 : 0}">Remove</button>
+                </span>
+              </div>`).join('');
+        } catch (e) { /* one org failing to list users must not blank the page */ }
       }
 
       // Add user toggles
       $$('.add-user-btn').forEach(btn => btn.addEventListener('click', () => {
         const form = $(`#addUserForm-${btn.dataset.orgId}`);
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        form.hidden = !form.hidden;
+        if (!form.hidden) form.querySelector('.new-client-email').focus();
       }));
 
       // Save client user
@@ -2733,19 +2741,26 @@ if ('serviceWorker' in navigator) {
           const res = await api(`/admin/clients/${orgId}/users`, { method: 'POST', body: JSON.stringify({ email, name }) });
           result.innerHTML = res.data.linked
             ? `<div class="alert alert-success">${escapeHtml(res.data.message)}</div>`
-            : `<div class="alert alert-success">Created! Invite link sent via email.<br><small>Or share directly:</small><br><input type="text" value="${escapeHtml(res.data.invite_url)}" readonly onclick="this.select()" style="width:100%;margin-top:8px;padding:8px;font-family:var(--mono);font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)"></div>`;
-          setTimeout(() => renderClients(), 3000);
+            : `<div class="alert alert-success">Created — the invite went out by email.
+                 <input type="text" class="in mono mt-s" value="${escapeHtml(res.data.invite_url)}" readonly
+                        aria-label="Invite link">
+               </div>`;
+          const box = result.querySelector('input');
+          if (box) box.addEventListener('click', () => box.select());
+          setTimeout(() => renderClients(), 4000);
         } catch (err) { result.innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`; }
       }));
 
       // Reset client user password
       $$('.client-reset-pw').forEach(btn => btn.addEventListener('click', async () => {
-        if (!confirm(`Reset password for ${btn.dataset.email}?`)) return;
+        if (!confirm(`Reset the password for ${btn.dataset.email}?`)) return;
         try {
           const res = await api(`/auth/users/${btn.dataset.userId}/reset`, { method: 'POST' });
-          const row = btn.closest('td');
-          row.innerHTML = `<input type="text" value="${escapeHtml(res.data.invite_url)}" readonly onclick="this.select()" style="width:220px;padding:4px 8px;font-family:var(--mono);font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text)">`;
-          setTimeout(() => renderClients(), 5000);
+          const cell = btn.closest('.acts');
+          cell.innerHTML = `<input type="text" class="in mono" value="${escapeHtml(res.data.invite_url)}" readonly aria-label="Reset link">`;
+          const box = cell.querySelector('input');
+          box.addEventListener('click', () => box.select());
+          setTimeout(() => renderClients(), 6000);
         } catch (err) { alert(err.message); }
       }));
 
@@ -2794,7 +2809,7 @@ if ('serviceWorker' in navigator) {
           <div class="login-logo"><span class="mark">K</span><span>kaymen<span class="accent">.</span>dev</span></div>
           <h2 class="login-title">Set Up Your Password</h2>
           <div id="inviteMsg"><div class="loading"><div class="spinner"></div> Validating invite...</div></div>
-          <form id="inviteForm" style="display:none">
+          <form id="inviteForm" hidden>
             <div id="inviteInfo"></div>
             <div class="form-group">
               <label>New Password</label>
@@ -2815,11 +2830,11 @@ if ('serviceWorker' in navigator) {
       if (!res.success) throw new Error(res.error);
       const user = res.data.user;
       $('#inviteMsg').innerHTML = '';
-      $('#inviteInfo').innerHTML = `<p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px">Welcome${user.name ? ', <strong>' + escapeHtml(user.name) + '</strong>' : ''}! Set your password to get started.</p>`;
-      $('#inviteForm').style.display = 'block';
+      $('#inviteInfo').innerHTML = `<p class="hint">Welcome${user.name ? ', <strong>' + escapeHtml(user.name) + '</strong>' : ''}! Set your password to get started.</p>`;
+      $('#inviteForm').hidden = false;
       $('#invitePass').focus();
     } catch (err) {
-      $('#inviteMsg').innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div><p style="margin-top:16px"><a href="#/login" style="color:var(--accent)">Go to login</a></p>`;
+      $('#inviteMsg').innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div><p class="mt-m"><a href="#/login" class="t-ok">Go to login</a></p>`;
       return;
     }
 
