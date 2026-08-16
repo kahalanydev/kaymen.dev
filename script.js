@@ -353,8 +353,8 @@
       if (nodes.length >= MAX_NODES) return;
       var best = null, bestGap = MIN_GAP;
       for (var i = 0; i < 18; i++) {
-        var x = 44 + Math.random() * (w - 88);
-        var y = 44 + Math.random() * (h - 88);
+        var x = 12 + Math.random() * (w - 24);
+        var y = 16 + Math.random() * (h - 32);
         var near = 1e9, parent = null;
         for (var j = 0; j < nodes.length; j++) {
           if (nodes[j].dying) continue;

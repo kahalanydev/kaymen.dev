@@ -96,7 +96,7 @@
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;scroll-padding-top:40px}
+html{scroll-behavior:smooth;scroll-padding-top:40px;overflow-x:clip}
 body{
   font-family:var(--body);
   background:var(--bg);
@@ -275,7 +275,13 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
 .rv.in{opacity:1;transform:none}
 
 /* ------------------------------------------------------------------- hero */
-.hero{padding-top:104px;padding-bottom:82px;position:relative;overflow:hidden}
+/* NO overflow:hidden here. .hero-fx cancels the page padding with negative
+   left/right to reach the screen edges, and overflow:hidden on the parent
+   clips exactly that back off — the canvas element still measures 0..1920, so
+   it reports full bleed while painting nothing outside the hero box. That is
+   why three earlier attempts at this measured clean and still looked wrong.
+   body already carries overflow-x:hidden, so nothing escapes sideways. */
+.hero{padding-top:104px;padding-bottom:82px;position:relative}
 @media (max-width:900px){.hero{padding-top:118px;padding-bottom:60px}}
 /* two columns: the argument on the left, what it costs to rent it on the right */
 .hero-grid{display:grid;gap:44px;align-items:center;position:relative;z-index:1}
@@ -307,7 +313,7 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
 .hero::before,.hero::after{
   content:"";position:absolute;pointer-events:none;z-index:0;border-radius:50%;
 }
-.hero::before{width:900px;height:900px;top:-420px;left:-260px;background:radial-gradient(circle,rgba(43,188,179,.13),transparent 62%)}
+.hero::before{width:900px;height:900px;top:-380px;left:-160px;background:radial-gradient(circle,rgba(43,188,179,.13),transparent 62%)}
 .hero::after{width:760px;height:760px;bottom:-420px;right:-200px;background:radial-gradient(circle,rgba(43,188,179,.10),transparent 64%)}
 .chip{
   display:inline-flex;align-items:center;gap:9px;
