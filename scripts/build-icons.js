@@ -122,6 +122,7 @@ async function cdp(port) {
   const VECTORS = [
     ['kaymen-mark-tile.svg', tileDeep, 'the icon: deep tile, accent keystone'],
     ['kaymen-mark-tile-accent.svg', tileAccent, 'the icon on accent, for light surfaces'],
+    ['kaymen-avatar-circle.svg', LOGO.tile({ kind: 'deep', radius: 16 }), 'circular avatar, for slots that crop to a circle'],
     ['kaymen-mark-white.svg', LOGO.glyph({ keyFill: WHITE, flankFill: WHITE, flankOpacity: 0.62 }), 'glyph only, white, transparent'],
     ['kaymen-mark-deep.svg', LOGO.glyph({ keyFill: LOGO.ACCENT, flankFill: DEEP, flankOpacity: 0.34 }), 'glyph only, for light backgrounds'],
     ['kaymen-mark-mono.svg', LOGO.glyph({ keyFill: 'currentColor', flankFill: 'currentColor', flankOpacity: 0.4 }), 'one colour: inherits currentColor, prints flat'],

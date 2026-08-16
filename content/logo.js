@@ -66,37 +66,38 @@ function course(cx, cy, rIn, rOut, n, gap) {
   return out;
 }
 
-/* THE ICON IS A GATEWAY, NOT A BARE ARC, and this was learned the hard way by
-   rendering it at 192px instead of trusting how it looked at 24.
+const centreThree = (c) => c.filter((v) => Math.abs(v.i - (c.length - 1) / 2) <= 1);
 
-   A three-stone fragment is the right mark inside a wide lockup, where the eye
-   already has the wordmark and the span for context. Standing alone in a
-   square it has neither, and it stops reading as masonry: three wedges over
-   empty space read as wings, or a fan, or a bird. The shape needs to close.
+/* THE ICON IS THE KEYSTONE AND ITS TWO NEIGHBOURS. Nothing else.
 
-   Carrying the course through the full 180 degrees and dropping two piers to a
-   floor fixes it completely. It is now a doorway, which no amount of squinting
-   turns into anything else, and a doorway is roughly square so it fills the
-   icon slot instead of hovering in the top third of it. Seven segments rather
-   than nine, because at 16px nine blur into a smooth band and the keystone
-   stops being distinguishable from its neighbours. */
-const GATE = { cx: 16, cy: 19.5, rIn: 5.5, rOut: 11.5, foot: 26.5, n: 7, gap: 4 };
+   This is Ohav's, and it is worth saying plainly that I twice replaced it with
+   something I preferred and twice had to put it back. The first substitution
+   was a gateway with piers, on the reasoning that three stones over empty space
+   read as wings at 192px. The reasoning was not wrong. It was also not mine to
+   act on: he had approved the three stones, and an icon that argues with the
+   lockup is a worse problem than an icon that is quiet at large sizes.
 
-function gatePaths(opts = {}) {
+   So: three stones, and the numbers below are the ones from the mockup he
+   approved rather than anything re-derived. The ring is thicker than the
+   lockup's on purpose, 6 against 12.5 rather than the lockup's 0.7 ratio,
+   because a thin ring cropped to three segments disappears by 16px. That is an
+   optical cut, the same argument as the segment counts, and it is the only
+   liberty taken with the shape. */
+const FAN = { cx: 16, cy: 24, rIn: 6, rOut: 12.5, n: 5, gap: 5.5 };
+
+function fanPaths(opts = {}) {
   const keyFill = opts.keyFill || ACCENT;
   const flankFill = opts.flankFill || WHITE;
   const flankOpacity = opts.flankOpacity == null ? 0.42 : opts.flankOpacity;
-  const { cx, cy, rIn, rOut, foot, n, gap } = GATE;
-  const pier = (x1, x2) => `<path d="M${x1} ${cy}H${x2}V${foot}H${x1}Z" fill="${flankFill}" opacity="${flankOpacity}"/>`;
-  return pier(cx - rOut, cx - rIn) + pier(cx + rIn, cx + rOut) +
-    course(cx, cy, rIn, rOut, n, gap)
-      .map((v) => v.key
-        ? `<path d="${v.d}" fill="${keyFill}"/>`
-        : `<path d="${v.d}" fill="${flankFill}" opacity="${flankOpacity}"/>`)
-      .join('');
+  const { cx, cy, rIn, rOut, n, gap } = FAN;
+  return centreThree(course(cx, cy, rIn, rOut, n, gap))
+    .map((v) => v.key
+      ? `<path d="${v.d}" fill="${keyFill}"/>`
+      : `<path d="${v.d}" fill="${flankFill}" opacity="${flankOpacity}"/>`)
+    .join('');
 }
 
-const glyphPaths = gatePaths;
+const glyphPaths = fanPaths;
 
 /* The glyph alone, transparent, for anywhere that already draws its own tile
    (the rail, the sidebars, the login screens). */
@@ -111,6 +112,8 @@ function tile(opts = {}) {
   const px = opts.px;
   const size = px ? ` width="${px}" height="${px}"` : '';
   const bg = kind === 'accent' ? ACCENT : DEEP;
+  /* 16 gives a circle, for the avatar slots that crop to one anyway. */
+  const rx = opts.radius == null ? 7.4 : opts.radius;
   /* White on teal needs more weight than accent on deep: at 0.45 the masonry
      washed out to near invisible by 24px, which is most of the places the
      accent tile is actually used. */
@@ -118,19 +121,19 @@ function tile(opts = {}) {
     ? glyphPaths({ keyFill: WHITE, flankFill: WHITE, flankOpacity: 0.62 })
     : glyphPaths({ keyFill: ACCENT, flankFill: WHITE, flankOpacity: 0.42 });
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"${size}>` +
-         `<rect width="32" height="32" rx="7.4" fill="${bg}"/>${paths}</svg>`;
+         `<rect width="32" height="32" rx="${rx}" fill="${bg}"/>${paths}</svg>`;
 }
 
-/* The same gateway with no tile behind it, for a surface that already has its
-   own background. `ctx` says what it is sitting on so the masonry stays legible
-   either way; the keystone keeps the accent regardless, because it is the one
-   part that must never be mistaken for a neighbour. */
+/* The same three stones with no tile behind them, for a surface that already
+   has its own background. `ctx` says what it is sitting on so the masonry stays
+   legible either way; the keystone keeps the accent regardless, because it is
+   the one part that must never be mistaken for a neighbour. */
 function markBare(opts = {}) {
   const px = opts.px;
   const size = px ? ` width="${px}" height="${px}"` : '';
   const base = opts.ctx === 'deep' ? WHITE : DEEP;
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"${size}>` +
-         `${gatePaths({ keyFill: ACCENT, flankFill: base, flankOpacity: 0.34 })}</svg>`;
+         `${fanPaths({ keyFill: ACCENT, flankFill: base, flankOpacity: 0.34 })}</svg>`;
 }
 
 /* The full lockup: the whole course with the wordmark in the span beneath the
@@ -164,13 +167,24 @@ function arch(opts = {}) {
   const c = display ? course(100, 98, 56, 80, 9, 3) : course(100, 98, 54, 80, 5, 5);
   const mid = (c.length - 1) / 2;
   const size = px ? ` width="${px}" height="${r2(px * 0.52)}"` : '';
+  /* The springing stones used to bottom out at 0.02, which is invisible. The
+     arch appeared to stop halfway down and the course looked like it was
+     dissolving rather than resting on something. The ramp still falls away from
+     the keystone, because the keystone has to stay the brightest thing in the
+     mark, but it now floors at 0.30 where a stone is still a stone. */
   const stones = c.map((v) => {
     if (v.key) return `<path d="${v.d}" fill="${ACCENT}"/>`;
-    const o = display ? r2(0.26 + 0.12 * (2 - Math.abs(v.i - mid))) : 0.34;
-    return `<path d="${v.d}" fill="${ink}" opacity="${Math.max(o, 0.02)}"/>`;
+    const o = display ? r2(0.30 + 0.08 * (4 - Math.abs(v.i - mid))) : 0.42;
+    return `<path d="${v.d}" fill="${ink}" opacity="${o}"/>`;
   }).join('');
   const fs = display ? 17 : 19;
-  const y = display ? 78 : 80;
+  /* Sat at 78, which put the wordmark near the middle of the opening and read
+     as floating. 82 drops it into the lower third without letting the descender
+     of the y crowd the springing line, which is what 85 did. Checked rather
+     than eyeballed: the layout box of the text overlaps the inner arc at every
+     one of these, because it measures full font ascent, but the ink does not.
+     The corner letters are a k and a v, and neither reaches its own box. */
+  const y = display ? 82 : 84;
   const face = opts.embedFont
     ? `<defs><style>@font-face{font-family:'Sora';font-style:normal;font-weight:700;` +
       `src:url(data:font/woff2;base64,${opts.embedFont}) format('woff2')}</style></defs>`
