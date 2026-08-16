@@ -2,7 +2,11 @@
 
 ## On Every New Conversation
 
-- **Always** read `HANDOFF-BACKOFFICE-2026-08-16.md` first — it is the **active** build document
+- **Always** read `HANDOFF-FRONTEND-2026-08-16.md` first — it is the most recent
+  build document (hero, pricing section, the mark, the mobile pass). It says what
+  landed, what is open, and the four things about the hero mesh that will
+  otherwise be rediscovered the hard way.
+- Then read `HANDOFF-BACKOFFICE-2026-08-16.md` — it is the **active** build document
   (admin, client portal, outbound email onto the site's design system). It says exactly what is
   done, what is next, and the traps.
 - Then read `HANDOFF-REDESIGN-2026-08-15.md`. The redesign it describes is **landed and live**, but
