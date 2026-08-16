@@ -91,6 +91,14 @@ a{color:inherit}
 
 .build{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:34px;margin-top:30px;align-items:start}
 .step{margin-bottom:26px}
+.pilot{
+  border:1px dashed rgba(43,188,179,.5);border-radius:14px;padding:15px 18px;
+  margin:-6px 0 26px;background:linear-gradient(180deg,var(--accent-soft) 0%,rgba(255,255,255,0) 80%);
+}
+.pilot b{display:block;font-family:var(--display);font-size:14px;font-weight:700;letter-spacing:-.02em;margin-bottom:5px}
+.pilot p{font-size:12.5px;color:var(--muted);line-height:1.6}
+.pilot p span{color:var(--accent-dark);font-weight:700}
+.pilot p em{font-style:normal;color:var(--ink);font-weight:600}
 .step h3{
   font-family:var(--body);font-size:10.5px;font-weight:700;letter-spacing:.13em;
   text-transform:uppercase;color:var(--muted);margin-bottom:11px;
@@ -203,6 +211,11 @@ a{color:inherit}
             <h3>1 · What are you replacing?</h3>
             <div id="bases"></div>
           </div>
+          <div class="pilot">
+            <b>Not sure which of these you are?</b>
+            <p><span>$750, one week.</span> A written plan and a working prototype of the single thing that matters most — enough to know whether the rest is worth building. <em>Credited in full against the build if you go ahead</em>, so it costs nothing if we carry on.</p>
+          </div>
+
           <div class="step">
             <h3>2 · What else does it need?</h3>
             <div id="addons"></div>
@@ -239,16 +252,16 @@ a{color:inherit}
 --------------------------------------------------------------------------- */
 var BASES = [
   { id:'tool',     from: 2500,  mo: 200,
-    name:'A spreadsheet, or one manual step',
-    note:'One job, done properly. A form, a tracker, a thing you currently do by hand every week.',
+    name:'One job you still do by hand',
+    note:'A form, a tracker, the report somebody rebuilds every week. One thing, done properly.',
     plan:'Site Care — patched, backed up, monitored, and we answer.' },
   { id:'stack',    from: 6500,  mo: 450,
-    name:'Monday, Airtable, Excel — and the glue between them',
-    note:'You have the tools. What you do not have is one place where the answer lives.',
+    name:'Work spread across tools that do not talk to each other',
+    note:'You have the software. What you do not have is one place where the answer lives — so somebody reconciles it by hand.',
     plan:'Keep Running — the above, plus the small changes as they come up.' },
   { id:'platform', from: 15000, mo: 1200,
-    name:'Several systems, and the integrations between them',
-    note:'More than one team, more than one tool, and reporting that has to cross all of it.',
+    name:'Several systems, several teams, and the reporting across all of it',
+    note:'Questions that can only be answered today by exporting everything and merging it.',
     plan:'Run &amp; Improve — 10 hours of development a month, rolling over one month.' }
 ];
 
@@ -256,7 +269,7 @@ var ADDONS = [
   { id:'mobile',  add: 5000, mo: 300, name:'An app in the App Store and Google Play',
     note:'Native, in both stores, updated over the air. Apple and Google force SDK bumps — an unmaintained app dies in about 18 months.' },
   { id:'connect', add: 2500, mo: 0,   name:'Connect to something you already run',
-    note:'A CRM, a PSA, QuickBooks, a bank feed. Per system connected.' },
+    note:'A CRM, an accounting system, a bank feed — whatever you already run. Per system connected.' },
   { id:'portal',  add: 2500, mo: 0,   name:'Logins for your own customers',
     note:'They see their own data and nothing else. Their questions stop arriving by email.' },
   { id:'tenant',  add: 3500, mo: 300, name:'More than one location, brand or tenant',
