@@ -107,7 +107,11 @@
     var askSay = document.getElementById('askSay');
     var askPop = document.getElementById('askPop');
     var askVeil = document.getElementById('askVeil');
-    var askSel = 'stack';
+    /* Opens on the entry rung, not the middle one. The first number a visitor
+       sees is the one that decides whether they keep reading, and $6,500 sent
+       away anyone whose budget started lower — while $2,500 still leads up the
+       ladder for anyone whose problem is bigger. */
+    var askSel = 'tool';
     var askEsc = function (s) {
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
     };

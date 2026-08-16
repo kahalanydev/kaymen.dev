@@ -60,15 +60,21 @@ const BASES = [
     plan: 'Patched, backed up, monitored, and small changes as they come up.',
   },
   {
-    /* This line used to read "one job you still do by hand", which made $2,500
-       sound steep by making the work sound small. Saying the job REPEATS is the
-       fix: a one-off price against a recurring cost reads as payback, not spend. */
+    /* THE ENTRY RUNG, AND THE DEFAULT. It has been reworded twice and both
+       failures were the same one: describing the WORK rather than the THING.
+       "One job you still do by hand" and then "the job that comes back every
+       week" both framed $2,500 as the price of a chore, and a chore is never
+       worth $2,500 to anyone. What is actually being sold is a system — a real
+       database with logins, that they own — for one part of the business. Price
+       a system at $2,500 and it reads as cheap, which is the truth. So this rung
+       names the thing, not the task, and the ticks answer "why not a
+       spreadsheet" rather than describing how we work. */
     id: 'tool', from: 2500, mo: 200,
-    chip: 'One job, every week',
-    name: 'The job that comes back every week',
-    say: 'the job somebody redoes by hand every week to stop coming back',
-    note: 'The report rebuilt from scratch every Monday. The tracker that lives in one person’s head. Built properly once, and then nobody does it again.',
-    ticks: ['Working builds as we go, not a reveal at the end', 'Yours, on your infrastructure and in your accounts', 'Ends with a handover document, not a support ticket'],
+    chip: 'Your first real system',
+    name: 'One part of the business, on software you own',
+    say: 'a real system for the part of the business still running on spreadsheets',
+    note: 'Quotes, jobs, bookings, stock, who owes what. A real database with logins for your people, not a spreadsheet that breaks when two of them open it at once.',
+    ticks: ['A real database behind it, not a spreadsheet', 'Logins for everyone who needs one, no per-seat fee', 'Yours, on your infrastructure and in your accounts'],
     plan: 'Patched, backed up, monitored, and we answer.',
   },
   {
