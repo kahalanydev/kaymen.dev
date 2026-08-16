@@ -355,13 +355,43 @@ function fleetPanel() {
 }
 
 /**
- * Shot strip. Our OWN products only: a client screenshot cannot go in here
- * without the per-project naming call (HANDOFF-REDESIGN-2026-08-15.md §5).
+ * Shot strip. Client back ends lead, because a business running its own work on
+ * one of these is stronger proof than a product we made for ourselves — the
+ * section's claim is "still running", not "we shipped things". Naming is settled
+ * per project by `client.named` in content/projects.js, not by this file.
+ *
+ * EVERY SHOT IS OF A LOCAL INSTANCE ON FABRICATED DATA, and that is not a
+ * detail. These systems hold borrowers, riders and students: the Thrive
+ * screenshot originally supplied showed six real students by name, an intake
+ * queue, a staff member and a university. Consent to name the CLIENT is not
+ * consent to publish the PEOPLE INSIDE their system, and no client gave the
+ * second one. Re-take with scripts/shoot-app.js against a freshly seeded
+ * database — never against production, and never against a dev database that
+ * has been synced from it. The recipes are in HANDOFF-FRONTEND-2026-08-16.md §6.
+ *
  * Lives here rather than in content/projects.js because it is presentation
  * for one section, not part of the case-study content model — move it if a
  * second surface ever needs it.
  */
 const SHOTS = [
+  {
+    img: '/assets/shots/bridgemtg.jpg',
+    host: 'bridgemtg.kaymen.dev',
+    title: 'Mortgage pipeline and client portal',
+    note: 'Every file, stage and bank approval on one board.',
+  },
+  {
+    img: '/assets/shots/thrive.jpg',
+    host: 'thrivestudyabroad.org',
+    title: 'Multi-campus student CRM',
+    note: 'One tenanted system serving five organisations.',
+  },
+  {
+    img: '/assets/shots/horseharmony.jpg',
+    host: 'horseandharmonyil.com',
+    title: 'Therapeutic-riding bookings',
+    note: 'Bilingual diary, health-fund referrals, reminders.',
+  },
   {
     img: '/assets/shots/predictable.jpg',
     host: 'predictable.kaymen.dev',

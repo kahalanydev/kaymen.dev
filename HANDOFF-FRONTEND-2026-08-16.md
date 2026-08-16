@@ -146,17 +146,69 @@ Two traps, both already paid for:
 
 ---
 
+## 6. The screenshot strip
+
+`SHOTS` in `server/render.js` now carries **six**: the three client back ends
+Ohav asked for, then the three own products. Client systems lead — the section
+claims "still running", and a business running its work on one of these proves
+that better than something we built for ourselves.
+
+### Nothing in these shots is real, and it must stay that way
+
+The Thrive screenshot originally supplied held **six real students by name**, an
+intake queue, a staff member and a university. Consent to name the **client** is
+not consent to publish the **people inside their system**, and no client gave the
+second one. BridgeMTG holds borrowers; Horse & Harmony holds riders, most of them
+children, with guardian phone numbers and health-fund membership.
+
+So every shot is taken from a **local instance against a freshly seeded database
+of invented data** — `@example.com` addresses, the reserved `555` phone ranges,
+fabricated names. Never production. Never a dev database that has been synced
+from production. **BridgeMTG's own seeded staff were renamed too** — its
+`seeds/009_staff_users.ts` creates the real people with their `@bridgemtg.com`
+addresses, and employees are not covered by client naming consent either.
+
+### Re-taking them
+
+`scripts/shoot-app.js` drives installed Chrome over the DevTools protocol (same
+approach as `build-icons.js` and `build-og.js`, no new dependency) and writes a
+900×562 JPEG — asserting those exact dimensions, because the markup hard-codes
+`width=900 height=562` and nothing downstream would catch a wrong one.
+
+```
+node scripts/shoot-app.js --url=<local url> --out=assets/shots/<name>.jpg \
+  [--login-url=… --fill='SEL::VALUE' --click=SEL] [--scroll-to=SEL] [--settle=MS]
+```
+
+Each back end needs its own database standing up first; all three are documented
+in their own repos. Two things cost an hour each and will do so again:
+
+- **Type, don't assign.** `el.value = x` fills the box on screen and leaves
+  React's `useState` and Livewire's component state empty, so the form submits
+  blank and the submit button never enables. The script types with
+  `Input.insertText`, which needs `Emulation.setFocusEmulationEnabled` — headless
+  pages are never focused, so without it every keystroke goes nowhere.
+- **Next.js `dev` did not hydrate at all** (no React fiber on any element, HMR
+  websocket failing in a loop). `next build && next start` fixed it, and a
+  production build is the more honest screenshot anyway.
+
+Also: **BridgeMTG deals are invisible without a `deal_assignees` row** — the
+pipeline query scopes to the signed-in user, so a seeded deal with no assignee
+renders as "No deals yet".
+
 ## Open
 
-- **Screenshot strip (`SHOTS`, `server/render.js:364`).** Ohav wants BridgeMTG,
-  Horse & Harmony and Thrive back ends in it. **The Thrive screenshot he sent
-  contains real student names** — six in the birthdays row, three in the intake
-  queue, plus a staff member and Reichman University. Naming consent covers
-  *Thrive as a client*, not the students inside it. BridgeMTG and H&H back ends
-  will hold real borrowers and riders. **Do not publish these unredacted.**
-  Recommended: screenshot against `scripts/seed-preview.js` demo data.
-- The existing shots are **illegible on a phone** — 900×562 desktop captures at
-  ~390px. Either hide under 900px or make the strip a horizontal swipe.
+- The strip is **six shots now, and still illegible on a phone** — 900×562
+  desktop captures at ~390px, and twice as many of them. Either hide under 900px
+  or make it a horizontal swipe. This got worse, not better.
+- **BridgeMTG and Horse & Harmony are real third parties** and their back ends
+  are now pictured on a public page. `client.named: true` was already set for
+  both and the running board already names them, so this is not a new decision —
+  but it is a bigger surface than a name, and neither business has been recorded
+  as having agreed. Ohav's call.
+- Neither BridgeMTG nor Horse & Harmony has a **demo-data seeder** of its own;
+  the fixtures for these shots were written as throwaway scripts. If the strip is
+  ever re-taken, that work repeats.
 - The pricing headline runs to **four lines on mobile**; a shorter mobile variant
   would tighten that section.
 - The mobile hero is **cramped** — six blocks, two paragraphs and two buttons
