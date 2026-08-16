@@ -202,6 +202,69 @@ Also: **BridgeMTG deals are invisible without a `deal_assignees` row** — the
 pipeline query scopes to the signed-in user, so a seeded deal with no assignee
 renders as "No deals yet".
 
+## 7. Pricing, after Ariel's review
+
+Three changes, and **two of them are one change** — do not undo either alone.
+
+### The hero panel now prices the person, not just the licences
+
+`.swork` in `rentPanel()`. The panel used to stop at $290 of subscriptions, which
+was its weakest point: $290 is not a frightening number, and §2 already concedes
+the page does not claim to be cheaper in year one. Ariel's note — *"we dont
+necessarily save u money on the saas fee but we save u money on manpower"* — is
+the argument that survives a spreadsheet, because the person reconciling between
+five tools costs an order of magnitude more than the tools.
+
+The published figure is a **break-even, not a salary**: `reconcileBreakEven()`
+divides the licence total by four hours a week, so it is arithmetic a reader can
+check rather than a claim about their payroll. Four hours is the low end on
+purpose. Computed, never typed, same as `rentTotal()`.
+
+The hours are said in words ("half a day a week") rather than printed from
+`reconcileMonthly()`, because that rounds to 17 and *"17 hours a month"* sitting
+beside *"$17 an hour"* read as one number written twice.
+
+### The entry rung went $200 → $300 a month
+
+Ariel: *"$200 a month is low."* The ladder's own evidence agrees — a light live
+system runs ~5 h/mo, so $200 was an effective **$40/hr** against a published
+**$125/hr** overflow rate.
+
+**This is the half that cannot stand alone.** $200 sat under the $290 rent total
+and the panel put them side by side, so raising it inverts the one juxtaposition
+the panel had. It only works because the labour line landed in the same commit:
+the comparison is no longer $290 vs $200, it is $290 *plus the person* vs $300
+flat. No case study moved — every one is `stack` or `platform`, none is `tool`.
+
+### All four rungs now show what they include
+
+`#askAll`, rendered by `script.js`. The picker showed one rung at a time, so
+comparing meant clicking and remembering.
+
+It is deliberately **not** a tier table. Ordered by the situation you are in, the
+money is a small muted line at the **foot** of each card, and it is a *third way
+into the same `askSel` state* — the sentence and the pills were already two, and
+the rule that none of them owns the state is what stops them drifting. Promote
+the price to the card heading and this becomes the rental frame the whole page
+argues against, with $15,000 on screen before anyone has read what it is for.
+
+Two things that are easy to undo by accident:
+
+- **`.ask-ticks` at the top only renders for "Not sure yet".** The grid carries
+  every rung's ticks, so showing both printed the same three lines twice about
+  250px apart. But the pilot is deliberately not in the grid — it is not a
+  package, and `quote()` does not know about it either — so its ticks would have
+  nowhere else to go. Hence the conditional, not a deletion.
+- **Below 560px the grid is a horizontal swipe.** Stacked, four cards were 949px
+  on a 390px phone — longer than the whole section was before they existed;
+  swiping brings it back to 294px. The selected card is centred by setting the
+  strip's own `scrollLeft`, **not** `scrollIntoView`, which is entitled to scroll
+  the page vertically and would yank a first-time visitor down the page on load.
+  `askReady` guards the first render for the same reason.
+
+`#price` is now 1,149px at 1440 (was ~835px), and 1,485px at 390px. Still far
+below the 2,046px the merge in §1 was undoing.
+
 ## Open
 
 - The strip is still **illegible on a phone** — 900×562 desktop captures at

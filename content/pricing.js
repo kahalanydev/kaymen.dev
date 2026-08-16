@@ -68,8 +68,26 @@ const BASES = [
        database with logins, that they own — for one part of the business. Price
        a system at $2,500 and it reads as cheap, which is the truth. So this rung
        names the thing, not the task, and the ticks answer "why not a
-       spreadsheet" rather than describing how we work. */
-    id: 'tool', from: 2500, mo: 200,
+       spreadsheet" rather than describing how we work.
+
+       THE MONTHLY WENT $200 to $300 on 2026-08-16 (Ariel: "$200 a month is
+       low"). He is right, and the ladder's own evidence says so: a light live
+       system runs ~5 h/mo, so $200 was an effective $40/hr against a published
+       $125/hr overflow rate and a $200/hr agency comparison. The retainer is
+       where the business is; pricing it at a third of the overflow rate meant
+       maintenance was being subsidised out of build revenue.
+
+       WHY THIS WAS NOT SAFE TO DO ALONE. $200 sat under the $290 rent-stack
+       total, and the hero panel put them side by side — so raising it inverts
+       the one juxtaposition the panel had. It is only defensible because the
+       labour line landed in the same change: the comparison is no longer $290
+       against $200, it is $290 PLUS the person reconciling against $300 flat.
+       Fixing the argument is what paid for the price rise. Do not undo one
+       without the other.
+
+       Still deliberately the cheapest thing on the page, and still a clear step
+       below `stack` at $450. */
+    id: 'tool', from: 2500, mo: 300,
     chip: 'Your first real system',
     name: 'One part of the business, on software you own',
     say: 'a real system for the part of the business still running on spreadsheets',
@@ -171,7 +189,29 @@ function quote(tierId, addonIds) {
 
    afterHires: the per-seat lines run about $39 a head, so three more people add
    roughly $117. Everything is a "from" and the total is summed in rentTotal(),
-   never typed, so the panel cannot disagree with its own line items. */
+   never typed, so the panel cannot disagree with its own line items.
+
+   THE LABOUR LINE (added 2026-08-16, Ariel's note). The panel used to stop at
+   the licences, and that was its weakest point: $290 is not a frightening
+   number, and this file already concedes the page does not claim to be cheaper
+   in year one. The cost that actually hurts a business running five disconnected
+   tools is the PERSON reconciling between them, and it is nowhere on the invoice
+   — Ariel's exact words were "we dont necessarily save u money on the saas fee
+   but we save u money on manpower".
+
+   reconcileHours is deliberately FOUR — half a day a week, the low end of
+   plausible, because the argument gets weaker if it sounds greedy. The number
+   published is not a salary, it is a BREAK-EVEN: reconcileBreakEven() divides
+   the licence total by those hours, so the claim is arithmetic the reader can
+   check rather than an assertion about their payroll. At $290 over 17.3 h/mo it
+   lands near $17/hr, i.e. below almost any wage — which is the point. It is
+   computed, never typed, for the same reason as rentTotal().
+
+   Note the scope: the ladder doc warns "do not build a per-seat TCO argument; it
+   does not hold at this size", and it is right. This is not a per-seat argument
+   and it is not aimed at the three-person brokerage — it sits on a panel that
+   says "team of five" out loud, which is the size where somebody really is
+   spending half a day a week on this. */
 const RENT_STACK = {
   label: 'team of five',
   rows: [
@@ -183,8 +223,15 @@ const RENT_STACK = {
   ],
   hires: 3,
   afterHires: 405,
+  reconcileHours: 4,
 };
 const rentTotal = () => RENT_STACK.rows.reduce((s, r) => s + r.mo, 0);
+
+/** Hours a month behind RENT_STACK.reconcileHours — 52 weeks over 12 months. */
+const reconcileMonthly = () => (RENT_STACK.reconcileHours * 52) / 12;
+
+/** The wage at which the person costs the same as every licence combined. */
+const reconcileBreakEven = () => rentTotal() / reconcileMonthly();
 
 const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
 
@@ -197,11 +244,20 @@ const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
 function routes() {
   return BASES.map((b) => ({
     id: b.id, chip: b.chip, name: b.name, say: b.say, note: b.note, ticks: b.ticks,
+    /* `plan` is what the MONTHLY buys, and it is the answer to the question the
+       picker could not answer: "what does each of these actually include?" Only
+       the rungs have one — the pilot is not a plan, which is why the comparison
+       grid keys off its presence rather than filtering on id. */
+    plan: b.plan,
     price: b.from ? 'from ' + money(b.from) : 'no build',
     n1: b.from ? money(b.from) : 'No build fee',
     s1: b.from ? 'to build, once' : 'we take it as it is',
     n2: money(b.mo),
     s2: b.from ? 'a month after that' : 'a month',
+    /* One compact line for the comparison grid, where the money is deliberately
+       subordinate to what you get. Assembled here so no second file has to know
+       how a "no build fee" rung reads. */
+    money: b.from ? `from ${money(b.from)} · ${money(b.mo)}/mo` : `no build fee · ${money(b.mo)}/mo`,
   })).concat([{
     id: UNSURE.id, chip: UNSURE.chip, name: UNSURE.name, say: UNSURE.say,
     note: UNSURE.note, ticks: UNSURE.ticks,
@@ -209,13 +265,14 @@ function routes() {
     n1: 'Free', s1: 'one conversation',
     n2: money(PILOT.price),
     s2: `only if you want a working prototype too, credited in full`,
+    money: `free · ${money(PILOT.price)} pilot, optional`,
   }]);
 }
 
 const API = {
   OVERFLOW_HOURLY, PILOT, PARTNER_AT, PARTNER,
   BASES, ADDONS, UNSURE, COMPARE, quote, routes,
-  RENT_STACK, rentTotal,
+  RENT_STACK, rentTotal, reconcileMonthly, reconcileBreakEven,
 };
 
 /* Dual export. require()d by server/render.js, and served as a plain script to

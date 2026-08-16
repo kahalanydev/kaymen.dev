@@ -319,13 +319,21 @@ function spark(days) {
    in the HTML rather than appearing a beat later.
    Numbers come from content/pricing.js; the total is summed here, never typed. */
 function rentPanel() {
-  const { RENT_STACK: S, rentTotal, BASES } = PRICING;
+  const { RENT_STACK: S, rentTotal, reconcileMonthly, reconcileBreakEven, BASES } = PRICING;
   const entry = BASES.find((b) => b.id === 'tool');
   return `<aside class="stack rv" aria-label="What renting it costs">
         <div class="sh"><span>What renting it costs</span><i>${esc(S.label)}</i></div>
         ${S.rows.map((r) => `<div class="srow"><b>${esc(r.name)}</b><span>${money(r.mo)}</span></div>`).join('\n        ')}
         <div class="stot"><b>${money(rentTotal())}<span> a month</span></b><span>Five bills, and none of them talk to each other.</span></div>
-        <div class="sgrow">Priced per person, so growing costs twice. <b>${S.hires} more hires is about ${money(S.afterHires)}</b>, and none of it becomes yours.</div>
+        <!-- The licences were never the expensive part, and the panel used to stop
+             before saying so. Half a day a week is the low end on purpose; the
+             figure published is a break-even, not a salary, so it is arithmetic
+             the reader can check. Computed in content/pricing.js.
+             The hours are said in words rather than as reconcileMonthly() — it
+             rounds to 17, and "17 hours a month" sitting beside "$17 an hour"
+             read as one number stated twice. -->
+        <div class="swork"><b>And somebody keeps them in step.</b> Half a day a week on that beats all five bills combined at any wage over <b>${money(reconcileBreakEven())} an hour</b> — and it never arrives as an invoice.</div>
+        <div class="sgrow">Priced per person, so growing costs twice. <b>${S.hires} more hires is about ${money(S.afterHires)}</b> in licences alone, and none of it becomes yours.</div>
         <div class="sown">
           <div class="k">One system, yours</div>
           <div class="v">From ${money(entry.from)} <small>once</small></div>

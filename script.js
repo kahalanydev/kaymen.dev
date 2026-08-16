@@ -134,6 +134,8 @@
        away anyone whose budget started lower — while $2,500 still leads up the
        ladder for anyone whose problem is bigger. */
     var askSel = 'tool';
+    /* False until the first askRender has run, so nothing auto-scrolls on load. */
+    var askReady = false;
     var askEsc = function (s) {
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
     };
@@ -149,6 +151,45 @@
     askChips.querySelectorAll('.ask-chip').forEach(function (c) {
       c.addEventListener('click', function () { askSel = c.dataset.id; askRender(); });
     });
+
+    /* The comparison grid. Same data, same state, THIRD way in — the sentence
+       and the pills were already two, and this follows the same rule: nothing
+       here owns askSel, so none of them can drift apart.
+
+       Only rungs with a `plan` are shown. The pilot is not a package and quote()
+       does not know about it either, so putting it in a row of things you get
+       for a monthly fee would be the one card that lies about what it is.
+
+       Money is a single muted line at the FOOT of each card, never the heading.
+       The moment the price becomes the column header this stops being "what
+       changes as the business gets harder" and becomes a SaaS tier table — which
+       is the frame the whole page argues against, and it would put $15,000 on
+       screen before anyone has read a word. */
+    var askAll = document.getElementById('askAll');
+    var askPkgs = ASK.filter(function (r) { return r.plan; });
+    if (askAll) {
+      askAll.innerHTML =
+        '<p class="ask-hint">or see what each one includes</p>' +
+        '<div class="ask-grid">' + askPkgs.map(function (r) {
+          return '<button class="ask-card" data-id="' + r.id + '" aria-pressed="false">' +
+            '<b>' + askEsc(r.chip) + '</b>' +
+            '<ul>' + r.ticks.map(function (t) {
+              return '<li>' + askEsc(t) + '</li>';
+            }).join('') + '</ul>' +
+            '<i class="pl"><span>The monthly covers</span>' + askEsc(r.plan) + '</i>' +
+            '<i class="mn">' + askEsc(r.money) + '</i>' +
+          '</button>';
+        }).join('') + '</div>';
+      askAll.querySelectorAll('.ask-card').forEach(function (c) {
+        c.addEventListener('click', function () {
+          askSel = c.dataset.id;
+          askRender();
+          /* Picked from down here, the answer is up there. Without this the page
+             looks like the click did nothing. */
+          document.querySelector('.ask-out').scrollIntoView({ block: 'center', behavior: 'smooth' });
+        });
+      });
+    }
 
     var askPopClose = function () {
       askPop.hidden = true;
@@ -201,7 +242,15 @@
       if (!r) return;
       askSay.textContent = r.say;
       document.getElementById('askNote').textContent = r.note;
-      document.getElementById('askTicks').innerHTML = r.ticks.map(function (t) {
+      /* These ticks are also the grid's ticks, so showing both printed the same
+         three lines twice about 250px apart. The grid wins — it shows every
+         rung's, not just the chosen one. But "Not sure yet" is deliberately NOT
+         in the grid (it is not a package), so its ticks would have nowhere to go.
+         Hence: top row only for whatever the grid cannot carry. */
+      var askTicks = document.getElementById('askTicks');
+      var inGrid = askPkgs.some(function (p) { return p.id === r.id; });
+      askTicks.hidden = inGrid;
+      askTicks.innerHTML = inGrid ? '' : r.ticks.map(function (t) {
         return '<li>' + askEsc(t) + '</li>';
       }).join('');
       document.getElementById('askBuild').innerHTML =
@@ -213,6 +262,30 @@
         c.classList.toggle('on', on);
         c.setAttribute('aria-selected', on);
       });
+      if (askAll) {
+        var askGrid = askAll.querySelector('.ask-grid');
+        /* Below 560px the grid is a horizontal swipe, so the chosen card is
+           usually off-screen — on load it opens on card one while the answer is
+           card two, and picking a chip looks like it did nothing.
+
+           Drive the strip's OWN scrollLeft rather than scrollIntoView: that can
+           only ever move this container, where scrollIntoView is entitled to
+           scroll the page vertically too and would yank a first-time visitor
+           down to the pricing grid before they had read the hero. .ask-grid is
+           position:relative so offsetLeft is measured inside it. */
+        askAll.querySelectorAll('.ask-card').forEach(function (c) {
+          var on = c.dataset.id === askSel;
+          c.classList.toggle('on', on);
+          c.setAttribute('aria-pressed', on);
+          if (on && askGrid && askGrid.scrollWidth > askGrid.clientWidth) {
+            askGrid.scrollTo({
+              left: Math.max(0, c.offsetLeft - (askGrid.clientWidth - c.offsetWidth) / 2),
+              behavior: askReady ? 'smooth' : 'auto',
+            });
+          }
+        });
+      }
+      askReady = true;
     };
     askRender();
   }
