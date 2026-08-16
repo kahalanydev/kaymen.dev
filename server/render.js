@@ -390,7 +390,9 @@ function boardRow(s) {
   const facts = s.scale.map((x) => `${x.value} ${x.label}`).join(' · ');
   return `<div class="brow">
           <span class="dot"></span>
-          <div class="nm">${esc(s.name)} <i>${esc(area ? area.label : '')} · ${s.own ? 'Ours' : 'Named on request'}</i></div>
+          <div class="nm">${esc(s.name)} <i>${esc(area ? area.label : '')} · ${
+            s.own ? 'Ours' : (clientName(s) || 'Named on request')
+          }</i></div>
           <div class="wt">${esc(facts)}</div>
           <div class="yr">LIVE SINCE ${esc(s.year)}</div>
         </div>`;
