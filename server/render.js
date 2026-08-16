@@ -313,6 +313,31 @@ function spark(days) {
     .join('');
 }
 
+/* The hero's right-hand panel: what the stack they already pay for costs, and
+   what owning one system costs instead. Server-rendered rather than drawn by
+   script.js like the picker is, because this one is above the fold and must be
+   in the HTML rather than appearing a beat later.
+   Numbers come from content/pricing.js; the total is summed here, never typed. */
+function rentPanel() {
+  const { RENT_STACK: S, rentTotal, BASES } = PRICING;
+  const entry = BASES.find((b) => b.id === 'tool');
+  return `<aside class="stack rv" aria-label="What renting it costs">
+        <div class="sh"><span>What renting it costs</span><i>${esc(S.label)}</i></div>
+        ${S.rows.map((r) => `<div class="srow"><b>${esc(r.name)}</b><span>${money(r.mo)}</span></div>`).join('\n        ')}
+        <div class="stot"><b>${money(rentTotal())}<span> a month</span></b><span>Five bills, and none of them talk to each other.</span></div>
+        <div class="sgrow">Priced per person, so growing costs twice. <b>${S.hires} more hires is about ${money(S.afterHires)}</b>, and none of it becomes yours.</div>
+        <div class="sown">
+          <div class="k">One system, yours</div>
+          <div class="v">From ${money(entry.from)} <small>once</small></div>
+          <div class="n">Then <b>${money(entry.mo)} a month</b>, flat. Add the whole team, the next branch, the busiest month — <b>the price does not move</b>.</div>
+        </div>
+      </aside>`;
+}
+
+/* Unused since the hero changed on 2026-08-16: the fleet panel was the hero
+   graphic and rentPanel took that slot. Kept because the same board still
+   renders in #running below, so nothing about it is stale, and it is the
+   obvious thing to reach for if the hero ever wants the proof back. */
 function fleetPanel() {
   const { FLEET, TYPICAL, MONTHS } = STATS;
   const window = `${MONTH_LABEL(MONTHS[0])} to ${MONTH_LABEL(MONTHS[MONTHS.length - 1])}`;
@@ -695,6 +720,7 @@ function notFoundPage() {
 module.exports = {
   homeSections,
   fleetPanel,
+  rentPanel,
   liveCount: () => String(STATS.LIVE.running),
   caseStudyPage,
   workIndexPage,

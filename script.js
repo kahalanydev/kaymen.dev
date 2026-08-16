@@ -195,6 +195,283 @@
     askRender();
   }
 
+  /* ---- one source, spreading ------------------------------------------------
+     The hero's argument, drawn and left running.
+
+     One bright node is the source of truth. Every other node in the picture is
+     descended from it: a node is only ever created by an existing node throwing
+     it outward, and it is joined to its parent at birth. Woken nodes also reach
+     sideways to a neighbour they are not already joined to, which is what turns a
+     tree into a system — front end, back end and an integration all end up wired
+     to more than one thing.
+
+     THREE PROPERTIES IT HAS TO KEEP, and all three were broken in the first cut:
+
+     1. NOTHING FLOATS. The graph is connected at all times. Growth cannot break
+        that because every new node arrives attached. Retirement can, so only
+        LEAVES are ever retired — removing a node of degree one is the one
+        deletion that provably cannot split a connected graph. The earlier version
+        retired the oldest node regardless of degree, which is exactly how the
+        drifting polygons appeared.
+
+     2. IT FILLS. Growth is not a random walk. Each spawn tries a dozen candidate
+        positions and keeps the one furthest from every existing node, so the mesh
+        pushes outward into empty space in every direction at once rather than
+        knotting up near the source.
+
+     3. IT STAYS ALIVE. Pulses cascade: when one lands it is forwarded down some
+        of that node's other edges, so signal keeps moving through the mesh long
+        after it has stopped growing. The source also re-fires on a timer.
+
+     It sits behind copy, so every alpha here is low and stays low.
+     ------------------------------------------------------------------------- */
+  (function () {
+    var cv = document.getElementById('heroNet'); if (!cv) return;
+    var ctx = cv.getContext('2d');
+    var w = 0, h = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var nodes = [], edges = [], pulses = [], tick = 0;
+
+    /* The source of truth IS the mark: the circular cut of the three stones,
+       the same drawing the brand set ships as kaymen-avatar-circle.svg.
+       Embedded rather than linked so the canvas never waits on a round trip and
+       the mark cannot go missing. Everything in the mesh descends from it. */
+    var SOURCE_R = 26;
+    var logo = new Image(), logoReady = false;
+    logo.onload = function () { logoReady = true; };
+    logo.src = 'data:image/svg+xml;base64,PCEtLSBnZW5lcmF0ZWQgYnkgc2NyaXB0cy9idWlsZC1pY29ucy5qcyBmcm9tIGNvbnRlbnQvbG9nby5qczsgZG8gbm90IGhhbmQtZWRpdCAtLT4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iMTYiIGZpbGw9IiMxNjMwM2QiLz48cGF0aCBkPSJNNi4yNSAxNi4xOEExMi41IDEyLjUgMCAwIDEgMTEuNTcgMTIuMzFMMTMuODcgMTguMzlBNiA2IDAgMCAwIDExLjMyIDIwLjI0WiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC40MiIvPjxwYXRoIGQ9Ik0xMi43MSAxMS45NEExMi41IDEyLjUgMCAwIDEgMTkuMjkgMTEuOTRMMTcuNTggMTguMjFBNiA2IDAgMCAwIDE0LjQyIDE4LjIxWiIgZmlsbD0iIzJiYmNiMyIvPjxwYXRoIGQ9Ik0yMC40MyAxMi4zMUExMi41IDEyLjUgMCAwIDEgMjUuNzUgMTYuMThMMjAuNjggMjAuMjRBNiA2IDAgMCAwIDE4LjEzIDE4LjM5WiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC40MiIvPjwvc3ZnPgo=';
+
+    var MAX_NODES = 52;
+    var MIN_GAP = 58;          /* nodes never sit closer than this */
+    var ACCENT = '43,188,179';
+
+    var srcX = 0, srcY = 0;
+
+    /* Where the corridor actually is, measured rather than assumed. */
+    function locate(r) {
+      var host = cv.closest ? cv.closest(".hero") : null;
+      var col = host && host.querySelector(".hero-grid > div:first-child");
+      var card = host && host.querySelector(".stack");
+      if (!col || !card) { srcX = w * 0.6; srcY = h * 0.44; return; }
+      var c = card.getBoundingClientRect(), t = col.getBoundingClientRect();
+      var gap = (c.left - r.left) - (t.right - r.left);
+      if (gap < 30 || c.left < t.left) {   /* stacked layout: no corridor */
+        srcX = w * 0.5; srcY = h * 0.30;
+      } else {
+        /* sit the whole mark clear of the card rather than half under it */
+        srcX = (c.left - r.left) - SOURCE_R - 12;
+        srcY = (c.top - r.top) + c.height / 2;
+      }
+      srcX = Math.max(SOURCE_R + 20, Math.min(w - SOURCE_R - 20, srcX));
+      srcY = Math.max(SOURCE_R + 20, Math.min(h - SOURCE_R - 20, srcY));
+    }
+
+    function size() {
+      var r = cv.parentNode.getBoundingClientRect();
+      w = r.width; h = r.height;
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      locate(r);
+      if (!nodes.length) seed();
+      else { nodes[0].x = srcX; nodes[0].y = srcY; }   /* keep it in the corridor on resize */
+    }
+
+    function seed() {
+      nodes = [{
+        x: srcX, y: srcY, r: SOURCE_R,
+        act: 1, born: 0, dying: 0, source: true,
+        ph: 0, sp: 0, ox: 0, oy: 0,
+      }];
+      edges = []; pulses = [];
+    }
+
+    function edgesOf(n) {
+      return edges.filter(function (e) { return e.a === n || e.b === n; });
+    }
+    function joined(a, b) {
+      for (var i = 0; i < edges.length; i++) {
+        if ((edges[i].a === a && edges[i].b === b) || (edges[i].a === b && edges[i].b === a)) return true;
+      }
+      return false;
+    }
+    function link(a, b, cross) {
+      if (a === b || joined(a, b)) return null;
+      var e = { a: a, b: b, life: 0, cross: !!cross };
+      edges.push(e);
+      return e;
+    }
+    function fire(e, from) {
+      pulses.push({ e: e, from: from, t: 0, sp: 0.011 + Math.random() * 0.009 });
+    }
+
+    /* GROW — a woken node throws a new one into the emptiest space it can find.
+       The candidate search is what makes the mesh spread evenly instead of
+       bunching, and the parent link is what keeps the graph connected. */
+    function grow() {
+      if (nodes.length >= MAX_NODES) return;
+      var live = nodes.filter(function (n) { return n.act > 0.5 && !n.dying; });
+      if (!live.length) return;
+
+      var bestParent = null, bestPos = null, bestGap = MIN_GAP;
+      for (var i = 0; i < 14; i++) {
+        var p = live[(Math.random() * live.length) | 0];
+        var a = Math.random() * Math.PI * 2;
+        var d = (p.source ? SOURCE_R + 66 : 84) + Math.random() * 108;
+        var x = p.x + Math.cos(a) * d, y = p.y + Math.sin(a) * d;
+        if (x < 44 || x > w - 44 || y < 44 || y > h - 44) continue;
+        var near = 1e9;
+        for (var j = 0; j < nodes.length; j++) {
+          var dd = Math.hypot(nodes[j].x - x, nodes[j].y - y);
+          if (dd < near) near = dd;
+        }
+        if (near > bestGap) { bestGap = near; bestParent = p; bestPos = { x: x, y: y }; }
+      }
+      if (!bestParent) return;
+
+      var n = {
+        x: bestPos.x, y: bestPos.y, r: 2.4 + Math.random() * 2.0,
+        act: 0, born: tick, dying: 0, source: false,
+        ph: Math.random() * 6.28, sp: 0.3 + Math.random() * 0.6, ox: 0, oy: 0,
+      };
+      nodes.push(n);
+      var e = link(bestParent, n);
+      if (e) fire(e, bestParent);
+    }
+
+    /* WEAVE — sideways links between nodes that already exist. Safe for
+       connectivity by definition: adding an edge can never disconnect a graph. */
+    function weave() {
+      var live = nodes.filter(function (n) { return n.act > 0.7 && !n.dying; });
+      if (live.length < 4) return;
+      var a = live[(Math.random() * live.length) | 0];
+      var best = null, bd = 1e9;
+      live.forEach(function (b) {
+        if (b === a || joined(a, b)) return;
+        var d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (d < bd && d < 215) { bd = d; best = b; }
+      });
+      if (best) { var e = link(a, best, true); if (e) fire(e, a); }
+    }
+
+    /* RETIRE — leaves only. This is the whole fix for the floating fragments:
+       a node of degree one is the only node whose removal cannot split the graph. */
+    function retire() {
+      if (nodes.length < MAX_NODES) return;
+      var leaves = nodes.filter(function (n) {
+        return !n.source && !n.dying && edgesOf(n).length === 1;
+      });
+      if (!leaves.length) return;          /* nothing safe to drop — hold */
+      var oldest = leaves[0];
+      leaves.forEach(function (n) { if (n.born < oldest.born) oldest = n; });
+      oldest.dying = 1;
+    }
+
+    function step() {
+      tick++;
+
+      /* several spawns per beat, so it opens in every direction at once */
+      if (tick % 16 === 0) { grow(); grow(); }
+      if (tick % 70 === 0) weave();
+      if (tick % 130 === 0) retire();
+
+      if (tick % 150 === 0) {
+        var k = edgesOf(nodes[0]);
+        if (k.length) fire(k[(Math.random() * k.length) | 0], nodes[0]);
+      }
+
+      nodes.forEach(function (n) {
+        n.ox = Math.sin(tick * 0.004 * n.sp + n.ph) * 7;
+        n.oy = Math.cos(tick * 0.0033 * n.sp + n.ph) * 7;
+        if (n.dying) n.act -= 0.040;   /* MUST outpace the 0.03 edge fade below, or the
+                                    node survives its own edges and floats alone */
+        else if (n.act < 1) n.act = Math.min(1, n.act + 0.02);
+      });
+
+      edges.forEach(function (e) {
+        var alive = !e.a.dying && !e.b.dying;
+        e.life = alive ? Math.min(1, e.life + 0.02) : Math.max(0, e.life - 0.03);
+      });
+
+      var landed = [];
+      pulses = pulses.filter(function (p) {
+        p.t += p.sp;
+        if (p.t >= 1) {
+          var to = p.from === p.e.a ? p.e.b : p.e.a;
+          to.act = Math.max(to.act, 0.62);
+          landed.push(to);
+          return false;
+        }
+        return true;
+      });
+
+      /* cascade — signal keeps moving through the mesh once growth has stopped */
+      if (pulses.length < 26) {
+        landed.forEach(function (n) {
+          edgesOf(n).forEach(function (e) {
+            if (Math.random() < 0.30) fire(e, n);
+          });
+        });
+      }
+
+      nodes = nodes.filter(function (n) { return n.act > 0 || n.source; });
+      edges = edges.filter(function (e) {
+        return e.life > 0 && nodes.indexOf(e.a) > -1 && nodes.indexOf(e.b) > -1;
+      });
+      pulses = pulses.filter(function (p) { return edges.indexOf(p.e) > -1; });
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, w, h);
+
+      edges.forEach(function (e) {
+        var ax = e.a.x + e.a.ox, ay = e.a.y + e.a.oy;
+        var bx = e.b.x + e.b.ox, by = e.b.y + e.b.oy;
+        var al = e.life * Math.min(e.a.act, e.b.act) * (e.cross ? 0.13 : 0.19);
+        ctx.strokeStyle = 'rgba(' + ACCENT + ',' + al.toFixed(3) + ')';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+      });
+
+      pulses.forEach(function (p) {
+        var s = p.from, o = p.from === p.e.a ? p.e.b : p.e.a;
+        var ax = s.x + s.ox, ay = s.y + s.oy, bx = o.x + o.ox, by = o.y + o.oy;
+        var x = ax + (bx - ax) * p.t, y = ay + (by - ay) * p.t;
+        var fade = Math.sin(p.t * Math.PI);
+        var g = ctx.createRadialGradient(x, y, 0, x, y, 13);
+        g.addColorStop(0, 'rgba(' + ACCENT + ',' + (0.30 * fade).toFixed(3) + ')');
+        g.addColorStop(1, 'rgba(' + ACCENT + ',0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 13, 0, 6.29); ctx.fill();
+        ctx.fillStyle = 'rgba(' + ACCENT + ',' + (0.46 * fade).toFixed(3) + ')';
+        ctx.beginPath(); ctx.arc(x, y, 2, 0, 6.29); ctx.fill();
+      });
+
+      nodes.forEach(function (n) {
+        var x = n.x + n.ox, y = n.y + n.oy;
+        if (n.source) {
+          var pu = 0.5 + 0.5 * Math.sin(tick * 0.026);
+          var halo = SOURCE_R + 26 + pu * 16;
+          var g = ctx.createRadialGradient(x, y, SOURCE_R * 0.82, x, y, halo);
+          g.addColorStop(0, 'rgba(' + ACCENT + ',' + (0.16 + pu * 0.07).toFixed(3) + ')');
+          g.addColorStop(1, 'rgba(' + ACCENT + ',0)');
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, halo, 0, 6.29); ctx.fill();
+          if (logoReady) ctx.drawImage(logo, x - SOURCE_R, y - SOURCE_R, SOURCE_R * 2, SOURCE_R * 2);
+          return;
+        }
+        ctx.fillStyle = 'rgba(' + ACCENT + ',' + (0.26 * n.act).toFixed(3) + ')';
+        ctx.beginPath(); ctx.arc(x, y, n.r, 0, 6.29); ctx.fill();
+      });
+    }
+
+    function loop() { step(); draw(); requestAnimationFrame(loop); }
+
+
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { size(); draw(); return; }
+    size(); loop();
+    /* the grid moves as webfonts land, so take the measurement again after */
+    setTimeout(size, 400); setTimeout(size, 1400);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(size);
+    window.addEventListener('resize', size);
+  })();
+
   /* ---- idea form ----------------------------------------------------------
      Not in the mockup — the mockup's contact buttons were placeholders. This
      posts to /api/contact, which is rate-limited and gated on the honeypot

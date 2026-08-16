@@ -275,11 +275,24 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
 .rv.in{opacity:1;transform:none}
 
 /* ------------------------------------------------------------------- hero */
-.hero{padding-top:104px;padding-bottom:82px}
-@media (max-width:900px){.hero{padding-top:78px;padding-bottom:60px}}
-/* two columns so the right-hand third carries a graphic instead of nothing */
-.hero-grid{display:grid;gap:44px;align-items:center}
-@media (min-width:1040px){.hero-grid{grid-template-columns:minmax(0,1fr) 386px;gap:52px}}
+.hero{padding-top:104px;padding-bottom:82px;position:relative;overflow:hidden}
+@media (max-width:900px){.hero{padding-top:118px;padding-bottom:60px}}
+/* two columns: the argument on the left, what it costs to rent it on the right */
+.hero-grid{display:grid;gap:44px;align-items:center;position:relative;z-index:1}
+/* 1280, not 1040: the rail takes 224px plus its gaps before the grid gets a
+   look in, so at 1040 the text column was 247px and the headline ran to four
+   lines. Below this it stacks and the copy gets the full measure. */
+@media (min-width:1280px){.hero-grid{grid-template-columns:minmax(0,1.15fr) 360px;gap:48px}}
+
+/* the mesh sits behind everything and must never touch legibility */
+.hero-fx{position:absolute;inset:0;z-index:0;pointer-events:none}
+.hero-fx canvas{display:block;width:100%;height:100%}
+/* two soft blooms, the site's own ambient treatment brought up enough to see */
+.hero::before,.hero::after{
+  content:"";position:absolute;pointer-events:none;z-index:0;border-radius:50%;
+}
+.hero::before{width:900px;height:900px;top:-420px;left:-260px;background:radial-gradient(circle,rgba(43,188,179,.13),transparent 62%)}
+.hero::after{width:760px;height:760px;bottom:-420px;right:-200px;background:radial-gradient(circle,rgba(43,188,179,.10),transparent 64%)}
 .chip{
   display:inline-flex;align-items:center;gap:9px;
   background:rgba(255,255,255,.7);
@@ -289,18 +302,79 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
   box-shadow:0 2px 10px rgba(22,48,61,.05);margin-bottom:30px;
 }
 .chip b{color:var(--ink);font-weight:700}
+/* 4rem, not 4.1: "Own your software." measures 596px at 64px inside the 668px
+   column. At 70px it was 652px — a 16px margin that font rendering ate, and the
+   line wrapped to make three. Verified 2 lines at 1040 through 2560px. */
 .hero h1{
-  font-size:clamp(2.5rem,6vw,4.1rem);font-weight:800;letter-spacing:-.045em;line-height:1.05;
+  font-size:clamp(2.2rem,5.2vw,4rem);font-weight:800;letter-spacing:-.045em;line-height:1.05;
+}
+/* Between the two-column breakpoint and ~1400px the rail has already taken
+   224px plus its gaps, so the text column is ~469px at 1280 rather than the
+   668px it gets at 1440. 64px type needs 596px and wrapped into three lines
+   there. Sized to the column, not the viewport. */
+@media (min-width:1280px) and (max-width:1400px){
+  .hero h1{font-size:clamp(2.2rem,3.6vw,2.9rem)}
 }
 .hero h1 span{color:var(--accent)}
+/* the struck word: the one moment of motion, on the word the headline turns on */
+.hero h1 s{text-decoration:none;position:relative;color:var(--muted);opacity:.55}
+.hero h1 s::after{
+  content:"";position:absolute;left:-2px;right:-2px;top:54%;height:5px;
+  background:var(--accent);border-radius:3px;
+  transform-origin:left center;animation:strike .62s cubic-bezier(.65,0,.35,1) .45s both;
+}
+@keyframes strike{from{transform:rotate(-1.6deg) scaleX(0)}to{transform:rotate(-1.6deg) scaleX(1)}}
+@media (prefers-reduced-motion:reduce){
+  .hero h1 s::after{animation:none;transform:rotate(-1.6deg)}
+}
 .hero .lead{
   font-size:clamp(1rem,1.6vw,1.15rem);color:var(--muted);margin-top:24px;
   max-width:50ch;line-height:1.75;
 }
-.hero .kick{
-  font-size:14px;color:var(--muted);margin-top:18px;max-width:50ch;
-  padding-left:15px;border-left:2px solid var(--accent);line-height:1.6;
+.hero .lead b{color:var(--ink);font-weight:600}
+.hero .lead-2{margin-top:14px}
+
+/* what they get — the offer, not a second complaint about the competition */
+.gets{display:grid;gap:8px;margin-top:22px;list-style:none}
+@media (min-width:560px){.gets{grid-template-columns:1fr 1fr}}
+@media (min-width:1040px){.gets{grid-template-columns:1fr 1fr 1fr}}
+.gets li{
+  display:flex;align-items:flex-start;gap:8px;
+  border:1px solid rgba(43,188,179,.3);background:var(--accent-soft);
+  border-radius:12px;padding:10px 12px;
 }
+.gets svg{
+  width:14px;height:14px;flex:none;margin-top:2px;stroke:var(--accent-dark);
+  stroke-width:3.2;fill:none;stroke-linecap:round;stroke-linejoin:round;
+}
+.gets b{display:block;font-size:13px;font-weight:700;letter-spacing:-.015em;line-height:1.25}
+.gets span span{display:block;font-size:11.5px;color:var(--muted);margin-top:1px;line-height:1.35}
+
+/* the panel: renting it, inverted to deep so the money argument has weight, and
+   the way out of it rendered as a white block breaking the dark. The metaphor
+   does the work — locked in is dark, owning it is not. */
+.stack{border:1px solid rgba(255,255,255,.1);border-radius:20px;overflow:hidden;background:var(--deep);box-shadow:0 22px 60px rgba(22,48,61,.28)}
+.stack .sh{
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  padding:15px 22px 12px;border-bottom:1px solid rgba(255,255,255,.12);
+  font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:rgba(255,255,255,.5);
+}
+.stack .sh i{font-style:normal;letter-spacing:0;text-transform:none;font-size:11.5px;font-weight:500}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 22px;font-size:13.5px}
+.srow b{font-weight:400;color:rgba(255,255,255,.82)}
+.srow span{font-family:var(--display);font-weight:700;font-size:13.5px;color:rgba(255,255,255,.55);font-variant-numeric:tabular-nums}
+.stot{padding:13px 22px 14px;border-top:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
+.stot b{font-family:var(--display);font-size:30px;font-weight:800;letter-spacing:-.045em;font-variant-numeric:tabular-nums;display:block;color:#fff}
+.stot b span{font-family:var(--body);font-size:13px;font-weight:500;letter-spacing:0;color:rgba(255,255,255,.55)}
+.stot > span{display:block;font-size:12.5px;color:rgba(255,255,255,.55);margin-top:3px;line-height:1.5}
+.sgrow{padding:11px 22px;font-size:12px;color:rgba(255,255,255,.55);border-top:1px solid rgba(255,255,255,.12);line-height:1.55}
+.sgrow b{color:#fff;font-weight:600}
+.sown{padding:18px 20px 20px;background:#fff;margin:10px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.22)}
+.sown .k{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-dark)}
+.sown .v{font-family:var(--display);font-size:28px;font-weight:800;letter-spacing:-.045em;color:var(--accent-dark);margin-top:5px;line-height:1.1}
+.sown .v small{font-family:var(--body);font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0}
+.sown .n{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.6}
+.sown .n b{color:var(--ink);font-weight:600}
 .actions{display:flex;gap:12px;margin-top:38px;flex-wrap:wrap}
 .btn{
   display:inline-flex;align-items:center;gap:8px;

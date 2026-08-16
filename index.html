@@ -103,20 +103,45 @@
 
   <!-- ================================================================ HERO -->
   <section class="hero" id="start">
+    <!-- The mesh: one source, spreading. Drawn by script.js into this canvas,
+         behind everything. The source is the circular mark and its position is
+         measured from the live layout, not set as a percentage — the canvas is
+         full-bleed while the content is capped at 1120px, so a fixed percentage
+         slid behind the panel on wide screens. -->
+    <div class="hero-fx" aria-hidden="true"><canvas id="heroNet"></canvas></div>
     <div class="wrap hero-grid">
       <div class="rv">
         <div class="chip"><span class="pulse"></span><span><b><!--{{LIVE}}--> systems</b> running in production right now</span></div>
-        <h1>We build it.<br>Then we <span>run it</span>.</h1>
-        <p class="lead">Multi-tenant platforms, hard integrations, and apps in the stores. Built and run by the same people. A portfolio shows finished work. Everything here is still switched on.</p>
+        <!-- Two lines, and the size is what holds it there: "Own your software."
+             measures 596px at 64px inside a 668px column. At 70px it was 652px,
+             a 16px margin, and it wrapped into three on wider screens. -->
+        <h1>Own your software.<br>Stop <s>renting</s> <span>it</span>.</h1>
+        <p class="lead">Five subscriptions, each doing half a job. Somebody reconciles them by hand every week, <b>every hire costs more</b>, and you own none of it.</p>
+        <p class="lead lead-2"><b>We build the one system that does all of it.</b> Yours, on your servers, and it scales for free.</p>
+        <!-- What they GET. These were "what you do not have" chips, which argued
+             against the competition immediately after the offer and read as a
+             second complaint. A buyer who has just seen the price wants to know
+             what the price buys. -->
+        <ul class="gets">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Everything in one system</b><span>Quotes, jobs, money, files</span></span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Unlimited people</b><span>Hire twenty, same bill</span></span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>Built to scale</b><span>New branch, same system</span></span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>You own all of it</b><span>Code, data, servers</span></span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>One source of truth</b><span>Reports build themselves</span></span></li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span><b>No lock-in</b><span>Take it with you, any time</span></span></li>
+        </ul>
         <div class="actions">
           <a href="#price" class="btn btn-primary" data-track="cta-what-you-need">What do you need?</a>
           <a href="#running" class="btn btn-ghost" data-track="cta-see-running">See what's running</a>
         </div>
       </div>
 
-      <!-- The graphic: the fleet, drawn from measured git history.
-           Server-rendered from content/stats.js, see server/render.js. -->
-      <!--{{FLEET}}-->
+      <!-- The panel: the subscription stack they already pay for, against owning
+           one system. Server-rendered from content/pricing.js by server/render.js,
+           because it sits above the fold and must be in the HTML rather than
+           appearing a beat after the script runs. Replaced the fleet panel on
+           2026-08-16; the same board still renders in #running below. -->
+      <!--{{RENT}}-->
     </div>
   </section>
 

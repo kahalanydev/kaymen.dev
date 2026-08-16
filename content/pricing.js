@@ -149,6 +149,30 @@ function quote(tierId, addonIds) {
   return { base, picked, build, monthly, partnership: build >= PARTNER_AT };
 }
 
+/* --- what the alternative costs, for the hero -------------------------------
+   ILLUSTRATIVE, NOT RESEARCHED. Sized for a team of about five from public list
+   prices so the hero can make its argument. This is the ONLY claim on the
+   homepage about somebody else's pricing, which is the same category where the
+   $200/hr agency rate got checked against a published guide before it shipped.
+   Verify these the same way before treating them as fact.
+
+   The total is derived, never typed, so the panel cannot disagree with its own
+   line items the way the OG cards once disagreed with the homepage. */
+const RENT_STACK = {
+  label: 'team of five',
+  rows: [
+    { name: 'Work & projects', mo: 45 },
+    { name: 'CRM & pipeline', mo: 60 },
+    { name: 'Invoicing & books', mo: 50 },
+    { name: 'Forms & scheduling', mo: 30 },
+    { name: 'Files & signatures', mo: 40 },
+  ],
+  /* most of the rows above are per-seat, so growing costs twice */
+  hires: 3,
+  afterHires: 310,
+};
+const rentTotal = () => RENT_STACK.rows.reduce((s, r) => s + r.mo, 0);
+
 const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
 
 /** The picker list, display-ready.
@@ -178,6 +202,7 @@ function routes() {
 const API = {
   OVERFLOW_HOURLY, PILOT, PARTNER_AT, PARTNER,
   BASES, ADDONS, UNSURE, COMPARE, quote, routes,
+  RENT_STACK, rentTotal,
 };
 
 /* Dual export. require()d by server/render.js, and served as a plain script to

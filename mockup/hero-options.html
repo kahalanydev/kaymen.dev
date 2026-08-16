@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hero — four directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --bg-alt:#f4f5f7; --ink:#1a1b1e; --muted:#5f6368;
+  --accent:#2bbcb3; --accent-dark:#229e96; --accent-soft:rgba(43,188,179,.08);
+  --accent-glow:rgba(43,188,179,.18); --line:#e2e4e8; --deep:#16303d;
+  --display:'Sora',sans-serif; --body:'Inter',sans-serif;
+  --w-page:1120px; --ease:cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);line-height:1.65;-webkit-font-smoothing:antialiased}
+a{text-decoration:none;color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
+.wrap{max-width:var(--w-page);margin:0 auto;padding:0 22px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 26px;border-radius:11px;font-size:14.5px;font-weight:600;transition:all .3s var(--ease)}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 16px var(--accent-glow)}
+.btn-primary:hover{background:var(--accent-dark);transform:translateY(-1px)}
+.btn-ghost{border:1.5px solid var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent-dark)}
+.btn-light{background:#fff;color:var(--deep)}
+.btn-outline{border:1.5px solid rgba(255,255,255,.28);color:#fff}
+.actions{display:flex;gap:12px;margin-top:38px;flex-wrap:wrap}
+.chip{
+  display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,.7);
+  border:1px solid var(--line);border-radius:100px;padding:7px 15px 7px 12px;
+  font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:30px;
+}
+.chip b{color:var(--ink);font-weight:700}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+
+/* harness */
+.bar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.bar .in{max-width:var(--w-page);margin:0 auto;padding:12px 22px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.bar .ttl{font-family:var(--display);font-weight:800;letter-spacing:-.03em;font-size:14px;margin-right:8px}
+.tab{padding:7px 14px;border:1px solid var(--line);border-radius:100px;font-size:12.5px;font-weight:600;color:var(--muted);transition:all .2s var(--ease)}
+.tab:hover{border-color:#d0d3d9}
+.tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.note{max-width:var(--w-page);margin:0 auto;padding:26px 22px 0}
+.note .card{border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 14px 14px 0;padding:16px 20px;background:var(--bg-alt);max-width:82ch}
+.note h4{font-family:var(--display);font-size:14.5px;font-weight:700;letter-spacing:-.02em}
+.note p{font-size:13px;color:var(--muted);margin-top:7px;line-height:1.65}
+.note p b{color:var(--ink);font-weight:600}
+.note .cost{margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:12.5px}
+.note .cost b{color:#a8541f;font-weight:600}
+.view{display:none}.view.on{display:block}
+.edge{border-top:1px dashed #cfd3da;border-bottom:1px dashed #cfd3da;margin-top:20px;position:relative}
+.edge::after{content:'hero ends · the pricing section follows';position:absolute;bottom:-8px;left:22px;background:#fff;padding:0 8px;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:#b6bac1;font-weight:700}
+
+/* the fleet panel, reused */
+.fleet{border:1px solid var(--line);border-radius:20px;padding:22px 24px;background:#fff;box-shadow:0 12px 40px rgba(22,48,61,.06)}
+.fleet .fh{display:flex;align-items:baseline;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.fleet .fh b{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:-.02em}
+.fleet .fh span{font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.frow{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid #f1f2f4}
+.frow:last-of-type{border-bottom:0}
+.frow .t{flex:1;min-width:0}
+.frow .t b{display:block;font-size:13.5px;font-weight:600;letter-spacing:-.01em}
+.frow .t i{font-style:normal;font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.spark{display:flex;align-items:flex-end;gap:2px;height:26px}
+.spark i{width:4px;border-radius:1px;background:var(--accent);display:block}
+.spark i.z{background:var(--line)}
+
+h1{font-family:var(--display);font-weight:800;letter-spacing:-.045em;line-height:1.04}
+.lead{font-size:1.08rem;color:var(--muted);margin-top:24px;max-width:52ch;line-height:1.75}
+.lead b{color:var(--ink);font-weight:600}
+
+/* ============================================== A — own it */
+.a-grid{display:grid;gap:48px;align-items:center;padding:96px 0 88px}
+@media(min-width:1040px){.a-grid{grid-template-columns:minmax(0,1.15fr) 360px}}
+/* 4rem max, not 4.4. "Own your software." measures 652px at 70px in a 668px
+   column — a 16px margin, which font rendering eats, and the line wrapped to
+   make three. At 64px it is 596px, a 72px margin, and it holds. */
+.a-h1{font-size:clamp(2.4rem,5.2vw,4rem)}
+.a-h1 span{color:var(--accent)}
+.a-h1 s{text-decoration:none;position:relative;color:var(--muted);opacity:.55}
+.a-h1 s::after{content:'';position:absolute;left:-2px;right:-2px;top:54%;height:5px;background:var(--accent);border-radius:3px;transform:rotate(-1.6deg)}
+.vs{border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 12px 40px rgba(22,48,61,.06)}
+.vs .r{padding:18px 22px;border-bottom:1px solid var(--line)}
+.vs .r:last-child{border-bottom:0;background:var(--accent-soft)}
+.vs .k{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.vs .v{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-.04em;margin-top:6px;line-height:1.1}
+.vs .r:last-child .v{color:var(--accent-dark)}
+.vs .n{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.55}
+
+/* ============================================== B — the fleet is the pitch */
+.b-hero{padding:92px 0 76px;text-align:center}
+.b-num{font-family:var(--display);font-size:clamp(6rem,17vw,12rem);font-weight:800;letter-spacing:-.06em;line-height:.86;color:var(--accent)}
+.b-h1{font-size:clamp(2rem,4.6vw,3.1rem);margin-top:10px}
+.b-lead{margin:24px auto 0;text-align:center;max-width:58ch}
+.b-actions{justify-content:center}
+.b-board{display:grid;gap:12px;margin-top:56px}
+@media(min-width:820px){.b-board{grid-template-columns:repeat(3,1fr)}}
+.b-card{border:1px solid var(--line);border-radius:16px;padding:16px 18px;background:#fff;text-align:left;transition:all .25s var(--ease)}
+.b-card:hover{border-color:rgba(43,188,179,.5);transform:translateY(-2px);box-shadow:0 14px 34px rgba(22,48,61,.08)}
+.b-card .top{display:flex;align-items:center;gap:8px}
+.b-card b{font-size:13.5px;font-weight:600;letter-spacing:-.01em}
+.b-card i{font-style:normal;margin-left:auto;font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.b-card .spark{margin-top:12px;height:22px}
+
+/* ============================================== C — pain first */
+.c-hero{padding:104px 0 84px;max-width:900px}
+.c-eyebrow{font-size:11px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:22px}
+.c-h1{font-size:clamp(2.3rem,5.4vw,3.7rem);line-height:1.1}
+.c-h1 span{color:var(--accent)}
+.c-after{display:flex;gap:14px;align-items:center;margin-top:40px;flex-wrap:wrap}
+.c-after .p{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:100px;padding:9px 18px;font-size:13px;font-weight:600;background:#fff}
+.c-after .p.bad{color:var(--muted)}
+.c-after .p.good{border-color:rgba(43,188,179,.5);background:var(--accent-soft);color:var(--accent-dark)}
+.c-arrow{color:var(--line);font-size:20px}
+
+/* ============================================== D — no orphans */
+.d-band{background:var(--deep);color:#fff;border-radius:26px;margin:34px 0;padding:84px 0 76px;position:relative;overflow:hidden}
+.d-band::after{content:'';position:absolute;width:620px;height:620px;border-radius:50%;background:rgba(43,188,179,.16);filter:blur(90px);top:-260px;right:-180px;pointer-events:none}
+.d-in{position:relative;max-width:var(--w-page);margin:0 auto;padding:0 44px}
+@media(max-width:700px){.d-in{padding:0 24px}.d-band{border-radius:18px}}
+.d-h1{font-size:clamp(2.4rem,5.6vw,3.9rem)}
+.d-h1 span{color:var(--accent)}
+.d-lead{font-size:1.08rem;color:rgba(255,255,255,.66);margin-top:24px;max-width:54ch;line-height:1.75}
+.d-lead b{color:#fff;font-weight:600}
+.d-strip{display:grid;gap:0;margin-top:52px;border-top:1px solid rgba(255,255,255,.14)}
+@media(min-width:760px){.d-strip{grid-template-columns:repeat(3,1fr)}}
+.d-stat{padding:24px 0 0}
+@media(min-width:760px){.d-stat{padding:24px 26px 0}.d-stat:first-child{padding-left:0}}
+.d-stat b{display:block;font-family:var(--display);font-size:34px;font-weight:800;letter-spacing:-.05em;color:var(--accent)}
+.d-stat span{display:block;font-size:13px;color:rgba(255,255,255,.6);margin-top:6px;line-height:1.55}
+.d-chip{display:inline-flex;align-items:center;gap:9px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:100px;padding:7px 15px 7px 12px;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.72);margin-bottom:30px}
+.d-chip b{color:#fff;font-weight:700}
+
+/* ============================================== A+C — own it, named by the pain */
+.stack{border:1px solid var(--line);border-radius:20px;overflow:hidden;background:#fff;box-shadow:0 12px 40px rgba(22,48,61,.06)}
+.stack .sh{
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  padding:15px 22px 12px;border-bottom:1px solid var(--line);
+  font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
+}
+.stack .sh i{font-style:normal;letter-spacing:0;text-transform:none;font-size:11.5px;font-weight:500;opacity:.8}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 22px;font-size:13.5px}
+.srow b{font-weight:500;color:var(--ink)}
+.srow span{font-family:var(--display);font-weight:700;font-size:13.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.srow em{font-style:normal;display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+.stot{padding:13px 22px 14px;border-top:1px solid var(--line);background:var(--bg-alt)}
+.stot b{font-family:var(--display);font-size:30px;font-weight:800;letter-spacing:-.045em;font-variant-numeric:tabular-nums;display:block}
+.stot span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+.sgrow{padding:11px 22px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);line-height:1.55}
+.sgrow b{color:var(--ink);font-weight:600}
+.sown{padding:18px 22px 20px;background:var(--accent-soft);border-top:1px solid rgba(43,188,179,.34)}
+.sown .k{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-dark)}
+.sown .v{font-family:var(--display);font-size:28px;font-weight:800;letter-spacing:-.045em;color:var(--accent-dark);margin-top:5px;line-height:1.1}
+.sown .v small{font-family:var(--body);font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0}
+.sown .n{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.6}
+.sown .n b{color:var(--ink);font-weight:600}
+/* What they GET. These were "what you do not have" chips, which argued against
+   the competition immediately after the offer and read as a second complaint.
+   Now they are the offer itself: bold ink, accent tick, big enough to skim.
+   Three columns rather than two — same six facts, two rows instead of three. */
+.gets{display:grid;gap:8px;margin-top:22px}
+@media(min-width:560px){.gets{grid-template-columns:1fr 1fr}}
+@media(min-width:1040px){.gets{grid-template-columns:1fr 1fr 1fr}}
+.gets div{
+  display:flex;align-items:flex-start;gap:8px;
+  border:1px solid rgba(43,188,179,.3);background:var(--accent-soft);
+  border-radius:12px;padding:10px 12px;
+}
+.gets svg{width:14px;height:14px;flex:none;margin-top:2px;stroke:var(--accent-dark);stroke-width:3.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.gets b{display:block;font-size:13px;font-weight:700;letter-spacing:-.015em;line-height:1.25}
+.gets span span{display:block;font-size:11.5px;color:var(--muted);margin-top:1px;line-height:1.35}
+
+/* ---- the eye ----
+   The section was white type on white with a white card, which is why it read
+   as plain. Three things fix it without reopening the palette: an accent bloom
+   behind the headline, the renting panel inverted to deep so the money argument
+   has weight, and the way out of it rendered as a white block breaking the dark.
+   The metaphor does the work: locked-in is dark, owning it is not. */
+.ac{position:relative;overflow:hidden}
+.ac::before{
+  content:'';position:absolute;pointer-events:none;
+  width:900px;height:900px;border-radius:50%;top:-420px;left:-260px;
+  background:radial-gradient(circle, rgba(43,188,179,.13), transparent 62%);
+}
+.ac::after{
+  content:'';position:absolute;pointer-events:none;
+  width:760px;height:760px;border-radius:50%;bottom:-420px;right:-200px;
+  background:radial-gradient(circle, rgba(43,188,179,.10), transparent 64%);
+}
+.ac .a-grid{position:relative;padding:76px 0 68px}
+
+/* the strike draws itself, which is the one moment of motion in the hero */
+.a-h1 s::after{transform-origin:left center;animation:strike .62s cubic-bezier(.65,0,.35,1) .45s both}
+@keyframes strike{from{transform:rotate(-1.6deg) scaleX(0)}to{transform:rotate(-1.6deg) scaleX(1)}}
+
+/* the renting panel, inverted */
+.stack.deep{background:var(--deep);border-color:rgba(255,255,255,.1);box-shadow:0 22px 60px rgba(22,48,61,.28)}
+.stack.deep .sh{color:rgba(255,255,255,.5);border-bottom-color:rgba(255,255,255,.12)}
+.stack.deep .srow b{color:rgba(255,255,255,.82);font-weight:400}
+.stack.deep .srow span{color:rgba(255,255,255,.55)}
+.stack.deep .stot{background:rgba(255,255,255,.04);border-top-color:rgba(255,255,255,.12)}
+.stack.deep .stot b{color:#fff}
+.stack.deep .stot span{color:rgba(255,255,255,.55)}
+.stack.deep .sgrow{color:rgba(255,255,255,.55);border-top-color:rgba(255,255,255,.12)}
+.stack.deep .sgrow b{color:#fff}
+.stack.deep .sown{background:#fff;border-top:0;margin:10px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.22)}
+
+/* ---------------------------------------------------------------- the effects
+   Three treatments, switchable. All of them sit BEHIND the content and none
+   touch contrast: the hero has to survive being read, not just looked at. */
+.fxlayer{position:absolute;inset:0;pointer-events:none;z-index:0;opacity:0;transition:opacity .5s var(--ease)}
+.ac .a-grid{z-index:1}
+.ac.fx-grain .fx-grain,
+.ac.fx-grid .fx-grid,
+.ac.fx-nodes .fx-nodes{opacity:1}
+
+/* 1 — grain over drifting blooms. The blooms already exist; this makes them
+      move, and adds the fine noise that stops a flat wash looking like a
+      gradient someone forgot to finish. */
+.ac.fx-grain::before{animation:drift1 22s ease-in-out infinite alternate}
+.ac.fx-grain::after{animation:drift2 27s ease-in-out infinite alternate}
+@keyframes drift1{from{transform:translate(0,0) scale(1)}to{transform:translate(70px,50px) scale(1.12)}}
+@keyframes drift2{from{transform:translate(0,0) scale(1)}to{transform:translate(-60px,-40px) scale(1.1)}}
+.fxlayer.fx-grain{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply;opacity:0;
+}
+.ac.fx-grain .fx-grain{opacity:.055}
+
+/* 2 — the blueprint grid. Reads as engineering drawing rather than decoration,
+      and fades out before it reaches the text. */
+.fxlayer.fx-grid{
+  background-image:
+    linear-gradient(rgba(22,48,61,.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(22,48,61,.055) 1px, transparent 1px);
+  background-size:56px 56px;
+  -webkit-mask-image:radial-gradient(120% 90% at 18% 0%, #000 12%, transparent 68%);
+  mask-image:radial-gradient(120% 90% at 18% 0%, #000 12%, transparent 68%);
+}
+
+/* 3 — the argument, animated. Five scattered nodes drift and pull into one.
+      It is the sentence the hero is making, drawn. */
+.fxlayer.fx-nodes canvas{display:block;width:100%;height:100%}
+
+.fxbar{background:var(--bg-alt);border-bottom:1px solid var(--line)}
+.fxbar .in{max-width:var(--w-page);margin:0 auto;padding:9px 22px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fxbar .lb{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-right:6px}
+.fxb{padding:6px 13px;border:1px solid var(--line);border-radius:100px;font-size:12px;font-weight:600;color:var(--muted);background:#fff}
+.fxb.on{background:var(--accent);border-color:var(--accent);color:#fff}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="in">
+  <span class="ttl">Hero</span>
+  <button class="tab on" data-v="ac">A+C · Own it × the pain</button>
+  <button class="tab" data-v="now">Current (live)</button>
+  <button class="tab" data-v="a">A · Own it (first pass)</button>
+  <button class="tab" data-v="b">B · The fleet is the pitch</button>
+  <button class="tab" data-v="c">C · Name the pain</button>
+  <button class="tab" data-v="d">D · No orphans</button>
+</div></div>
+
+<!-- =============================================== A+C -->
+<div class="view on" id="v-ac">
+  <div class="note"><div class="card">
+    <h4>A+C · Own it, argued with the pain</h4>
+    <p><b>The first pass had the comparison backwards.</b> "$29–80 per user" makes renting look cheap, because it prices one seat of one tool against a whole build. Nobody runs a business on one tool. The real number is the stack — five subscriptions that each do half a job, and the thing that actually hurts is not the price, it is that none of them talk to each other.</p>
+    <p>So the headline still says <b>own it</b>, the paragraph under it is the pain — tools that half-work, information scattered, nobody with one source of truth, and a bill that rises every time you hire — and the six blocks are the answer. <b>They say what you get, not what the other lot withhold.</b> Arguing against the competition immediately after making the offer reads as a second complaint; a buyer who has just been told the price wants to see what the price buys.</p>
+    <p><b>Scale is now the spine of it,</b> because it is the one thing per-seat software can never match. It appears three times on purpose: in the lead, as its own block, and as the closing line of the panel.</p>
+    <p>The panel is the argument in numbers. It is not "we are cheaper" — year one is not cheaper, and pretending otherwise would not survive a spreadsheet. It is <b>you are already spending this, and at the end of it you own nothing.</b></p>
+    <p class="cost">Before this goes live: <b>the subscription figures are illustrative</b>, sized for a team of about five from public list prices. Say the word and I will verify each one properly, the way we did the $200/hr agency rate.</p>
+  </div></div>
+  <div class="fxbar"><div class="in">
+    <span class="lb">Background</span>
+    <button class="fxb" data-fx="">None</button>
+    <button class="fxb" data-fx="fx-grain">Grain + drifting light</button>
+    <button class="fxb" data-fx="fx-grid">Blueprint grid</button>
+    <button class="fxb on" data-fx="fx-nodes">One source, spreading</button>
+  </div></div>
+  <div class="edge ac fx-nodes" id="ac">
+    <div class="fxlayer fx-grain"></div>
+    <div class="fxlayer fx-grid"></div>
+    <div class="fxlayer fx-nodes"><canvas id="nodeCanvas"></canvas></div>
+    <div class="wrap"><div class="a-grid">
+    <div>
+      <div class="chip"><span class="pulse"></span><span><b>19 systems</b> running in production right now</span></div>
+      <h1 class="a-h1">Own your software.<br>Stop <s>renting</s> <span>it</span>.</h1>
+      <p class="lead">Five subscriptions, each doing half a job. Somebody reconciles them by hand every week, <b>every hire costs more</b>, and you own none of it.</p>
+      <p class="lead" style="margin-top:14px"><b>We build the one system that does all of it.</b> Yours, on your servers, and it scales for free.</p>
+      <div class="gets">
+        <div><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span><b>Everything in one system</b><span>Quotes, jobs, money, files</span></span></div>
+        <div><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span><b>Unlimited people</b><span>Hire twenty, same bill</span></span></div>
+        <div><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span><b>Built to scale</b><span>New branch, same system</span></span></div>
+        <div><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span><b>You own all of it</b><span>Code, data, servers</span></span></div>
+        <div><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span><b>One source of truth</b><span>Reports build themselves</span></span></div>
+        <div><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span><b>No lock-in</b><span>Take it with you, any time</span></span></div>
+      </div>
+      <div class="actions"><a href="#" class="btn btn-primary">What do you need?</a><a href="#" class="btn btn-ghost">See what's running</a></div>
+    </div>
+    <div class="stack deep">
+      <div class="sh"><span>What renting it costs</span><i>team of five</i></div>
+      <div class="srow"><b>Work &amp; projects</b><span>$45</span></div>
+      <div class="srow"><b>CRM &amp; pipeline</b><span>$60</span></div>
+      <div class="srow"><b>Invoicing &amp; books</b><span>$50</span></div>
+      <div class="srow"><b>Forms &amp; scheduling</b><span>$30</span></div>
+      <div class="srow"><b>Files &amp; signatures</b><span>$40</span></div>
+      <div class="stot"><b>$225<span style="font-family:var(--body);font-size:13px;font-weight:500;letter-spacing:0;color:rgba(255,255,255,.55)"> a month</span></b><span>Five bills, and none of them talk to each other.</span></div>
+      <div class="sgrow">Priced per person, so growing costs twice. <b>Three more hires is about $310</b>, and none of it becomes yours.</div>
+      <div class="sown">
+        <div class="k">One system, yours</div>
+        <div class="v">From $2,500 <small>once</small></div>
+        <div class="n">Then <b>$200 a month</b>, flat. Add the whole team, the next branch, the busiest month — <b>the price does not move</b>.</div>
+      </div>
+    </div>
+  </div></div></div>
+</div>
+
+<!-- =============================================== CURRENT -->
+<div class="view" id="v-now">
+  <div class="note"><div class="card">
+    <h4>What is live, and the seven things working against it</h4>
+    <p><b>1. Every sentence is about you, not them.</b> "We build it. Then we run it." The visitor's first question is "what do I get", and the answer on screen is your business model.</p>
+    <p><b>2. It is a category description, not a position.</b> Any shop can write "we build and maintain". Nothing in it is hard to copy, so it cannot be owned.</p>
+    <p><b>3. "Run it" is ambiguous.</b> Run my business? Run a server? It reads as hosting, which is the cheapest possible reading of what you actually do.</p>
+    <p><b>4. The lead is a capability list.</b> "Multi-tenant platforms, hard integrations, apps in the stores" are inputs. Your own case-study page says it better: <b>a capability list is free to write.</b></p>
+    <p><b>5. The best asset on the page is decoration.</b> The Live fleet panel is real, generated from git, and almost nobody else can show one. It is parked in the right column while the headline says something generic.</p>
+    <p><b>6. It never names a buyer.</b> Nothing on screen tells a three-person brokerage paying for Monday seats that this page is for them.</p>
+    <p><b>7. It no longer matches the next section.</b> Pricing now opens with "still running on spreadsheets". The hero and the section under it are telling two different stories.</p>
+  </div></div>
+  <div class="edge"><div class="wrap"><div class="a-grid">
+    <div>
+      <div class="chip"><span class="pulse"></span><span><b>19 systems</b> running in production right now</span></div>
+      <h1 class="a-h1">We build it.<br>Then we <span>run it</span>.</h1>
+      <p class="lead">Multi-tenant platforms, hard integrations, and apps in the stores. Built and run by the same people. A portfolio shows finished work. Everything here is still switched on.</p>
+      <div class="actions"><a href="#" class="btn btn-primary">What do you need?</a><a href="#" class="btn btn-ghost">See what's running</a></div>
+    </div>
+    <div class="fleet" id="f-now"></div>
+  </div></div></div>
+</div>
+
+<!-- =============================================== A -->
+<div class="view" id="v-a">
+  <div class="note"><div class="card">
+    <h4>A · Own it, don't rent it — attack the category</h4>
+    <p><b>This is the only line here a competitor cannot copy,</b> because most of them resell or build on someone else's platform. It is also the argument that actually moved you: BridgeMTG pays for Monday seats it will never own, and moving costs them nothing per user afterwards.</p>
+    <p>It sets up everything below it. "No per-seat licence" and "yours, on your infrastructure" are already ticks in the pricing section, so the page finally tells one story from top to bottom.</p>
+    <p class="cost">What it costs you: <b>it picks a fight.</b> Anyone happy with their SaaS stack reads it as an argument rather than an offer, and it says nothing about apps in the stores.</p>
+  </div></div>
+  <div class="edge"><div class="wrap"><div class="a-grid">
+    <div>
+      <div class="chip"><span class="pulse"></span><span><b>19 systems</b> running in production right now</span></div>
+      <h1 class="a-h1">Own your software.<br>Stop <s>renting</s> <span>it</span>.</h1>
+      <p class="lead">Business software charges you per person, per month, forever, and keeps your data on its own servers. <b>We build you the system instead.</b> You own it, it runs on your infrastructure, and your tenth user costs the same as your first: nothing.</p>
+      <div class="actions"><a href="#" class="btn btn-primary">What do you need?</a><a href="#" class="btn btn-ghost">See what's running</a></div>
+    </div>
+    <div class="vs">
+      <div class="r">
+        <div class="k">Renting it</div>
+        <div class="v">$29–80<span style="font-family:var(--body);font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0"> /user /month</span></div>
+        <div class="n">Forever. Rises when you grow. Your data lives on their servers, and leaving means exporting a spreadsheet.</div>
+      </div>
+      <div class="r">
+        <div class="k">Owning it</div>
+        <div class="v">From $2,500<span style="font-family:var(--body);font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0"> once</span></div>
+        <div class="n">Then a flat monthly to keep it running. Add every person in the company for nothing. Take it elsewhere whenever you like.</div>
+      </div>
+    </div>
+  </div></div></div>
+</div>
+
+<!-- =============================================== B -->
+<div class="view" id="v-b">
+  <div class="note"><div class="card">
+    <h4>B · The fleet is the pitch — lead with the proof</h4>
+    <p><b>The number is the only thing on this site nobody can fake,</b> and it is generated from real git history on every deploy. Most shops cannot show a board like this because their work stopped being theirs at handover. Making it the hero says "we are still here" without claiming it.</p>
+    <p>It also answers the quietest objection in the room, the one nobody says out loud: <b>will you still exist next year.</b></p>
+    <p class="cost">What it costs you: <b>19 is a number that has to keep going up.</b> It is proof, not a promise, so it says nothing about price or fit, and a visitor still has to scroll to learn what you would do for them.</p>
+  </div></div>
+  <div class="edge"><div class="wrap"><div class="b-hero">
+    <div class="b-num">19</div>
+    <h1 class="b-h1">systems we built.<br>Every one still running.</h1>
+    <p class="lead b-lead">Most shops hand over a repository and disappear. Everything below is in production right now, on infrastructure we operate, and when one of them breaks at 3am <b>we are the ones who get paged</b>.</p>
+    <div class="actions b-actions"><a href="#" class="btn btn-primary">What do you need?</a><a href="#" class="btn btn-ghost">See what's running</a></div>
+    <div class="b-board" id="b-board"></div>
+  </div></div></div>
+</div>
+
+<!-- =============================================== C -->
+<div class="view" id="v-c">
+  <div class="note"><div class="card">
+    <h4>C · Name the pain — say the buyer's sentence, not yours</h4>
+    <p><b>The only option here that opens with the reader instead of the company.</b> It describes a room they recognise, and the recognition does the selling. It also runs straight into the pricing section, which now opens on "the part of the business still running on spreadsheets" — hero and offer become one sentence.</p>
+    <p>Strongest for the client you said you want: already working, already paying for tools, one person holding it together.</p>
+    <p class="cost">What it costs you: <b>it aims low on purpose.</b> Someone arriving with a multi-tenant platform to build may decide you are the spreadsheet people, and it makes no claim about staying, which is your real differentiator.</p>
+  </div></div>
+  <div class="edge"><div class="wrap"><div class="c-hero">
+    <p class="c-eyebrow">For businesses that already run on something</p>
+    <h1 class="c-h1">Your business runs on a spreadsheet <span>one person</span> understands.</h1>
+    <p class="lead">When they are on holiday, work slows down. When they leave, it stops. We replace it with a real system: your data, logins for everyone who needs one, and the same people on call afterwards.</p>
+    <div class="c-after">
+      <span class="p bad">A spreadsheet and one person</span>
+      <span class="c-arrow">→</span>
+      <span class="p good">A system, and someone who keeps it running</span>
+    </div>
+    <div class="actions"><a href="#" class="btn btn-primary">What do you need?</a><a href="#" class="btn btn-ghost">See what's running</a></div>
+  </div></div></div>
+</div>
+
+<!-- =============================================== D -->
+<div class="view" id="v-d">
+  <div class="note"><div class="card">
+    <h4>D · No orphans — the promise you already wrote</h4>
+    <p><b>"We don't hand over orphans" is already in your own pricing notes</b> as the line that is the promise and the revenue model at once. It has never been on the site. It is short, it is memorable, and it names the exact fear every buyer of custom software carries: the developer disappears and the thing rots.</p>
+    <p>The deep band is the one place on the site that uses the dark tone, so the hero stops looking like the section under it and starts looking like a statement.</p>
+    <p class="cost">What it costs you: <b>"orphans" needs the second line to land</b>, so it is the least skimmable of the four, and the dark band reopens a locked design decision — the palette currently uses deep exactly once.</p>
+  </div></div>
+  <div class="edge"><div class="wrap"><div class="d-band"><div class="d-in">
+    <div class="d-chip"><span class="pulse"></span><span><b>19 systems</b> live right now</span></div>
+    <h1 class="d-h1">We don't hand over <span>orphans</span>.</h1>
+    <p class="d-lead">Most custom software starts dying the day the developer leaves. Ours doesn't, because we don't leave. <b>Every build ends in a plan to keep it alive</b>, priced into the contract from the first day, not sold to you after launch.</p>
+    <div class="actions"><a href="#" class="btn btn-light">What do you need?</a><a href="#" class="btn btn-outline">See what's running</a></div>
+    <div class="d-strip">
+      <div class="d-stat"><b>19</b><span>systems in production right now, on infrastructure we operate</span></div>
+      <div class="d-stat"><b>1,924</b><span>commits across the last twelve months, counted from the repositories</span></div>
+      <div class="d-stat"><b>1</b><span>team, from architecture to the 3am page</span></div>
+    </div>
+  </div></div></div>
+</div>
+
+<script>
+/* the real fleet, from content/stats.js */
+var FLEET=[
+ {name:'Broker portal',kind:'Platform',days:[0,0,2,4,1,0,6]},
+ {name:'Multi-campus platform',kind:'Platform',days:[0,0,0,0,19,29,11]},
+ {name:'Community ledger',kind:'Platform',days:[0,11,0,0,2,5,8]},
+ {name:'Torah Tracker',kind:'App',days:[1,14,13,1,1,0,5]},
+ {name:'MSP compliance portal',kind:'Integration',days:[0,0,0,0,6,8,5]},
+ {name:'Bilingual booking',kind:'App',days:[0,0,1,2,5,2,0]}
+];
+function spark(days,h){
+  var max=Math.max.apply(null,days)||1;
+  return '<span class="spark">'+days.map(function(d){
+    var px=Math.max(3,Math.round((d/max)*h));
+    return '<i class="'+(d?'':'z')+'" style="height:'+(d?px:3)+'px"></i>';
+  }).join('')+'</span>';
+}
+/* current + A: the side panel */
+document.getElementById('f-now').innerHTML=
+  '<div class="fh"><b>Live fleet</b><span>active days / mo</span></div>'+
+  FLEET.map(function(f){
+    return '<div class="frow"><span class="pulse"></span><span class="t"><b>'+f.name+'</b><i>'+f.kind+'</i></span>'+spark(f.days,26)+'</div>';
+  }).join('');
+/* B: the board as the hero */
+document.getElementById('b-board').innerHTML=FLEET.map(function(f){
+  return '<div class="b-card"><div class="top"><span class="pulse"></span><b>'+f.name+'</b><i>'+f.kind+'</i></div>'+spark(f.days,22)+'</div>';
+}).join('');
+
+/* ---- one source, spreading ------------------------------------------------
+   The hero's argument, drawn and left running.
+
+   One bright node is the source of truth. Every other node in the picture is
+   descended from it: a node is only ever created by an existing node throwing
+   it outward, and it is joined to its parent at birth. Woken nodes also reach
+   sideways to a neighbour they are not already joined to, which is what turns a
+   tree into a system — front end, back end and an integration all end up wired
+   to more than one thing.
+
+   THREE PROPERTIES IT HAS TO KEEP, and all three were broken in the first cut:
+
+   1. NOTHING FLOATS. The graph is connected at all times. Growth cannot break
+      that because every new node arrives attached. Retirement can, so only
+      LEAVES are ever retired — removing a node of degree one is the one
+      deletion that provably cannot split a connected graph. The earlier version
+      retired the oldest node regardless of degree, which is exactly how the
+      drifting polygons appeared.
+
+   2. IT FILLS. Growth is not a random walk. Each spawn tries a dozen candidate
+      positions and keeps the one furthest from every existing node, so the mesh
+      pushes outward into empty space in every direction at once rather than
+      knotting up near the source.
+
+   3. IT STAYS ALIVE. Pulses cascade: when one lands it is forwarded down some
+      of that node's other edges, so signal keeps moving through the mesh long
+      after it has stopped growing. The source also re-fires on a timer.
+
+   It sits behind copy, so every alpha here is low and stays low.
+   ------------------------------------------------------------------------- */
+(function () {
+  var cv = document.getElementById('nodeCanvas'); if (!cv) return;
+  var ctx = cv.getContext('2d');
+  var w = 0, h = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var nodes = [], edges = [], pulses = [], tick = 0;
+
+  /* The source of truth IS the mark: the circular cut of the three stones,
+     the same drawing the brand set ships as kaymen-avatar-circle.svg.
+     Embedded rather than linked so the canvas never waits on a round trip and
+     the mark cannot go missing. Everything in the mesh descends from it. */
+  var SOURCE_R = 26;
+  var logo = new Image(), logoReady = false;
+  logo.onload = function () { logoReady = true; };
+  logo.src = 'data:image/svg+xml;base64,PCEtLSBnZW5lcmF0ZWQgYnkgc2NyaXB0cy9idWlsZC1pY29ucy5qcyBmcm9tIGNvbnRlbnQvbG9nby5qczsgZG8gbm90IGhhbmQtZWRpdCAtLT4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iMTYiIGZpbGw9IiMxNjMwM2QiLz48cGF0aCBkPSJNNi4yNSAxNi4xOEExMi41IDEyLjUgMCAwIDEgMTEuNTcgMTIuMzFMMTMuODcgMTguMzlBNiA2IDAgMCAwIDExLjMyIDIwLjI0WiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC40MiIvPjxwYXRoIGQ9Ik0xMi43MSAxMS45NEExMi41IDEyLjUgMCAwIDEgMTkuMjkgMTEuOTRMMTcuNTggMTguMjFBNiA2IDAgMCAwIDE0LjQyIDE4LjIxWiIgZmlsbD0iIzJiYmNiMyIvPjxwYXRoIGQ9Ik0yMC40MyAxMi4zMUExMi41IDEyLjUgMCAwIDEgMjUuNzUgMTYuMThMMjAuNjggMjAuMjRBNiA2IDAgMCAwIDE4LjEzIDE4LjM5WiIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC40MiIvPjwvc3ZnPgo=';
+
+  var MAX_NODES = 52;
+  var MIN_GAP = 58;          /* nodes never sit closer than this */
+  var ACCENT = '43,188,179';
+
+  var srcX = 0, srcY = 0;
+
+  /* Where the corridor actually is, measured rather than assumed. */
+  function locate(r) {
+    var host = cv.closest ? cv.closest(".ac") : null;
+    var col = host && host.querySelector(".a-grid > div:first-child");
+    var card = host && host.querySelector(".stack");
+    if (!col || !card) { srcX = w * 0.6; srcY = h * 0.44; return; }
+    var c = card.getBoundingClientRect(), t = col.getBoundingClientRect();
+    var gap = (c.left - r.left) - (t.right - r.left);
+    if (gap < 30 || c.left < t.left) {   /* stacked layout: no corridor */
+      srcX = w * 0.5; srcY = h * 0.30;
+    } else {
+      /* sit the whole mark clear of the card rather than half under it */
+      srcX = (c.left - r.left) - SOURCE_R - 12;
+      srcY = (c.top - r.top) + c.height / 2;
+    }
+    srcX = Math.max(SOURCE_R + 20, Math.min(w - SOURCE_R - 20, srcX));
+    srcY = Math.max(SOURCE_R + 20, Math.min(h - SOURCE_R - 20, srcY));
+  }
+
+  function size() {
+    var r = cv.parentNode.getBoundingClientRect();
+    w = r.width; h = r.height;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    locate(r);
+    if (!nodes.length) seed();
+    else { nodes[0].x = srcX; nodes[0].y = srcY; }   /* keep it in the corridor on resize */
+  }
+
+  function seed() {
+    nodes = [{
+      x: srcX, y: srcY, r: SOURCE_R,
+      act: 1, born: 0, dying: 0, source: true,
+      ph: 0, sp: 0, ox: 0, oy: 0,
+    }];
+    edges = []; pulses = [];
+  }
+
+  function edgesOf(n) {
+    return edges.filter(function (e) { return e.a === n || e.b === n; });
+  }
+  function joined(a, b) {
+    for (var i = 0; i < edges.length; i++) {
+      if ((edges[i].a === a && edges[i].b === b) || (edges[i].a === b && edges[i].b === a)) return true;
+    }
+    return false;
+  }
+  function link(a, b, cross) {
+    if (a === b || joined(a, b)) return null;
+    var e = { a: a, b: b, life: 0, cross: !!cross };
+    edges.push(e);
+    return e;
+  }
+  function fire(e, from) {
+    pulses.push({ e: e, from: from, t: 0, sp: 0.011 + Math.random() * 0.009 });
+  }
+
+  /* GROW — a woken node throws a new one into the emptiest space it can find.
+     The candidate search is what makes the mesh spread evenly instead of
+     bunching, and the parent link is what keeps the graph connected. */
+  function grow() {
+    if (nodes.length >= MAX_NODES) return;
+    var live = nodes.filter(function (n) { return n.act > 0.5 && !n.dying; });
+    if (!live.length) return;
+
+    var bestParent = null, bestPos = null, bestGap = MIN_GAP;
+    for (var i = 0; i < 14; i++) {
+      var p = live[(Math.random() * live.length) | 0];
+      var a = Math.random() * Math.PI * 2;
+      var d = (p.source ? SOURCE_R + 66 : 84) + Math.random() * 108;
+      var x = p.x + Math.cos(a) * d, y = p.y + Math.sin(a) * d;
+      if (x < 44 || x > w - 44 || y < 44 || y > h - 44) continue;
+      var near = 1e9;
+      for (var j = 0; j < nodes.length; j++) {
+        var dd = Math.hypot(nodes[j].x - x, nodes[j].y - y);
+        if (dd < near) near = dd;
+      }
+      if (near > bestGap) { bestGap = near; bestParent = p; bestPos = { x: x, y: y }; }
+    }
+    if (!bestParent) return;
+
+    var n = {
+      x: bestPos.x, y: bestPos.y, r: 2.4 + Math.random() * 2.0,
+      act: 0, born: tick, dying: 0, source: false,
+      ph: Math.random() * 6.28, sp: 0.3 + Math.random() * 0.6, ox: 0, oy: 0,
+    };
+    nodes.push(n);
+    var e = link(bestParent, n);
+    if (e) fire(e, bestParent);
+  }
+
+  /* WEAVE — sideways links between nodes that already exist. Safe for
+     connectivity by definition: adding an edge can never disconnect a graph. */
+  function weave() {
+    var live = nodes.filter(function (n) { return n.act > 0.7 && !n.dying; });
+    if (live.length < 4) return;
+    var a = live[(Math.random() * live.length) | 0];
+    var best = null, bd = 1e9;
+    live.forEach(function (b) {
+      if (b === a || joined(a, b)) return;
+      var d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d < bd && d < 215) { bd = d; best = b; }
+    });
+    if (best) { var e = link(a, best, true); if (e) fire(e, a); }
+  }
+
+  /* RETIRE — leaves only. This is the whole fix for the floating fragments:
+     a node of degree one is the only node whose removal cannot split the graph. */
+  function retire() {
+    if (nodes.length < MAX_NODES) return;
+    var leaves = nodes.filter(function (n) {
+      return !n.source && !n.dying && edgesOf(n).length === 1;
+    });
+    if (!leaves.length) return;          /* nothing safe to drop — hold */
+    var oldest = leaves[0];
+    leaves.forEach(function (n) { if (n.born < oldest.born) oldest = n; });
+    oldest.dying = 1;
+  }
+
+  function step() {
+    tick++;
+
+    /* several spawns per beat, so it opens in every direction at once */
+    if (tick % 16 === 0) { grow(); grow(); }
+    if (tick % 70 === 0) weave();
+    if (tick % 130 === 0) retire();
+
+    if (tick % 150 === 0) {
+      var k = edgesOf(nodes[0]);
+      if (k.length) fire(k[(Math.random() * k.length) | 0], nodes[0]);
+    }
+
+    nodes.forEach(function (n) {
+      n.ox = Math.sin(tick * 0.004 * n.sp + n.ph) * 7;
+      n.oy = Math.cos(tick * 0.0033 * n.sp + n.ph) * 7;
+      if (n.dying) n.act -= 0.040;   /* MUST outpace the 0.03 edge fade below, or the
+                                  node survives its own edges and floats alone */
+      else if (n.act < 1) n.act = Math.min(1, n.act + 0.02);
+    });
+
+    edges.forEach(function (e) {
+      var alive = !e.a.dying && !e.b.dying;
+      e.life = alive ? Math.min(1, e.life + 0.02) : Math.max(0, e.life - 0.03);
+    });
+
+    var landed = [];
+    pulses = pulses.filter(function (p) {
+      p.t += p.sp;
+      if (p.t >= 1) {
+        var to = p.from === p.e.a ? p.e.b : p.e.a;
+        to.act = Math.max(to.act, 0.62);
+        landed.push(to);
+        return false;
+      }
+      return true;
+    });
+
+    /* cascade — signal keeps moving through the mesh once growth has stopped */
+    if (pulses.length < 26) {
+      landed.forEach(function (n) {
+        edgesOf(n).forEach(function (e) {
+          if (Math.random() < 0.30) fire(e, n);
+        });
+      });
+    }
+
+    nodes = nodes.filter(function (n) { return n.act > 0 || n.source; });
+    edges = edges.filter(function (e) {
+      return e.life > 0 && nodes.indexOf(e.a) > -1 && nodes.indexOf(e.b) > -1;
+    });
+    pulses = pulses.filter(function (p) { return edges.indexOf(p.e) > -1; });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+
+    edges.forEach(function (e) {
+      var ax = e.a.x + e.a.ox, ay = e.a.y + e.a.oy;
+      var bx = e.b.x + e.b.ox, by = e.b.y + e.b.oy;
+      var al = e.life * Math.min(e.a.act, e.b.act) * (e.cross ? 0.13 : 0.19);
+      ctx.strokeStyle = 'rgba(' + ACCENT + ',' + al.toFixed(3) + ')';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    });
+
+    pulses.forEach(function (p) {
+      var s = p.from, o = p.from === p.e.a ? p.e.b : p.e.a;
+      var ax = s.x + s.ox, ay = s.y + s.oy, bx = o.x + o.ox, by = o.y + o.oy;
+      var x = ax + (bx - ax) * p.t, y = ay + (by - ay) * p.t;
+      var fade = Math.sin(p.t * Math.PI);
+      var g = ctx.createRadialGradient(x, y, 0, x, y, 13);
+      g.addColorStop(0, 'rgba(' + ACCENT + ',' + (0.30 * fade).toFixed(3) + ')');
+      g.addColorStop(1, 'rgba(' + ACCENT + ',0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 13, 0, 6.29); ctx.fill();
+      ctx.fillStyle = 'rgba(' + ACCENT + ',' + (0.46 * fade).toFixed(3) + ')';
+      ctx.beginPath(); ctx.arc(x, y, 2, 0, 6.29); ctx.fill();
+    });
+
+    nodes.forEach(function (n) {
+      var x = n.x + n.ox, y = n.y + n.oy;
+      if (n.source) {
+        var pu = 0.5 + 0.5 * Math.sin(tick * 0.026);
+        var halo = SOURCE_R + 26 + pu * 16;
+        var g = ctx.createRadialGradient(x, y, SOURCE_R * 0.82, x, y, halo);
+        g.addColorStop(0, 'rgba(' + ACCENT + ',' + (0.16 + pu * 0.07).toFixed(3) + ')');
+        g.addColorStop(1, 'rgba(' + ACCENT + ',0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, halo, 0, 6.29); ctx.fill();
+        if (logoReady) ctx.drawImage(logo, x - SOURCE_R, y - SOURCE_R, SOURCE_R * 2, SOURCE_R * 2);
+        return;
+      }
+      ctx.fillStyle = 'rgba(' + ACCENT + ',' + (0.26 * n.act).toFixed(3) + ')';
+      ctx.beginPath(); ctx.arc(x, y, n.r, 0, 6.29); ctx.fill();
+    });
+  }
+
+  function loop() { step(); draw(); requestAnimationFrame(loop); }
+
+  /* exposed so the harness can assert connectivity rather than eyeball it */
+  window.__net = function () { return { nodes: nodes, edges: edges, pulses: pulses }; };
+
+  size(); loop();
+  /* the grid moves as webfonts land, so take the measurement again after */
+  setTimeout(size, 400); setTimeout(size, 1400);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(size);
+  window.addEventListener('resize', size);
+})();
+
+document.querySelectorAll('.fxb').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.fxb').forEach(function(x){x.classList.remove('on')});
+    b.classList.add('on');
+    var ac=document.getElementById('ac');
+    ac.classList.remove('fx-grain','fx-grid','fx-nodes');
+    if(b.dataset.fx) ac.classList.add(b.dataset.fx);
+  });
+});
+
+document.querySelectorAll('.tab').forEach(function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on')});
+    document.querySelectorAll('.view').forEach(function(x){x.classList.remove('on')});
+    t.classList.add('on');
+    document.getElementById('v-'+t.dataset.v).classList.add('on');
+    window.scrollTo(0,0);
+  });
+});
+</script>
+</body>
+</html>
