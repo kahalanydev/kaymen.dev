@@ -135,6 +135,12 @@ Two behaviour changes worth knowing:
    invite, login. They already render coherently through the bridge (§4); this is a pass to remove
    inline styles and old-theme leftovers, not a rebuild.
 
+   Start with **`renderLogin()`**: it still emits the old `{ kaymen.dev }` brace wordmark, while the
+   rail now uses the K mark plus `kaymen.dev`. `.login-logo .mark` is already styled and waiting for
+   a `<span class="mark">K</span>` that the markup does not yet contain. It is on-palette and
+   perfectly legible, so this is cosmetic — but it is the first screen anyone sees, and it is the
+   one place the panel still disagrees with itself about the wordmark.
+
 ---
 
 ## 4. Traps — read before touching anything
