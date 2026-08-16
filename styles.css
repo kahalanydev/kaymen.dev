@@ -212,6 +212,25 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.03em;line-height:1.1;fon
 .rail-link.on svg{transform:scale(1.06)}
 .rail-link.on span{font-weight:600}
 
+/* Client login. Deliberately OUTSIDE .rail-nav, and it has to stay outside for
+   two reasons. The lozenge is positioned against .rail-nav's children, so a
+   seventh child would give it a link to park on that never becomes current; and
+   the rail's grammar is "where am I on this page", which a login is not — it is
+   the one item that leaves the page. Bordered rather than plain so it does not
+   read as a section that simply never lights up.
+   There is no top bar to put it in: this design replaced the header with the
+   rail, and inventing a fixed top-right control for one link would fight that
+   and crowd a mobile hero the handoff already calls cramped. Under 900px the
+   rail is hidden, so the footer carries it instead. */
+.rail-login{
+  display:flex;align-items:center;gap:12px;margin-top:10px;padding:0 9px;height:38px;
+  border:1px solid var(--line);border-radius:12px;color:var(--muted);flex:none;
+  transition:color .2s var(--ease),border-color .2s var(--ease),background .2s var(--ease);
+}
+.rail-login svg{width:17px;height:17px;flex:none;stroke-width:1.7}
+.rail-login span{font-size:12.5px;font-weight:600;white-space:nowrap;letter-spacing:-.005em}
+.rail-login:hover{color:var(--accent-dark);border-color:rgba(43,188,179,.5);background:var(--accent-soft)}
+
 /* live footer — the status ribbon idea, demoted to a quiet corner */
 .rail-foot{
   margin-top:8px;padding-top:10px;border-top:1px solid rgba(226,228,232,.9);

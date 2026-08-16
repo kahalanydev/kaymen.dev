@@ -133,6 +133,13 @@ function rail(active = 'work') {
     ).join('\n    ')}
   </div>
 
+  <!-- Outside .rail-nav on purpose: it is the one rail item that leaves the
+       page, and the lozenge tracks .rail-nav's children. index.html carries the
+       same markup for the homepage — change both or they disagree. -->
+  <a href="/portal" class="rail-login" data-track="nav-portal">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 3H18a2.5 2.5 0 0 1 2.5 2.5v13A2.5 2.5 0 0 1 18 21h-3.5"/><path d="M9.5 16.5 14 12 9.5 7.5"/><path d="M14 12H3.5"/></svg><span>Client login</span>
+  </a>
+
   <div class="rail-foot">
     <span class="pulse"></span><em>${STATS.LIVE.running} systems live now</em>
   </div>
@@ -160,6 +167,10 @@ function footer() {
         <a href="/#price">Pricing</a>
         <a href="/#terms">No hostages</a>
         <a href="/#talk">Contact</a>
+        <!-- Under 900px the rail is hidden and the tabbar is full at five slots,
+             so this is the only place a returning client can find the portal on
+             a phone. Do not drop it from the footer without giving it a home. -->
+        <a href="/portal">Client login</a>
       </nav>
       <span>&copy; 2026 Kaymen Group LLC</span>
     </div>
