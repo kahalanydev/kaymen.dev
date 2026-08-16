@@ -308,7 +308,11 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
    crosses every line of it and the source node lands on top of a benefit
    block. It is a desktop flourish; on a phone it costs legibility and battery
    for nothing. The ambient blooms stay, so the hero is still not flat. */
-@media (max-width:900px){.hero-fx{display:none}}
+/* Faded rather than removed. Hiding it outright was too blunt — it is the
+   one thing giving the hero life. At 45% the lines read as texture behind the
+   copy instead of crossing it, and script.js moves the source into the top
+   corner when the layout stacks so it can no longer land on a benefit block. */
+@media (max-width:900px){.hero-fx{opacity:.45}}
 /* two soft blooms, the site's own ambient treatment brought up enough to see */
 .hero::before,.hero::after{
   content:"";position:absolute;pointer-events:none;z-index:0;border-radius:50%;

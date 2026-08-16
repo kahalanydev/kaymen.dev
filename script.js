@@ -282,7 +282,9 @@
       var c = card.getBoundingClientRect(), t = col.getBoundingClientRect();
       var gap = (c.left - r.left) - (t.right - r.left);
       if (gap < 30 || c.left < t.left) {   /* stacked layout: no corridor */
-        srcX = w * 0.5; srcY = h * 0.30;
+        /* stacked layout: no corridor exists, so put it in the top-right
+           corner where nothing is, rather than the middle of the copy */
+        srcX = w - SOURCE_R - 18; srcY = SOURCE_R + 14;
       } else {
         /* sit the whole mark clear of the card rather than half under it */
         srcX = (c.left - r.left) - SOURCE_R - 12;
