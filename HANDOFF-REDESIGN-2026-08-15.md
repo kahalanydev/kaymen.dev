@@ -135,12 +135,14 @@ visual layer is what gets replaced.
 
 ## 4. Do not break these
 
-- **Never `git push` and assume it deployed.** Auto-deploy is broken — the repo's GitHub webhook
-  (id 603404325) still POSTs to the dead `admin.kahalany.dev`, returns 200, and builds nothing.
-  After pushing, trigger manually:
-  `POST https://admin.kaymen.dev/api/v1/deploy?uuid=zcco40skss0o8wwocs40k4gs` with a bearer token,
-  then poll the deployment or just `curl https://kaymen.dev`. Builds take ~10–20s.
-  The real fix is repointing the webhook host — still not done.
+- **Auto-deploy was FIXED on 2026-08-15.** The repo's GitHub webhook (id 603404325) used to POST
+  to the dead `admin.kahalany.dev`, return 200 and build nothing. It now points at
+  `https://admin.kaymen.dev/webhooks/source/github/events/manual` with the app's existing
+  `manual_webhook_secret_github`, and a push to `master` builds and goes live in ~10–20s —
+  verified end to end, not just by a 200 from the webhook.
+  Still verify after pushing (`curl https://kaymen.dev`), because a 200 from the hook never
+  proved anything. If it stops working, the manual fallback is
+  `POST https://admin.kaymen.dev/api/v1/deploy?uuid=zcco40skss0o8wwocs40k4gs` with a bearer token.
 - **`admin.kahalany.dev` is a different, older box** and returns 401. A wrong host is
   indistinguishable from a revoked token, which has cost real time before.
 - **`master` is production.** This repo has no staging branch — that is an explicit documented
