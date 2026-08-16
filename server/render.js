@@ -355,10 +355,16 @@ function fleetPanel() {
 }
 
 /**
- * Shot strip. Client back ends lead, because a business running its own work on
- * one of these is stronger proof than a product we made for ourselves — the
- * section's claim is "still running", not "we shipped things". Naming is settled
- * per project by `client.named` in content/projects.js, not by this file.
+ * Shot strip. THREE, and it stays three — one row. It briefly ran to six (the
+ * client back ends plus predictable/kartov/davenen) and that was wrong twice
+ * over: it doubled a strip already too small to read on a phone, and it diluted
+ * the section's claim. "Still running" is proved by a business doing its work on
+ * one of these, not by a product we made for ourselves. Naming is settled per
+ * project by `client.named` in content/projects.js, not by this file.
+ *
+ * The three retired shots are still in assets/shots/ (predictable.jpg,
+ * kartov.jpg, davenen.jpg) — swapping one back in is four lines, so the mix can
+ * change without re-shooting anything. Do not let it grow past three.
  *
  * EVERY SHOT IS OF A LOCAL INSTANCE ON FABRICATED DATA, and that is not a
  * detail. These systems hold borrowers, riders and students: the Thrive
@@ -391,24 +397,6 @@ const SHOTS = [
     host: 'horseandharmonyil.com',
     title: 'Therapeutic-riding bookings',
     note: 'Bilingual diary, health-fund referrals, reminders.',
-  },
-  {
-    img: '/assets/shots/predictable.jpg',
-    host: 'predictable.kaymen.dev',
-    title: 'Stock curation platform',
-    note: 'ML-scored sectors over a live broker integration.',
-  },
-  {
-    img: '/assets/shots/kartov.jpg',
-    host: 'kartov.app',
-    title: 'Shared lists & meal planning',
-    note: 'iOS and Android, with a vision-model capture flow.',
-  },
-  {
-    img: '/assets/shots/davenen.jpg',
-    host: 'davenen.org',
-    title: 'Prayer-partner matching',
-    note: 'Laravel platform plus an app in the App Store.',
   },
 ];
 

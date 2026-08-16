@@ -148,10 +148,16 @@ Two traps, both already paid for:
 
 ## 6. The screenshot strip
 
-`SHOTS` in `server/render.js` now carries **six**: the three client back ends
-Ohav asked for, then the three own products. Client systems lead — the section
-claims "still running", and a business running its work on one of these proves
-that better than something we built for ourselves.
+`SHOTS` in `server/render.js` carries **three, and it stays three**: BridgeMTG,
+Thrive and Horse & Harmony. The section claims "still running", and a business
+doing its work on one of these proves that better than a product we built for
+ourselves.
+
+It shipped at six for about an hour — the client back ends *plus*
+predictable/kartov/davenen — and Ohav killed that on sight. Six doubled a strip
+already too small to read on a phone, and diluted the claim. The three retired
+JPEGs are still in `assets/shots/`, so changing the mix is four lines and needs
+no re-shoot. **Do not let it grow back.**
 
 ### Nothing in these shots is real, and it must stay that way
 
@@ -198,14 +204,12 @@ renders as "No deals yet".
 
 ## Open
 
-- The strip is **six shots now, and still illegible on a phone** — 900×562
-  desktop captures at ~390px, and twice as many of them. Either hide under 900px
-  or make it a horizontal swipe. This got worse, not better.
-- **BridgeMTG and Horse & Harmony are real third parties** and their back ends
-  are now pictured on a public page. `client.named: true` was already set for
-  both and the running board already names them, so this is not a new decision —
-  but it is a bigger surface than a name, and neither business has been recorded
-  as having agreed. Ohav's call.
+- The strip is still **illegible on a phone** — 900×562 desktop captures at
+  ~390px. Either hide it under 900px or make it a horizontal swipe. Unchanged by
+  the re-shoot; back to three shots rather than six at least stops it worsening.
+- **BridgeMTG and Horse & Harmony being pictured is settled** — Ohav cleared it
+  on 2026-08-16 ("its ok") after being shown that neither business is recorded as
+  having agreed. Do not re-open it.
 - Neither BridgeMTG nor Horse & Harmony has a **demo-data seeder** of its own;
   the fixtures for these shots were written as throwaway scripts. If the strip is
   ever re-taken, that work repeats.
