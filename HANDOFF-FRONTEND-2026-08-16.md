@@ -267,9 +267,13 @@ below the 2,046px the merge in §1 was undoing.
 
 ## Open
 
-- The strip is still **illegible on a phone** — 900×562 desktop captures at
-  ~390px. Either hide it under 900px or make it a horizontal swipe. Unchanged by
-  the re-shoot; back to three shots rather than six at least stops it worsening.
+- The strip **swipes below 820px now** (`.shots`, same pattern as `.ask-grid`),
+  which was the length problem: it was 963px of stacked screenshot at 390px and
+  1,671px at 768px, now 295px and 471px. It does **not** make a back office
+  legible at 320px and does not try to — on a phone these exist to show that real
+  systems with real interfaces are behind the claim, and one card plus a peek
+  says that. Real legibility needs mobile-specific crops, i.e. a second set of
+  assets shot at a tighter frame. Still open, but no longer urgent.
 - **BridgeMTG and Horse & Harmony being pictured is settled** — Ohav cleared it
   on 2026-08-16 ("its ok") after being shown that neither business is recorded as
   having agreed. Do not re-open it.

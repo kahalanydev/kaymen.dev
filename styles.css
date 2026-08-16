@@ -500,6 +500,26 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
    products here — no client shot goes in without the naming call.       */
 .shots{display:grid;gap:16px;margin-top:34px}
 @media (min-width:820px){.shots{grid-template-columns:repeat(3,1fr)}}
+/* Below the three-up breakpoint these were three 900x562 DESKTOP captures
+   stacked at phone width — 963px of screenshot at 390px, 1,671px at 768px, and
+   not a word of any of them readable. Swipe instead: same pattern as .ask-grid.
+   It does not make a back office legible at 320px and is not meant to — the job
+   of these on a phone is to show that real systems with real interfaces exist,
+   and one card plus a peek says that in a third of the height. Genuine
+   legibility would need mobile-specific crops, i.e. a second set of assets.
+   overflow-x lives on this element alone: `html` carries overflow-x:clip, and
+   making a second scroll container out of anything taller breaks sticky. */
+@media (max-width:819px){
+  .shots{
+    display:flex;overflow-x:auto;overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory;padding-bottom:6px;scrollbar-width:none;
+  }
+  .shots::-webkit-scrollbar{display:none}
+  .shot{flex:0 0 82%;scroll-snap-align:start}
+  /* The lift is a pointer affordance. Inside a swipe strip it only ever fires
+     from a stray touch and leaves one card sitting proud of its neighbours. */
+  .shot:hover{transform:none;box-shadow:none;border-color:var(--line)}
+}
 .shot{
   border-radius:14px;overflow:hidden;background:#fff;border:1px solid var(--line);
   transition:all .35s var(--ease);
