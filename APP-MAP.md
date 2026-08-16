@@ -62,7 +62,8 @@ Portfolio/showcase website for kaymen.dev (Kaymen Group LLC) — a custom softwa
 - **Database** — SQLite via sql.js (WASM, pure JS — no native deps)
 - **Auth** — JWT tokens + bcrypt password hashing
 - **Charts** — Chart.js 4.x (CDN) in admin panel
-- **Fonts** — Inter (body) + JetBrains Mono (code/accents) via Google Fonts
+- **Fonts** — Sora (display) + Inter (body) via Google Fonts. JetBrains Mono was dropped with the
+  2026-08-15 redesign; code/monospace now uses the system stack.
 - **Deployment** — Node.js Docker container on Coolify (Hetzner VPS)
 - **SSL** — Let's Encrypt via Traefik (auto-provisioned)
 - **Domain** — kaymen.dev on Cloudflare (DNS only, wildcard A record)
@@ -99,7 +100,10 @@ Kaymen.Dev Site/
 │   │   └── uploads.js      # File upload/download/delete with auth-gated access
 │   └── utils/
 │       ├── detection.js    # Bot detection, rate tracking, suspicious activity logging
-│       └── email.js        # Nodemailer SMTP email (welcome, password reset, contact, ticket notifications)
+│       └── email.js        # ALL outbound email — one skinned wrapper + 8 templates.
+│                           # Rewritten 2026-08-16: escapes user input, ships a
+│                           # text/plain part. Route files must NOT hand-roll email
+│                           # HTML; three of them did and drifted a whole palette behind.
 ├── admin/
 │   ├── index.html          # Admin panel shell (PWA-enabled, loads Chart.js + app.js)
 │   ├── styles.css          # Admin dark/light theme styles + mobile card tables + bottom nav
@@ -409,11 +413,19 @@ does the selling. Each page carries prev/next navigation and a closing CTA band.
 - **Theme-color sync**: Meta tag updates to match current dark/light theme
 
 ## Theming
-- **Dark/light mode** across all three frontends (main site, admin, portal)
-- CSS custom properties with `[data-theme="light"]` overrides
-- Theme toggle buttons on each frontend
-- Persistence via localStorage (separate keys: `theme`, `admin_theme`, `portal_theme`)
-- Default: dark theme
+
+**Light-first, single theme. Dark mode was dropped, not deferred** — see
+`HANDOFF-REDESIGN-2026-08-15.md` §5. Do not ship a half-working one.
+
+| Surface | State |
+|---|---|
+| Main site | Light only. Toggle removed in the 2026-08-15 redesign. |
+| Admin | Light only. Toggle removed 2026-08-16; a stale `admin_theme` key is actively cleared on boot. |
+| Portal | **Still the old dark theme** — not yet re-skinned. `portal/app.js` still has its toggle. |
+
+Admin and portal stylesheets carry a **legacy token bridge**: the old dark theme's variable names
+(`--surface-3`, `--text-dim`, `--danger` …) are kept and pointed at the new palette, because the
+SPAs carry several hundred inline styles written against them. Grep `app.js` before deleting one.
 
 ## Deployment
 - **Docker**: `node:20-alpine` runs Express on port 8080

@@ -262,7 +262,10 @@ router.post('/projects/:projectId/tickets', enforceOrgScope, (req, res) => {
     sendTicketNotification({
       adminEmails: admins.map(a => a.email),
       projectName, ticketNumber: ticketNum, title: title.trim(),
-      type: ticketType, priority: ticketPriority, createdBy, ticketUrl
+      type: ticketType, priority: ticketPriority, createdBy, ticketUrl,
+      // The client's own words are the useful part of this notification —
+      // without them it is a link that has to be opened to be triaged.
+      description: description || null
     }).catch(err => console.error('[NOTIFY] Email error:', err.message));
   }
 

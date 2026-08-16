@@ -8,8 +8,11 @@ if ('serviceWorker' in navigator) {
   const $$ = (s, el) => [...(el || document).querySelectorAll(s)];
   const app = document.getElementById('app');
 
-  // Load saved theme
-  if (localStorage.getItem('admin_theme') === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  // The panel is light-first now and has no dark variant, so a leftover
+  // admin_theme key from before the re-skin must not be applied — it would set
+  // data-theme on a stylesheet that no longer has any [data-theme] rules.
+  localStorage.removeItem('admin_theme');
+  document.documentElement.removeAttribute('data-theme');
 
   // ===== STATE =====
   const state = {
@@ -94,6 +97,16 @@ if ('serviceWorker' in navigator) {
   function truncate(str, len = 40) {
     if (!str) return '';
     return str.length > len ? str.substring(0, len) + '...' : str;
+  }
+
+  /* Two letters for an avatar chip. Falls back to the first two characters of
+     whatever we have, because the activity feed carries emails as often as it
+     carries names and "OH" beats an empty square. */
+  function initials(name) {
+    const parts = String(name || '').trim().split(/[\s@._-]+/).filter(Boolean);
+    if (!parts.length) return '?';
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
   }
 
   function severityBadge(severity) {
@@ -526,48 +539,71 @@ if ('serviceWorker' in navigator) {
   }
 
   // ===== RENDER: LAYOUT =====
-  function renderLayout(content) {
+  /* Line icons, same set and stroke weight as the marketing rail. Emoji were
+     the old panel's icons; they render differently on every OS and cannot take
+     currentColor, so the active state could never tint them. */
+  const NAV_ICON = {
+    dashboard: '<path d="M3 10.5 12 3l9 7.5V21H3z"/>',
+    projects:  '<rect x="2.5" y="6.5" width="19" height="13.5" rx="2.2"/><path d="M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/>',
+    clients:   '<path d="M16 20v-1.6a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20"/><circle cx="9" cy="7" r="3.4"/><path d="M22 20v-1.6a4 4 0 0 0-3-3.8"/><path d="M16.5 3.8a4 4 0 0 1 0 6.4"/>',
+    security:  '<path d="M12 2.8 4.5 6v6c0 4.6 3.1 8 7.5 9.2 4.4-1.2 7.5-4.6 7.5-9.2V6z"/><path d="M9.2 12.2l2 2 3.6-3.9"/>',
+    analytics: '<path d="M3 20h18"/><path d="M6 20V11M11 20V6M16 20v-6M21 20V9"/>',
+    settings:  '<circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>',
+  };
+  const icon = (id) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">${NAV_ICON[id] || ''}</svg>`;
+
+  function renderLayout(content, opts) {
     const navItems = [
-      { id: 'dashboard', icon: '\u25A3', label: 'Dashboard' },
-      { id: 'projects', icon: '\u{1F4CB}', label: 'Projects' },
-      { id: 'clients', icon: '\u{1F465}', label: 'Clients' },
-      { id: 'security', icon: '\u26A0', label: 'Security' },
-      { id: 'analytics', icon: '\u25CE', label: 'Analytics' },
-      { id: 'settings', icon: '\u2699', label: 'Settings' },
+      { id: 'dashboard', label: 'Dashboard' },
+      { id: 'projects', label: 'Projects', count: 'projects' },
+      { id: 'clients', label: 'Clients', count: 'clients' },
+      { id: 'security', label: 'Security', count: 'security' },
+      { id: 'analytics', label: 'Analytics' },
+      { id: 'settings', label: 'Settings' },
     ];
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    // Counts are whatever the last dashboard fetch saw. Absent on a cold load,
+    // which is why every one of them is optional rather than rendered as 0.
+    const counts = state.navCounts || {};
     const bottomNavItems = navItems.filter(n => n.id !== 'settings');
+    const wide = opts && opts.wide ? ' wide' : '';
+
     app.innerHTML = `
       <div class="mobile-top-bar" id="mobileTopBar">
-        <button class="mtb-btn" id="mtbTheme" title="Toggle theme">${isLight ? '\u2600' : '\u{1F319}'}</button>
-        <a href="#/settings" class="mtb-btn ${state.page === 'settings' ? 'active' : ''}" title="Settings">\u2699</a>
-        <button class="mtb-btn" id="mtbLogout" title="Logout">\u{1F6AA}</button>
+        <a href="#/settings" class="mtb-btn ${state.page === 'settings' ? 'active' : ''}" title="Settings" aria-label="Settings">${icon('settings')}</a>
+        <button class="mtb-btn" id="mtbLogout" title="Log out" aria-label="Log out">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4.5"/><path d="m16 16.5 4.5-4.5L16 7.5"/><path d="M20.5 12H9.5"/></svg>
+        </button>
       </div>
       <div class="layout">
         <aside class="sidebar" id="sidebar">
-          <div class="sidebar-logo"><span class="accent">{</span> kaymen.dev <span class="accent">}</span></div>
-          <div class="sidebar-label">Admin Panel</div>
+          <div class="sidebar-logo">
+            <span class="mark">K</span>
+            <span>kaymen<span class="accent">.</span>dev</span>
+          </div>
+          <div class="sidebar-label">Admin</div>
           <ul class="sidebar-nav">
-            ${navItems.map(n => `
+            ${navItems.map(n => {
+              const c = n.count ? counts[n.count] : null;
+              return `
               <li><a href="#/${n.id}" class="${state.page === n.id ? 'active' : ''}" data-page="${n.id}">
-                <span class="icon">${n.icon}</span> ${n.label}
-              </a></li>
-            `).join('')}
+                <span class="icon">${icon(n.id)}</span><span>${n.label}</span>
+                ${c ? `<span class="count${c.hot ? ' hot' : ''}">${c.n}</span>` : ''}
+              </a></li>`;
+            }).join('')}
           </ul>
           <div class="sidebar-bottom">
+            ${state.navCounts && state.navCounts.live
+              ? `<div class="sidebar-live"><span class="pulse"></span><em>${state.navCounts.live} systems live now</em></div>` : ''}
             <div class="sidebar-user">${escapeHtml(state.user?.email)}</div>
-            <div style="display:flex;gap:6px;margin-bottom:8px">
-              <button class="theme-toggle-btn" id="themeToggleAdmin" style="flex:1;justify-content:center">${isLight ? '\u2600 Light' : '\u{1F319} Dark'}</button>
-            </div>
-            <button class="btn btn-secondary btn-sm" id="logoutBtn" style="width:100%">Logout</button>
+            <button class="btn btn-secondary btn-sm" id="logoutBtn" style="width:100%">Log out</button>
           </div>
         </aside>
-        <main class="main" id="mainContent">${content}</main>
+        <main class="main${wide}" id="mainContent">${content}</main>
       </div>
       <nav class="bottom-nav" id="bottomNav">
         ${bottomNavItems.map(n => `
           <a href="#/${n.id}" class="bottom-nav-item ${state.page === n.id ? 'active' : ''}" data-page="${n.id}">
-            <span class="bottom-nav-icon">${n.icon}</span>
+            <span class="bottom-nav-icon">${icon(n.id)}</span>
             <span class="bottom-nav-label">${n.label}</span>
           </a>
         `).join('')}
@@ -585,21 +621,9 @@ if ('serviceWorker' in navigator) {
     $('#logoutBtn').addEventListener('click', logout);
     const mtbLogout = $('#mtbLogout');
     if (mtbLogout) mtbLogout.addEventListener('click', logout);
-    function applyTheme(goLight) {
-      if (goLight) { document.documentElement.setAttribute('data-theme', 'light'); localStorage.setItem('admin_theme', 'light'); }
-      else { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('admin_theme', 'dark'); }
-      const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.content = goLight ? '#ffffff' : '#09090b';
-      render();
-    }
-    const mtbTheme = $('#mtbTheme');
-    if (mtbTheme) mtbTheme.addEventListener('click', () => {
-      applyTheme(document.documentElement.getAttribute('data-theme') !== 'light');
-    });
-    const themeBtn = $('#themeToggleAdmin');
-    if (themeBtn) themeBtn.addEventListener('click', () => {
-      applyTheme(document.documentElement.getAttribute('data-theme') !== 'light');
-    });
+    // The theme toggle was removed with the re-skin, on the same grounds the
+    // main site dropped its own (handoff §5): the palette is light-first and no
+    // dark variant is designed. Do not re-add a half-working one.
   }
 
   // ===== RENDER: DASHBOARD =====
@@ -616,155 +640,219 @@ if ('serviceWorker' in navigator) {
       const statusColors = { planning: 'badge-gray', proposed: 'badge-yellow', approved: 'badge-blue', in_progress: 'badge-blue', review: 'badge-yellow', completed: 'badge-green', maintenance: 'badge-green', archived: 'badge-gray' };
 
       // Build needs-attention items
+      // tone drives the icon and the one badge; hue is spent on severity only
+      const ATT_ICON = {
+        alert: '<path d="M12 8v5"/><circle cx="12" cy="16.6" r=".9" fill="currentColor" stroke="none"/><path d="M10.3 3.9 2.6 17.4A2 2 0 0 0 4.3 20.4h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>',
+        warn:  '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.4l3.4 2"/>',
+        plan:  '<path d="M14 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.5z"/><path d="M14 2.5v5h5"/>',
+        ok:    '<path d="M3.5 6.5h17v12h-17z"/><path d="m3.5 7 8.5 6.2L20.5 7"/>',
+      };
+      const attIcon = (k) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">${ATT_ICON[k]}</svg>`;
+
       const attentionItems = [];
       d.urgentTickets.forEach(t => attentionItems.push({
-        icon: t.priority === 'urgent' ? '&#9888;' : '&#9679;',
-        color: 'var(--danger)',
-        text: `<strong>#${t.ticket_number}</strong> ${escapeHtml(t.title)}`,
-        sub: `${escapeHtml(t.project_name)} &middot; ${t.priority} &middot; ${timeAgo(t.created_at)}`,
+        tone: 'alert', glyph: 'alert', flag: t.priority === 'urgent' ? 'Urgent' : 'High',
+        text: `#${t.ticket_number} — ${escapeHtml(t.title)}`,
+        sub: `${escapeHtml(t.project_name)} &middot; opened ${timeAgo(t.created_at)}`,
         href: `#/tickets/${t.id}`
       }));
       d.overdueMilestones.forEach(m => attentionItems.push({
-        icon: '&#9200;',
-        color: 'var(--warning)',
-        text: `<strong>Overdue:</strong> ${escapeHtml(m.title)}`,
-        sub: `${escapeHtml(m.project_name)} &middot; due ${escapeHtml(m.target_date)}`,
+        tone: 'warn', glyph: 'warn', flag: 'Overdue',
+        text: `Milestone overdue — ${escapeHtml(m.title)}`,
+        sub: `${escapeHtml(m.project_name)} &middot; target was ${escapeHtml(m.target_date)}`,
         href: `#/projects/${m.project_id}`
       }));
       d.waitingApprovals.forEach(p => attentionItems.push({
-        icon: '&#9993;',
-        color: 'var(--info)',
-        text: `<strong>Awaiting approval:</strong> ${escapeHtml(p.name)}`,
-        sub: `${escapeHtml(p.org_name)} &middot; proposed ${timeAgo(p.updated_at)}`,
+        tone: 'warn', glyph: 'plan', flag: 'Waiting',
+        text: `Plan sent, not yet approved`,
+        sub: `${escapeHtml(p.org_name)} &middot; ${escapeHtml(p.name)} &middot; proposed ${timeAgo(p.updated_at)}`,
         href: `#/projects/${p.id}`
       }));
       const newContacts = d.recentContacts.filter(c => !c.dismissed);
+      if (newContacts.length) attentionItems.push({
+        tone: 'ok', glyph: 'ok', flag: 'New',
+        text: `${newContacts.length} new lead${newContacts.length === 1 ? '' : 's'}, none dismissed`,
+        sub: `Oldest is ${timeAgo(newContacts[newContacts.length - 1].created_at)} old`,
+        href: '#/dashboard'
+      });
+
+      // Feed the rail's queue counts. Absent on a cold load, which is why
+      // renderLayout treats every one of them as optional.
+      state.navCounts = {
+        projects: d.activeProjects ? { n: d.activeProjects } : null,
+        clients: null,
+        security: null,
+        live: null,
+      };
+
+      const hour = new Date().getHours();
+      const partOfDay = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+      const firstName = (state.user?.name || '').trim().split(/\s+/)[0] || '';
+      const needCount = attentionItems.length;
+      const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
       $('#mainContent').innerHTML = `
-        <div class="page-header"><h1>Dashboard</h1><p>Command center</p></div>
+        <div class="page-header">
+          <p class="eyebrow">${escapeHtml(today)}</p>
+          <h1>Good ${partOfDay}${firstName ? ', ' + escapeHtml(firstName) : ''}.</h1>
+          <p>${needCount === 0
+                ? 'Nothing needs you. Everything is running.'
+                : `${needCount} thing${needCount === 1 ? '' : 's'} need${needCount === 1 ? 's' : ''} you today. Everything else is running.`}</p>
+        </div>
 
-        <!-- Top metrics -->
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="metric-label">Active Projects</div>
-            <div class="metric-value accent">${d.activeProjects}</div>
-            <div class="metric-sub">in progress or review</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Open Tickets</div>
-            <div class="metric-value${d.openTickets > 0 ? ' warning' : ''}">${d.openTickets}</div>
-            <div class="metric-sub">need resolution</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Pending Approvals</div>
-            <div class="metric-value${d.pendingApprovals > 0 ? ' info' : ''}">${d.pendingApprovals}</div>
-            <div class="metric-sub">plans waiting on client</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">New Leads</div>
-            <div class="metric-value${d.unreadContacts > 0 ? ' accent' : ''}">${d.unreadContacts}</div>
-            <div class="metric-sub">contact submissions</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Visitors Today</div>
-            <div class="metric-value">${d.visitors.today}</div>
-            <div class="metric-sub">${d.activeNow} active now</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">This Month</div>
-            <div class="metric-value">${d.visitors.month}</div>
-            <div class="metric-sub">avg ${d.avgTimeOnSite}s per session</div>
+        <hr class="rule">
+
+        <!-- the evidence strip, pointed at the panel's own numbers -->
+        <div class="section">
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-value accent">${d.activeProjects}</div>
+              <div class="metric-label">Active projects</div>
+              <div class="metric-sub">in progress or review</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value${d.openTickets > 0 ? ' danger' : ''}">${d.openTickets}</div>
+              <div class="metric-label">Open tickets</div>
+              <div class="metric-sub">need resolution</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value${d.pendingApprovals > 0 ? ' info' : ''}">${d.pendingApprovals}</div>
+              <div class="metric-label">Awaiting approval</div>
+              <div class="metric-sub">plans with the client</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value${d.unreadContacts > 0 ? ' accent' : ''}">${d.unreadContacts}</div>
+              <div class="metric-label">New leads</div>
+              <div class="metric-sub">contact submissions</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value">${d.visitors.today}</div>
+              <div class="metric-label">Visitors today</div>
+              <div class="metric-sub">${d.activeNow} active now</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value">${d.visitors.month}</div>
+              <div class="metric-label">This month</div>
+              <div class="metric-sub">avg ${d.avgTimeOnSite}s per session</div>
+            </div>
           </div>
         </div>
 
-        <!-- Needs Attention -->
-        ${attentionItems.length > 0 ? `
-        <div class="card" style="border-color:var(--warning-dim)">
-          <div class="card-header">
-            <span class="card-title" style="color:var(--warning)">Needs Attention</span>
-            <span class="badge badge-yellow">${attentionItems.length}</span>
-          </div>
-          <div style="max-height:280px;overflow-y:auto">
+        <hr class="rule">
+
+        <!-- needs attention — the site's no-hostages tick-row, carrying a problem -->
+        <div class="section">
+          <p class="eyebrow">Needs attention</p>
+          ${attentionItems.length > 0 ? `
+          <div class="att">
             ${attentionItems.map(item => `
-              <a href="${item.href}" style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--surface-3);text-decoration:none;cursor:pointer" class="dash-attention-row">
-                <span style="color:${item.color};font-size:16px;line-height:1;flex-shrink:0;margin-top:2px">${item.icon}</span>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:13px;color:var(--text)">${item.text}</div>
-                  <div style="font-size:11px;color:var(--text-dim);margin-top:2px">${item.sub}</div>
+              <a href="${item.href}" class="att-row">
+                <span class="att-ic t-${item.tone}">${attIcon(item.glyph)}</span>
+                <div>
+                  <div class="t">${item.text}</div>
+                  <div class="s">${item.sub}</div>
                 </div>
+                <span class="badge ${item.tone === 'alert' ? 'badge-red' : item.tone === 'warn' ? 'badge-yellow' : 'badge-green'}">${item.flag}</span>
               </a>
             `).join('')}
-          </div>
+          </div>` : `
+          <div class="att-clear">
+            <span class="pulse"></span>
+            <p><b>Nothing is waiting.</b> No urgent tickets, no overdue milestones, no plan sitting with a client.</p>
+          </div>`}
         </div>
-        ` : `
-        <div class="card" style="border-color:var(--success-dim)">
-          <div style="padding:16px;text-align:center;color:var(--text-dim);font-size:13px">
-            All clear — no urgent items need your attention.
-          </div>
-        </div>
-        `}
 
-        <div class="grid-2">
-          <!-- Active Projects -->
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">Active Projects</span>
-              <a href="#/projects" style="font-size:12px;color:var(--accent);text-decoration:none">View all</a>
-            </div>
-            ${d.projects.length === 0 ? '<p style="color:var(--text-dim);font-size:13px;padding:8px 0">No active projects.</p>' : `
-              <div style="max-height:320px;overflow-y:auto">
+        <hr class="rule">
+
+        <!-- the running board, straight off the marketing site -->
+        <div class="section">
+          <p class="eyebrow">Active projects</p>
+          ${d.projects.length === 0
+            ? '<div class="empty-state"><p>No active projects.</p></div>'
+            : `<div class="board">
                 ${d.projects.map(p => `
-                  <a href="#/projects/${p.id}" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--surface-3);text-decoration:none;cursor:pointer" class="dash-attention-row">
-                    <div style="flex:1;min-width:0">
-                      <div style="font-size:13px;font-weight:600;color:var(--text)">${escapeHtml(p.name)}</div>
-                      <div style="font-size:11px;color:var(--text-dim)">${escapeHtml(p.org_name)}</div>
-                    </div>
-                    <div style="width:80px">
-                      <div style="height:4px;background:var(--surface-3);border-radius:2px;overflow:hidden">
-                        <div style="height:100%;width:${p.progress_percent}%;background:var(--accent);border-radius:2px"></div>
-                      </div>
-                      <div style="font-size:10px;color:var(--text-dim);text-align:right;margin-top:2px">${p.progress_percent}%</div>
-                    </div>
-                    <span class="badge ${statusColors[p.status] || 'badge-gray'}" style="font-size:10px;white-space:nowrap">${p.status.replace(/_/g, ' ')}</span>
-                    ${p.open_tickets > 0 ? `<span class="badge badge-yellow" style="font-size:10px">${p.open_tickets} tickets</span>` : ''}
+                  <a href="#/projects/${p.id}" class="brow">
+                    <span class="dot${p.status === 'proposed' || p.status === 'planning' ? ' idle' : ''}"></span>
+                    <div class="nm">${escapeHtml(p.name)}<i>${escapeHtml(p.org_name)}</i></div>
+                    <div class="wt">${escapeHtml(p.description ? truncate(p.description, 90) : p.status.replace(/_/g, ' '))}</div>
+                    <div class="pg"><em>${p.progress_percent}%</em><span class="bar"><i style="width:${p.progress_percent}%"></i></span></div>
+                    ${p.open_tickets > 0
+                      ? `<span class="badge badge-yellow">${p.open_tickets} open</span>`
+                      : `<span class="badge ${statusColors[p.status] || 'badge-gray'}">${escapeHtml(p.status.replace(/_/g, ' '))}</span>`}
                   </a>
                 `).join('')}
-              </div>
-            `}
-          </div>
+              </div>`}
+        </div>
 
-          <!-- Recent Activity -->
-          <div class="card">
-            <div class="card-header"><span class="card-title">Recent Activity</span></div>
-            ${d.recentActivity.length === 0 ? '<p style="color:var(--text-dim);font-size:13px;padding:8px 0">No activity yet.</p>' : `
-              <div style="max-height:320px;overflow-y:auto">
-                ${d.recentActivity.map(a => `
-                  <div style="padding:8px 0;border-bottom:1px solid var(--surface-3);font-size:13px">
-                    <div style="color:var(--text-secondary)">
-                      <strong style="color:var(--text)">${escapeHtml(a.user_name)}</strong> ${escapeHtml(a.action.replace(/_/g, ' '))}
+        <hr class="rule">
+
+        <div class="section">
+          <div class="grid-2">
+            <!-- Recent activity -->
+            <div class="card">
+              <div class="card-header"><span class="card-title">Recent activity</span></div>
+              ${d.recentActivity.length === 0 ? '<div class="empty-state"><p>No activity yet.</p></div>' : `
+                <div class="act">
+                  ${d.recentActivity.map(a => `
+                    <div class="act-row">
+                      <span class="avatar">${escapeHtml(initials(a.user_name))}</span>
+                      <div class="tx">
+                        <b>${escapeHtml(a.user_name)}</b> ${escapeHtml(a.action.replace(/_/g, ' '))}
+                        ${a.project_name ? ` in <b>${escapeHtml(a.project_name)}</b>` : ''}
+                      </div>
+                      <span class="tm">${timeAgo(a.created_at)}</span>
                     </div>
-                    <div style="font-size:11px;color:var(--text-dim);margin-top:2px">
-                      ${a.project_name ? `<a href="#/projects/${a.project_id}" style="color:var(--accent);text-decoration:none">${escapeHtml(a.project_name)}</a> &middot; ` : ''}${timeAgo(a.created_at)}
-                    </div>
-                  </div>
-                `).join('')}
+                  `).join('')}
+                </div>
+              `}
+            </div>
+
+            <!-- New leads -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">New leads</span>
+                ${d.unreadContacts > 0 ? `<span class="badge badge-green">${d.unreadContacts} new</span>` : ''}
               </div>
-            `}
+              ${d.recentContacts.length === 0 ? '<div class="empty-state"><p>No submissions yet.</p></div>' : `
+                <div class="no-pad">
+                  ${d.recentContacts.map(c => `
+                    <div class="lead-row" data-contact-id="${c.id}">
+                      <div class="lh">
+                        <span class="ln">${escapeHtml(c.name)}</span>
+                        <span class="le">${timeAgo(c.created_at)}</span>
+                      </div>
+                      <div class="le">${escapeHtml(c.email)}${c.project_name ? ` &middot; <b style="color:var(--ink)">${escapeHtml(c.project_name)}</b>` : ''}</div>
+                      <div class="lm">${escapeHtml(truncate(c.message, 130))}</div>
+                      <div style="display:flex;gap:7px;margin-top:10px">
+                        ${c.converted_at
+                          ? '<span class="badge badge-green">Converted</span>'
+                          : `<button class="btn btn-primary btn-sm contact-convert" data-id="${c.id}" data-name="${escapeHtml(c.name).replace(/"/g, '&quot;')}" data-email="${escapeHtml(c.email).replace(/"/g, '&quot;')}" data-project="${escapeHtml(c.project_name || '').replace(/"/g, '&quot;')}">Make a client</button>
+                             <button class="btn btn-secondary btn-sm contact-dismiss" data-id="${c.id}">Dismiss</button>`}
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+              `}
+            </div>
           </div>
         </div>
 
-        <div class="grid-2">
-          <!-- Recent Visitors -->
+        <hr class="rule">
+
+        <!-- Contact submissions moved into "New leads" above \u2014 they are the
+             same records, and having them in two places meant dismissing one
+             left the other showing a lead that was already dealt with. -->
+        <div class="section">
           <div class="card">
             <div class="card-header">
-              <span class="card-title">Recent Visitors</span>
-              <a href="#/analytics" style="font-size:12px;color:var(--accent);text-decoration:none">Analytics</a>
+              <span class="card-title">Recent visitors</span>
+              <a href="#/analytics">Analytics &rarr;</a>
             </div>
             <div class="table-wrap">
               <table class="mobile-cards">
                 <thead><tr><th>IP</th><th>Location</th><th>Device</th><th>When</th></tr></thead>
                 <tbody>
-                  ${d.recentVisitors.length === 0 ? '<tr><td colspan="4" style="text-align:center;color:var(--text-dim)">No visitors yet</td></tr>' :
+                  ${d.recentVisitors.length === 0 ? '<tr><td colspan="4" style="text-align:center;color:var(--muted)">No visitors yet</td></tr>' :
                     d.recentVisitors.map(v => `<tr>
                       <td data-label="IP"><span class="mono">${escapeHtml(v.ip)}</span> ${v.is_bot ? '<span class="badge badge-yellow">bot</span>' : ''}</td>
                       <td data-label="Location">${escapeHtml(v.country ? `${v.city || ''}, ${v.country}` : 'Unknown')}</td>
@@ -774,38 +862,6 @@ if ('serviceWorker' in navigator) {
                 </tbody>
               </table>
             </div>
-          </div>
-
-          <!-- Contact Submissions -->
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">Contact Submissions</span>
-              ${d.unreadContacts > 0 ? `<span class="badge badge-green">${d.unreadContacts} new</span>` : ''}
-            </div>
-            ${d.recentContacts.length === 0 ? '<p style="color:var(--text-dim);font-size:13px;padding:8px 0">No submissions yet.</p>' : `
-              <div style="max-height:400px;overflow-y:auto">
-                ${d.recentContacts.map(c => `
-                  <div style="padding:10px 0;border-bottom:1px solid var(--surface-3)" data-contact-id="${c.id}">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;flex-wrap:wrap;gap:4px">
-                      <div style="font-size:13px;min-width:0">
-                        <strong style="color:var(--text)">${escapeHtml(c.name)}</strong>
-                        <span style="color:var(--text-dim)">${escapeHtml(c.email)}</span>
-                        ${c.project_name ? `<span class="badge badge-blue" style="font-size:10px;margin-left:4px">${escapeHtml(c.project_name)}</span>` : ''}
-                      </div>
-                      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-                        <span style="font-size:11px;color:var(--text-dim)">${timeAgo(c.created_at)}</span>
-                        ${c.converted_at
-                          ? '<span class="badge badge-green" style="font-size:10px">Converted</span>'
-                          : `<button class="btn btn-primary btn-sm contact-convert" data-id="${c.id}" data-name="${escapeHtml(c.name).replace(/"/g, '&quot;')}" data-email="${escapeHtml(c.email).replace(/"/g, '&quot;')}" data-project="${escapeHtml(c.project_name || '').replace(/"/g, '&quot;')}" style="font-size:10px;padding:2px 8px">\u2192 Client</button>
-                            <button class="btn btn-secondary btn-sm contact-dismiss" data-id="${c.id}" style="font-size:10px;padding:2px 8px">Dismiss</button>`
-                        }
-                      </div>
-                    </div>
-                    <div style="font-size:12px;color:var(--text-secondary);line-height:1.4">${escapeHtml(truncate(c.message, 120))}</div>
-                  </div>
-                `).join('')}
-              </div>
-            `}
           </div>
         </div>
       `;

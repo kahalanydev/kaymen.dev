@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kaymen.dev — back-office directions (admin · portal · email)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   kaymen.dev — back-office directions
+   ----------------------------------------------------------------------------
+   Three directions for /admin, two for /portal, and the re-skinned email.
+
+   Palette, faces and the glass recipe are lifted verbatim from styles.css —
+   which is itself the port of mockup/v3-quiet.html. Nothing in the LOCKED set
+   (HANDOFF-REDESIGN-2026-08-15.md §1) is re-opened here: same accent, same
+   Sora + Inter, same always-labelled 224px rail.
+
+   Two additions are declared rather than smuggled in, both in the token block
+   below: a warn and an alert tone. See the note there.
+
+   Data is shaped to the real schema in server/db.js and uses the real
+   organisations behind content/projects.js. Values are plausible, not live.
+   ============================================================================ */
+
+:root{
+  /* --- the locked palette, verbatim from styles.css --- */
+  --bg:#ffffff;
+  --bg-alt:#f4f5f7;
+  --ink:#1a1b1e;
+  --muted:#5f6368;
+  --accent:#2bbcb3;
+  --accent-dark:#229e96;
+  --accent-soft:rgba(43,188,179,.08);
+  --accent-glow:rgba(43,188,179,.18);
+  --line:#e2e4e8;
+  --deep:#16303d;
+  --deep-2:#1c2333;
+
+  --display:'Sora',-apple-system,BlinkMacSystemFont,sans-serif;
+  --body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+
+  --w-page:1120px;
+  --rail-w:224px;
+  --rail-gap:32px;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --spring:cubic-bezier(.34,1.4,.64,1);
+
+  /* --- the two additions, declared ---------------------------------------
+     The marketing site needs one accent and it has one. An operations surface
+     genuinely cannot run on one: "urgent" and "overdue" have to be legible
+     without reading, and rendering them in the accent would make the accent
+     mean nothing. So two tones, both desaturated to sit with #2bbcb3 rather
+     than shout over it, and both restricted to severity — never to decorate a
+     heading, a chart or a card edge. If Ohav would rather ship on one accent,
+     the fallback is weight and a leading rule instead of hue; it is legible,
+     just slower to scan. */
+  --warn:#a8761c;   --warn-soft:rgba(168,118,28,.09);
+  --alert:#b8443c;  --alert-soft:rgba(184,68,60,.08);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:var(--body);background:var(--bg-alt);color:var(--ink);
+  line-height:1.6;-webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+ul{list-style:none}
+h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.03em;line-height:1.15;font-weight:700}
+svg{display:block}
+
+/* ======================================================= MOCKUP CHROME ONLY
+   Everything under this heading is scaffolding for reviewing the file. None
+   of it is proposed for the product.                                       */
+.mk-top{
+  position:sticky;top:0;z-index:200;background:rgba(255,255,255,.86);
+  backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:1px solid var(--line);
+}
+.mk-top-in{
+  max-width:1360px;margin:0 auto;padding:11px 24px;
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+}
+.mk-brand{display:flex;align-items:center;gap:10px;flex:none}
+.mk-mark{
+  width:26px;height:26px;border-radius:8px;
+  background:linear-gradient(150deg,var(--accent) 0%,var(--accent-dark) 100%);
+  color:#fff;font-family:var(--display);font-weight:800;font-size:12px;
+  display:flex;align-items:center;justify-content:center;letter-spacing:-.04em;
+  box-shadow:0 4px 12px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.45);
+}
+.mk-brand b{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:-.02em;display:block;line-height:1.25}
+.mk-brand i{font-style:normal;font-size:11px;color:var(--muted);font-weight:500;display:block;line-height:1.3}
+.mk-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
+.mk-group{
+  display:flex;align-items:center;gap:5px;padding:3px;border-radius:12px;
+  background:var(--bg-alt);border:1px solid var(--line);
+}
+.mk-group em{
+  font-style:normal;font-size:9.5px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);padding:0 7px 0 8px;
+}
+.mk-tab{
+  padding:6px 13px;border-radius:9px;font-size:12.5px;font-weight:600;
+  color:var(--muted);transition:all .22s var(--ease);white-space:nowrap;
+}
+.mk-tab:hover{color:var(--ink);background:rgba(255,255,255,.8)}
+.mk-tab.on{background:#fff;color:var(--accent-dark);box-shadow:0 1px 4px rgba(22,48,61,.1)}
+
+.mk-page{max-width:1360px;margin:0 auto;padding:26px 24px 90px}
+.mk-panel{display:none;animation:mkin .4s var(--ease)}
+.mk-panel.on{display:block}
+@keyframes mkin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* the premise card that heads every direction */
+.mk-note{
+  background:#fff;border:1px solid var(--line);border-radius:16px;
+  padding:22px 24px;margin-bottom:22px;
+  box-shadow:0 10px 30px rgba(22,48,61,.05);
+}
+.mk-note .mk-eyebrow{
+  font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--accent-dark);margin-bottom:9px;
+}
+.mk-note h2{font-size:22px;letter-spacing:-.035em}
+.mk-note h2 small{
+  font-family:var(--body);font-size:12px;font-weight:600;color:var(--muted);
+  letter-spacing:0;margin-left:10px;
+}
+.mk-cols{display:grid;gap:18px;margin-top:16px}
+@media (min-width:860px){.mk-cols{grid-template-columns:repeat(3,1fr);gap:26px}}
+.mk-col h5{
+  font-family:var(--body);font-size:10.5px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:7px;
+}
+.mk-col p{font-size:13.5px;color:var(--muted);line-height:1.6}
+.mk-col p b{color:var(--ink);font-weight:600}
+.mk-col.cost h5{color:var(--warn)}
+
+/* the app frame — reuses the site's .shot-bar browser chrome */
+.frame{
+  border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#fff;
+  box-shadow:0 26px 64px -22px rgba(22,48,61,.22),0 8px 20px -8px rgba(22,48,61,.07);
+}
+.frame-bar{
+  height:34px;background:var(--bg-alt);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:6px;padding:0 13px;
+}
+.frame-bar i{width:8px;height:8px;border-radius:50%;background:#d3d6dc;display:block;flex:none}
+.frame-bar em{
+  font-style:normal;font-size:10.5px;color:var(--muted);font-weight:600;margin-left:10px;
+  letter-spacing:.01em;
+}
+.frame-bar em b{color:var(--ink);font-weight:600}
+
+/* the screen itself — the rail is fixed in the real CSS; here it is absolute
+   inside the frame so six screens can coexist in one document */
+.screen{position:relative;min-height:660px;background:var(--bg);overflow:hidden}
+.screen .ambient{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.screen .ambient i{position:absolute;border-radius:50%;filter:blur(90px);display:block}
+.screen .ambient .g1{width:560px;height:560px;top:-300px;left:-190px;background:rgba(43,188,179,.06)}
+.screen .ambient .g2{width:460px;height:460px;top:45%;right:-250px;background:rgba(43,188,179,.045)}
+.screen .ambient .g3{width:420px;height:420px;bottom:-250px;left:26%;background:rgba(28,35,51,.03)}
+
+/* ============================================================== THE RAIL
+   Verbatim recipe from styles.css — glass, always 224px, always labelled.
+   LOCKED: hover-to-collapse is not reintroduced in any direction below,
+   including the dense one, where it would have been the obvious cheat.
+
+   One difference from production, and it is this file's fault rather than a
+   proposal: on the real site the rail is `position:fixed; top:50%`, so it
+   rides the middle of the viewport. These frames are tall static captures,
+   so centring would park it against the bottom of a long screen. Pinned to
+   the top of each frame instead.                                          */
+.rail{
+  position:absolute;top:30px;left:26px;z-index:80;
+  width:var(--rail-w);padding:10px 9px;border-radius:26px;
+  display:flex;flex-direction:column;gap:2px;overflow:hidden;
+  background:rgba(255,255,255,.55);
+  backdrop-filter:blur(30px) saturate(190%);
+  -webkit-backdrop-filter:blur(30px) saturate(190%);
+  box-shadow:
+    0 24px 54px -18px rgba(22,48,61,.22),
+    0 8px 20px -8px rgba(22,48,61,.10),
+    0 0 0 .5px rgba(255,255,255,.70),
+    0 0 0 1px rgba(226,228,232,.75),
+    inset 0 1px 0 rgba(255,255,255,.90),
+    inset 0 -1px 0 rgba(22,48,61,.04);
+}
+.rail::before{
+  content:"";position:absolute;inset:0;border-radius:26px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.65) 0%,rgba(255,255,255,.14) 22%,rgba(255,255,255,0) 48%);
+  mix-blend-mode:screen;
+}
+.rail-brand{
+  display:flex;align-items:center;gap:12px;height:44px;padding:0 8px;
+  margin-bottom:6px;flex:none;position:relative;z-index:2;
+}
+.mark{
+  width:30px;height:30px;flex:none;border-radius:9px;
+  background:linear-gradient(150deg,var(--accent) 0%,var(--accent-dark) 100%);
+  color:#fff;font-family:var(--display);font-weight:800;font-size:14px;
+  display:flex;align-items:center;justify-content:center;letter-spacing:-.04em;
+  box-shadow:0 4px 12px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.45);
+}
+.rail-wordmark{font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:-.02em;white-space:nowrap}
+.rail-wordmark span{color:var(--accent)}
+.rail-wordmark i{
+  font-style:normal;display:block;font-size:9px;font-weight:700;color:var(--muted);
+  letter-spacing:.15em;text-transform:uppercase;margin-top:1px;
+}
+.rail-nav{position:relative;display:flex;flex-direction:column;gap:2px;z-index:2}
+.rail-link{
+  display:flex;align-items:center;gap:14px;height:40px;padding:0 9px;
+  border-radius:14px;color:var(--muted);position:relative;flex:none;
+  transition:color .2s var(--ease);
+}
+.rail-link svg{width:18px;height:18px;flex:none;stroke-width:1.6}
+.rail-link span{font-size:13.5px;font-weight:500;white-space:nowrap;letter-spacing:-.005em}
+.rail-link:hover{color:var(--ink)}
+.rail-link.on{
+  color:var(--accent-dark);font-weight:600;background:var(--accent-soft);
+  box-shadow:inset 0 0 0 1px rgba(43,188,179,.22),inset 0 1px 0 rgba(255,255,255,.7);
+}
+.rail-link.on span{font-weight:600}
+/* the count that rides a nav item — an admin has queues, the marketing site
+   does not, so this is the one structural addition the rail needs */
+.rail-link u{
+  text-decoration:none;margin-left:auto;font-size:10.5px;font-weight:700;
+  min-width:19px;height:19px;padding:0 5px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg-alt);color:var(--muted);
+}
+.rail-link u.hot{background:var(--alert-soft);color:var(--alert)}
+.rail-foot{
+  margin-top:8px;padding-top:10px;border-top:1px solid rgba(226,228,232,.9);
+  display:flex;align-items:center;gap:11px;padding-left:9px;padding-right:9px;
+  height:38px;flex:none;position:relative;z-index:2;
+}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none;position:relative}
+.pulse::after{
+  content:"";position:absolute;inset:-4px;border-radius:50%;
+  border:1.5px solid var(--accent);opacity:0;animation:ping 2.6s var(--ease) infinite;
+}
+@keyframes ping{0%{transform:scale(.6);opacity:.7}70%{transform:scale(1.5);opacity:0}100%{opacity:0}}
+.rail-foot em{font-style:normal;font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+
+/* the content column has to clear the rail — same arithmetic as styles.css */
+.body{position:relative;z-index:1;padding-left:calc(26px + var(--rail-w) + var(--rail-gap));padding-right:34px}
+
+/* ---------------------------------------------------------- shared atoms */
+.eyebrow{
+  font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--accent-dark);
+}
+.h-row{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px}
+.card-h{
+  padding:15px 18px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.card-h h3{font-size:14px;letter-spacing:-.02em}
+.card-h a{font-size:11.5px;font-weight:600;color:var(--accent-dark)}
+.rule{height:1px;background:var(--line);border:0}
+
+.badge{
+  display:inline-flex;align-items:center;gap:5px;height:20px;padding:0 8px;
+  border-radius:6px;font-size:10.5px;font-weight:700;letter-spacing:.03em;
+  text-transform:uppercase;white-space:nowrap;
+}
+.badge.b-live{background:var(--accent-soft);color:var(--accent-dark)}
+.badge.b-warn{background:var(--warn-soft);color:var(--warn)}
+.badge.b-alert{background:var(--alert-soft);color:var(--alert)}
+.badge.b-mute{background:var(--bg-alt);color:var(--muted)}
+
+.avatar{
+  width:26px;height:26px;border-radius:9px;flex:none;background:var(--bg-alt);
+  border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:var(--muted);font-family:var(--display);
+}
+
+/* progress bar, used by every direction */
+.bar{height:4px;border-radius:3px;background:var(--bg-alt);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent) 0%,var(--accent-dark) 100%)}
+
+/* =========================================================== DIRECTION A
+   Continuity — the admin as the same building. Section rhythm, hairline
+   rules, the .brow running-board row and the wide measure, all carried
+   straight over from the marketing site.                                  */
+.a-head{padding:34px 0 22px}
+.a-head h1{font-size:30px;letter-spacing:-.04em;margin-top:9px}
+.a-head p{font-size:13.5px;color:var(--muted);margin-top:8px}
+.a-sec{padding:26px 0}
+.a-sec > .eyebrow{margin-bottom:16px}
+
+/* the metric strip speaks the site's evidence-strip language: a number in
+   Sora, a flat label, no card, no border, no icon */
+.a-metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:2px}
+.a-metric{padding:2px 16px 2px 0}
+.a-metric b{
+  font-family:var(--display);font-size:27px;font-weight:800;letter-spacing:-.045em;
+  display:block;line-height:1;font-variant-numeric:tabular-nums;
+}
+.a-metric b.up{color:var(--accent-dark)}
+.a-metric b.hot{color:var(--alert)}
+.a-metric span{font-size:11.5px;color:var(--muted);display:block;margin-top:7px;line-height:1.35}
+
+/* needs-attention borrows the .term tick-row from the no-hostages block,
+   inverted: the same row shape, carrying a problem instead of a promise */
+.a-att{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.a-att-row{
+  display:grid;grid-template-columns:26px 1fr auto;gap:14px;align-items:center;
+  background:#fff;padding:14px 16px;transition:background .22s var(--ease);cursor:pointer;
+}
+.a-att-row:hover{background:rgba(244,245,247,.75)}
+.a-att-ic{
+  width:26px;height:26px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+}
+.a-att-ic svg{width:14px;height:14px;stroke-width:2}
+.a-att-ic.alert{background:var(--alert-soft);color:var(--alert)}
+.a-att-ic.warn{background:var(--warn-soft);color:var(--warn)}
+.a-att-ic.ok{background:var(--accent-soft);color:var(--accent-dark)}
+.a-att-row .t{font-size:13.5px;font-weight:600;letter-spacing:-.01em}
+.a-att-row .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+/* the running board, unchanged from the marketing site — this is the whole
+   continuity argument in one component */
+.board{border-top:1px solid var(--line)}
+.brow{
+  display:grid;grid-template-columns:10px 1.15fr 1.6fr 120px auto;gap:20px;
+  align-items:center;padding:15px 10px;border-bottom:1px solid var(--line);
+  transition:background .25s var(--ease);cursor:pointer;
+}
+.brow:hover{background:rgba(244,245,247,.7)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.dot.idle{background:#c6cad1;box-shadow:0 0 0 3px rgba(198,202,209,.18)}
+.brow .nm{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.brow .nm i{
+  font-style:normal;display:block;color:var(--muted);font-weight:600;font-size:9.5px;
+  letter-spacing:.11em;text-transform:uppercase;margin-top:4px;
+}
+.brow .wt{color:var(--muted);font-size:12.5px;line-height:1.5}
+.brow .pg{display:flex;align-items:center;gap:9px}
+.brow .pg em{font-style:normal;font-size:11px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;width:30px}
+.brow .pg .bar{flex:1}
+
+.a-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:20px}
+
+/* activity — the same dotted-list vocabulary as the case-study outcome lists */
+.act{padding:6px 0}
+.act-row{display:grid;grid-template-columns:26px 1fr auto;gap:12px;align-items:flex-start;padding:9px 18px}
+.act-row .tx{font-size:12.5px;line-height:1.5;color:var(--muted)}
+.act-row .tx b{color:var(--ink);font-weight:600}
+.act-row .tm{font-size:10.5px;color:var(--muted);white-space:nowrap;padding-top:2px;font-variant-numeric:tabular-nums}
+.lead-row{padding:13px 18px;border-bottom:1px solid var(--line)}
+.lead-row:last-child{border-bottom:0}
+.lead-row .lh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.lead-row .ln{font-size:13px;font-weight:600}
+.lead-row .le{font-size:11px;color:var(--muted)}
+.lead-row .lm{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+
+/* =========================================================== DIRECTION B
+   Triage-first — the dashboard is one queue, not six cards.               */
+.b-head{padding:34px 0 20px}
+.b-head h1{font-size:30px;letter-spacing:-.04em}
+/* the six metrics compress into one sentence you read rather than scan */
+.b-line{font-size:13.5px;color:var(--muted);margin-top:12px}
+.b-line b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.b-line s{text-decoration:none;color:var(--line);margin:0 9px}
+
+.q-head{display:flex;align-items:baseline;gap:12px;margin:10px 0 12px}
+.q-head h2{font-size:17px;letter-spacing:-.03em}
+.q-head span{font-size:11.5px;color:var(--muted)}
+.queue{display:grid;gap:9px}
+/* the severity spine: a 3px leading rule, the only place hue is spent */
+.qi{
+  background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  position:relative;transition:all .25s var(--ease);
+}
+.qi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--line)}
+.qi.s-alert::before{background:var(--alert)}
+.qi.s-warn::before{background:var(--warn)}
+.qi.s-ok::before{background:var(--accent)}
+.qi:hover{box-shadow:0 12px 30px rgba(22,48,61,.08);border-color:#d7dae0}
+.qi-h{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;padding:15px 18px 15px 20px;cursor:pointer}
+.qi-t{font-size:14px;font-weight:600;letter-spacing:-.015em;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.qi-t em{font-style:normal;font-size:11px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+.qi-s{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.5}
+.qi-s b{color:var(--ink);font-weight:600}
+.qi-r{display:flex;align-items:center;gap:9px}
+.qi-age{font-size:11px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+/* actions sit on the row — triage means never opening the thing to act */
+.qi-do{
+  height:30px;padding:0 13px;border-radius:9px;font-size:12px;font-weight:600;
+  border:1px solid var(--line);color:var(--ink);background:#fff;white-space:nowrap;
+  transition:all .22s var(--ease);
+}
+.qi-do:hover{border-color:var(--accent);color:var(--accent-dark)}
+.qi-do.p{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 3px 12px var(--accent-glow)}
+.qi-do.p:hover{background:var(--accent-dark);border-color:var(--accent-dark);color:#fff}
+/* expanded in place — the row opens, the page does not change */
+.qi-x{border-top:1px solid var(--line);background:rgba(244,245,247,.5);padding:16px 20px}
+.qi-x p{font-size:12.5px;color:var(--muted);line-height:1.65;max-width:70ch}
+.qi-x p+p{margin-top:9px}
+.qi-x .meta{display:flex;gap:20px;flex-wrap:wrap;margin-top:13px;padding-top:13px;border-top:1px solid var(--line)}
+.qi-x .meta div{font-size:11px;color:var(--muted)}
+.qi-x .meta b{display:block;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px}
+.b-clear{
+  margin-top:16px;padding:20px;border-radius:14px;border:1px dashed var(--line);
+  display:flex;align-items:center;gap:13px;
+}
+.b-clear .pulse{position:relative}
+.b-clear p{font-size:13px;color:var(--muted)}
+.b-clear p b{color:var(--ink);font-weight:600}
+
+/* =========================================================== DIRECTION C
+   Dense console — two panes, no navigation round-trip, tabular numerals.
+   The rail stays 224px and labelled; density is bought from the content.   */
+.c-top{
+  display:flex;align-items:center;gap:14px;padding:13px 0 12px;
+  border-bottom:1px solid var(--line);
+}
+.c-top h1{font-size:16px;letter-spacing:-.03em}
+.c-k{
+  margin-left:auto;display:flex;align-items:center;gap:8px;height:30px;padding:0 11px;
+  border-radius:9px;border:1px solid var(--line);background:var(--bg-alt);
+  font-size:11.5px;color:var(--muted);
+}
+.c-k kbd{
+  font-family:var(--body);font-size:10px;font-weight:700;background:#fff;
+  border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:var(--ink);
+}
+.c-panes{display:grid;grid-template-columns:270px 1fr;gap:0;min-height:520px}
+.c-list{border-right:1px solid var(--line);padding:10px 14px 10px 0}
+.c-lh{
+  font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);padding:9px 8px 7px;
+}
+.c-li{
+  display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;
+  padding:7px 9px;border-radius:9px;cursor:pointer;transition:background .18s var(--ease);
+}
+.c-li:hover{background:var(--bg-alt)}
+.c-li.on{background:var(--accent-soft);box-shadow:inset 0 0 0 1px rgba(43,188,179,.22)}
+.c-li .n{font-size:12.5px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+.c-li .o{font-size:10px;color:var(--muted);margin-top:2px}
+.c-li .c{font-size:10.5px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.c-li .c.hot{color:var(--alert)}
+.c-li .bar{grid-column:1/-1;margin-top:6px}
+
+.c-detail{padding:14px 0 14px 20px;min-width:0}
+.c-dh{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+.c-dh h2{font-size:17px;letter-spacing:-.03em}
+.c-dh .sp{margin-left:auto;display:flex;gap:7px}
+.c-sub{font-size:11.5px;color:var(--muted);margin-top:5px}
+.c-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:15px 0;padding:13px 0;border-block:1px solid var(--line)}
+.c-stat b{
+  font-family:var(--display);font-size:19px;font-weight:700;letter-spacing:-.04em;
+  display:block;line-height:1;font-variant-numeric:tabular-nums;
+}
+.c-stat span{font-size:10px;color:var(--muted);display:block;margin-top:5px;letter-spacing:.02em}
+.c-stat b.hot{color:var(--alert)}
+.c-cols{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:26px}
+.c-blk h4{
+  font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);font-family:var(--body);margin-bottom:8px;
+}
+/* 28px rows against the marketing site's 42px — this is where the density is */
+.c-ms{display:grid;gap:1px}
+.c-m{display:grid;grid-template-columns:16px 1fr auto;gap:9px;align-items:center;padding:5px 0;font-size:12px}
+.c-m .mk{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--line);position:relative}
+.c-m .mk.done{background:var(--accent);border-color:var(--accent)}
+.c-m .mk.done::after{content:"";position:absolute;left:3.6px;top:1.6px;width:3.4px;height:6.4px;border:1.6px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
+.c-m .mk.now{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.c-m .mn{letter-spacing:-.01em}
+.c-m.is-done .mn{color:var(--muted)}
+.c-m .md{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.c-tb{width:100%;border-collapse:collapse;font-size:12px}
+.c-tb th{
+  text-align:left;font-size:9.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--muted);padding:0 8px 7px 0;border-bottom:1px solid var(--line);
+}
+.c-tb td{padding:6px 8px 6px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+.c-tb tr:hover td{background:rgba(244,245,247,.6)}
+.c-tb .num{font-variant-numeric:tabular-nums;color:var(--muted);font-size:11px}
+.c-tb .ti{font-weight:500;letter-spacing:-.01em}
+/* inline status select — the app already does this on the project page */
+.c-sel{
+  font-family:var(--body);font-size:11px;font-weight:600;color:var(--ink);
+  border:1px solid var(--line);border-radius:7px;padding:3px 6px;background:#fff;
+  cursor:pointer;
+}
+.c-log{display:grid;gap:0;margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.c-lr{display:grid;grid-template-columns:1fr auto;gap:12px;padding:4px 0;font-size:11.5px;color:var(--muted)}
+.c-lr b{color:var(--ink);font-weight:600}
+.c-lr .t{font-variant-numeric:tabular-nums;font-size:10.5px}
+
+/* ============================================================= PORTAL A
+   Reassurance — answer the question before the client has to scroll.      */
+.p-hero{padding:44px 0 30px;max-width:760px}
+.p-hero .eyebrow{margin-bottom:14px}
+.p-hero h1{font-size:38px;letter-spacing:-.045em;line-height:1.08}
+.p-hero h1 span{color:var(--accent)}
+.p-hero .lead{font-size:16px;color:var(--muted);margin-top:18px;line-height:1.7;max-width:52ch}
+.p-hero .lead b{color:var(--ink);font-weight:600}
+.p-actions{display:flex;gap:11px;margin-top:26px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:11px;
+  font-family:var(--body);font-size:13.5px;font-weight:600;transition:all .3s var(--ease);
+}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 16px var(--accent-glow)}
+.btn-primary:hover{background:var(--accent-dark);transform:translateY(-1px)}
+.btn-ghost{border:1.5px solid var(--line);color:var(--ink);background:rgba(255,255,255,.6)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent-dark)}
+
+.p-grid{display:grid;grid-template-columns:1fr 300px;gap:34px;padding:28px 0 34px;align-items:start}
+/* the ring already exists in portal/app.js — re-tinted, not rebuilt */
+.ring-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px;border:1px solid var(--line);border-radius:18px;background:#fff}
+.ring{position:relative;width:132px;height:132px}
+.ring svg{transform:rotate(-90deg)}
+.ring .tr{stroke:var(--bg-alt)}
+.ring .fg{stroke:url(#pg);stroke-linecap:round}
+.ring .lbl{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.ring .lbl b{font-family:var(--display);font-size:30px;font-weight:800;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums}
+.ring .lbl span{font-size:10px;color:var(--muted);letter-spacing:.11em;text-transform:uppercase;margin-top:5px;font-weight:700}
+.ring-wrap .sub{font-size:12px;color:var(--muted);text-align:center;line-height:1.5}
+.ring-wrap .sub b{color:var(--ink);font-weight:600;display:block;font-size:13px;margin-bottom:3px}
+
+/* the timeline, re-drawn in the accent instead of the old blue */
+.tl{position:relative;padding-left:26px}
+.tl::before{content:"";position:absolute;left:6px;top:8px;bottom:14px;width:2px;background:var(--line)}
+.tl.lit::before{background:linear-gradient(180deg,var(--accent) 0%,var(--accent) 62%,var(--line) 62%)}
+.tl-i{position:relative;padding:0 0 22px}
+.tl-i::before{
+  content:"";position:absolute;left:-26px;top:4px;width:14px;height:14px;border-radius:50%;
+  background:#fff;border:2px solid var(--line);
+}
+.tl-i.done::before{background:var(--accent);border-color:var(--accent)}
+.tl-i.done::after{content:"";position:absolute;left:-21.4px;top:8px;width:3.6px;height:6.6px;border:1.7px solid #fff;border-top:0;border-left:0;transform:rotate(42deg)}
+.tl-i.now::before{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft);animation:beat 2.4s var(--ease) infinite}
+@keyframes beat{0%,100%{box-shadow:0 0 0 4px var(--accent-soft)}50%{box-shadow:0 0 0 8px rgba(43,188,179,.05)}}
+.tl-i h4{font-size:14px;letter-spacing:-.02em}
+.tl-i.done h4{color:var(--muted);font-weight:600}
+.tl-i p{font-size:12px;color:var(--muted);margin-top:4px}
+.tl-i .when{font-size:10.5px;color:var(--muted);margin-top:5px;font-variant-numeric:tabular-nums}
+.tl-i.now .when{color:var(--accent-dark);font-weight:700}
+
+.p-story{padding:26px 0 40px;border-top:1px solid var(--line)}
+.story{display:grid;gap:0;margin-top:14px;max-width:720px}
+.story-i{display:grid;grid-template-columns:78px 1fr;gap:18px;padding:11px 0;border-bottom:1px solid var(--line)}
+.story-i:last-child{border-bottom:0}
+.story-i .d{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:2px;letter-spacing:.02em}
+.story-i .b{font-size:13px;line-height:1.6;color:var(--muted)}
+.story-i .b b{color:var(--ink);font-weight:600}
+
+/* ============================================================= PORTAL B
+   Workspace — what is yours to do, beside where it stands.                */
+.w-head{padding:32px 0 18px;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.w-head h1{font-size:26px;letter-spacing:-.04em}
+.w-head p{font-size:13px;color:var(--muted);margin-top:7px}
+.w-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:26px;padding-bottom:34px;align-items:start}
+.w-lane h3{font-size:12px;font-family:var(--body);font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.w-lane h3 u{text-decoration:none;color:var(--accent-dark);margin-left:6px}
+.todo{display:grid;gap:10px}
+.td{
+  background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;
+  transition:all .25s var(--ease);
+}
+.td:hover{border-color:#d7dae0;box-shadow:0 10px 26px rgba(22,48,61,.06)}
+.td.hero{border-color:rgba(43,188,179,.5);background:linear-gradient(180deg,var(--accent-soft) 0%,rgba(255,255,255,0) 62%)}
+.td-t{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.td-t h4{font-size:14.5px;letter-spacing:-.02em}
+.td p{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.6;max-width:56ch}
+.td-a{display:flex;gap:9px;margin-top:14px;align-items:center;flex-wrap:wrap}
+.td-a .btn{padding:9px 17px;font-size:12.5px;border-radius:10px}
+.td-a .note{font-size:11px;color:var(--muted)}
+.td-meta{display:flex;gap:8px;align-items:center;margin-top:9px;font-size:11px;color:var(--muted)}
+/* the compose box — the whole argument of this direction is that it is here,
+   on the landing screen, rather than three clicks into a Tickets tab */
+.compose{
+  margin-top:12px;border:1px solid var(--line);border-radius:14px;background:#fff;
+  overflow:hidden;
+}
+.compose textarea{
+  width:100%;border:0;padding:14px 16px 10px;font-family:var(--body);font-size:13px;
+  color:var(--ink);resize:none;outline:none;line-height:1.6;background:transparent;
+}
+.compose textarea::placeholder{color:#9aa0a8}
+.compose-f{
+  display:flex;align-items:center;gap:9px;padding:9px 12px 11px 16px;
+  border-top:1px solid var(--line);background:rgba(244,245,247,.5);
+}
+.compose-f select{
+  font-family:var(--body);font-size:11.5px;font-weight:600;border:1px solid var(--line);
+  border-radius:8px;padding:5px 8px;background:#fff;cursor:pointer;color:var(--ink);
+}
+.compose-f .btn{margin-left:auto;padding:8px 16px;font-size:12.5px;border-radius:9px}
+.compose-f .clip{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:5px}
+
+.w-side{display:grid;gap:16px}
+.w-stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.w-stat .top{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.w-stat .top b{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.w-stat .top span{font-size:11px;color:var(--muted)}
+.w-stat .bar{margin-top:11px}
+.w-stat .nx{font-size:12px;color:var(--muted);margin-top:11px;line-height:1.5}
+.w-stat .nx b{color:var(--ink);font-weight:600}
+.w-mini{padding:4px 0}
+.w-mini .r{display:grid;grid-template-columns:1fr auto;gap:10px;padding:7px 18px;font-size:12px;color:var(--muted)}
+.w-mini .r b{color:var(--ink);font-weight:600}
+.w-mini .r .t{font-size:10.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* ================================================================= EMAIL */
+.e-grid{display:grid;gap:20px}
+@media (min-width:1000px){.e-grid{grid-template-columns:1fr 1fr}}
+.e-slot{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.e-slot-h{padding:13px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.e-slot-h b{font-size:12.5px;font-family:var(--display);letter-spacing:-.02em}
+.e-slot-h code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px;
+  color:var(--muted);background:var(--bg-alt);padding:2px 7px;border-radius:6px;
+}
+/* the inbox backdrop — email is never seen on white, so do not show it on white */
+.e-stage{background:#e8eaee;padding:22px 18px}
+.e-note{
+  margin-top:18px;padding:18px 20px;background:#fff;border:1px solid var(--line);
+  border-radius:14px;
+}
+.e-note h5{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-family:var(--body);margin-bottom:9px}
+.e-note ul{display:grid;gap:8px}
+.e-note li{font-size:13px;color:var(--muted);line-height:1.6;padding-left:16px;position:relative}
+.e-note li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.e-note li b{color:var(--ink);font-weight:600}
+
+/* the file is built for desktop review; below this it is legible, not pretty */
+@media (max-width:1180px){
+  .a-metrics{grid-template-columns:repeat(3,1fr);gap:18px 2px}
+  .a-grid,.p-grid,.w-grid,.c-cols{grid-template-columns:1fr}
+  .c-panes{grid-template-columns:220px 1fr}
+  .c-stats{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:900px){
+  .body{padding-left:22px;padding-right:22px}
+  .rail{display:none}
+  .brow{grid-template-columns:10px 1fr;gap:6px 13px}
+  .brow .pg,.brow .yr{grid-column:2}
+  .c-panes{grid-template-columns:1fr}
+  .c-list{border-right:0;border-bottom:1px solid var(--line);padding-right:0}
+  .c-detail{padding-left:0}
+}
+</style>
+</head>
+<body>
+
+<!-- ==================================================== MOCKUP CHROME ONLY -->
+<header class="mk-top">
+  <div class="mk-top-in">
+    <div class="mk-brand">
+      <span class="mk-mark">K</span>
+      <span><b>Back-office directions</b><i>admin · portal · email — 16 Aug 2026</i></span>
+    </div>
+    <nav class="mk-tabs">
+      <div class="mk-group">
+        <em>Admin</em>
+        <button class="mk-tab on" data-go="admin-a">Continuity</button>
+        <button class="mk-tab" data-go="admin-b">Triage-first</button>
+        <button class="mk-tab" data-go="admin-c">Dense console</button>
+      </div>
+      <div class="mk-group">
+        <em>Portal</em>
+        <button class="mk-tab" data-go="portal-a">Reassurance</button>
+        <button class="mk-tab" data-go="portal-b">Workspace</button>
+      </div>
+      <div class="mk-group">
+        <em>Email</em>
+        <button class="mk-tab" data-go="email">Re-skin</button>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="mk-page">
+
+<!-- ====================================================================== -->
+<!-- ADMIN A — CONTINUITY                                                   -->
+<!-- ====================================================================== -->
+<section class="mk-panel on" id="admin-a">
+  <div class="mk-note">
+    <p class="mk-eyebrow">Admin · direction 1 of 3</p>
+    <h2>Continuity <small>the same building, one door further in</small></h2>
+    <div class="mk-cols">
+      <div class="mk-col">
+        <h5>The premise</h5>
+        <p>A client goes kaymen.dev → invite email → <b>/portal</b>, and Ohav goes kaymen.dev → <b>/admin</b>, several times a day. Three visual identities read as three vendors. This direction spends nothing on new ideas: the rail, the section rhythm, the hairline rules and the <b>running-board row</b> come over unchanged, and the project list literally <b>is</b> the marketing site's running board pointed at the <code>projects</code> table.</p>
+      </div>
+      <div class="mk-col">
+        <h5>What changes</h5>
+        <p>Only the palette and the components. Every screen, route and query stays where it is — this is <b>admin/styles.css</b> replaced and the class names in <b>admin/app.js</b> renamed. The six dashboard cards, Needs Attention, the activity feed and the leads list survive intact.</p>
+      </div>
+      <div class="mk-col cost">
+        <h5>What it costs</h5>
+        <p>The site's air is expensive in a tool. <b>74px section padding</b> and a 760px prose measure are right for a page read once and wrong for a screen opened twenty times a day — below, the same information needs about 1.6 screens where today it needs one. It is also the least decisive of the three: it re-skins the dashboard without asking whether the dashboard was right.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-bar"><i></i><i></i><i></i><em><b>kaymen.dev</b>/admin</em></div>
+    <div class="screen">
+      <div class="ambient" aria-hidden="true"><i class="g1"></i><i class="g2"></i><i class="g3"></i></div>
+
+      <nav class="rail">
+        <a href="#" class="rail-brand">
+          <span class="mark">K</span>
+          <span class="rail-wordmark"><b>kaymen</b><span>.</span>dev<i>Admin</i></span>
+        </a>
+        <div class="rail-nav">
+          <a href="#" class="rail-link on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg><span>Dashboard</span></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2.5" y="6.5" width="19" height="13.5" rx="2.2"/><path d="M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/></svg><span>Projects</span><u>6</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 20v-1.6a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20"/><circle cx="9" cy="7" r="3.4"/><path d="M22 20v-1.6a4 4 0 0 0-3-3.8"/><path d="M16.5 3.8a4 4 0 0 1 0 6.4"/></svg><span>Clients</span><u>5</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3.5 8.5 12 3l8.5 5.5v7L12 21l-8.5-5.5z"/><path d="M12 11.5v9.5"/></svg><span>Tickets</span><u class="hot">7</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 20h18"/><path d="M6 20V11M11 20V6M16 20v-6M21 20V9"/></svg><span>Analytics</span></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.8 4.5 6v6c0 4.6 3.1 8 7.5 9.2 4.4-1.2 7.5-4.6 7.5-9.2V6z"/></svg><span>Security</span><u>3</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.33-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg><span>Settings</span></a>
+        </div>
+        <div class="rail-foot"><span class="pulse"></span><em>19 systems live now</em></div>
+      </nav>
+
+      <div class="body">
+        <div class="a-head">
+          <p class="eyebrow">16 August 2026</p>
+          <h1>Good morning, Ohav.</h1>
+          <p>Four things need you today. Everything else is running.</p>
+        </div>
+
+        <hr class="rule">
+
+        <div class="a-sec">
+          <div class="a-metrics">
+            <div class="a-metric"><b>6</b><span>Active projects</span></div>
+            <div class="a-metric"><b class="hot">7</b><span>Open tickets</span></div>
+            <div class="a-metric"><b class="up">1</b><span>Awaiting approval</span></div>
+            <div class="a-metric"><b>3</b><span>New leads</span></div>
+            <div class="a-metric"><b>41</b><span>Visitors today</span></div>
+            <div class="a-metric"><b>1,284</b><span>This month</span></div>
+          </div>
+        </div>
+
+        <hr class="rule">
+
+        <div class="a-sec">
+          <p class="eyebrow">Needs attention</p>
+          <div class="a-att">
+            <div class="a-att-row">
+              <span class="a-att-ic alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 8v5"/><circle cx="12" cy="16.6" r=".9" fill="currentColor" stroke="none"/><path d="M10.3 3.9 2.6 17.4A2 2 0 0 0 4.3 20.4h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>
+              <div>
+                <div class="t">#12 — Lender statement shows the pre-correction fund total</div>
+                <div class="s">Passaic Clifton Gemach · Community lending ledger · opened by Yitzchok Berger</div>
+              </div>
+              <span class="badge b-alert">Urgent</span>
+            </div>
+            <div class="a-att-row">
+              <span class="a-att-ic warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.4l3.4 2"/></svg></span>
+              <div>
+                <div class="t">Milestone overdue — Per-lender statements</div>
+                <div class="s">Community lending ledger · target was 12 Aug · 4 days over</div>
+              </div>
+              <span class="badge b-warn">Overdue</span>
+            </div>
+            <div class="a-att-row">
+              <span class="a-att-ic warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.5z"/><path d="M14 2.5v5h5"/></svg></span>
+              <div>
+                <div class="t">Plan v4 sent 3 days ago, not yet approved</div>
+                <div class="s">BridgeMortgage · Mortgage client portal · proposed 13 Aug</div>
+              </div>
+              <span class="badge b-warn">Waiting</span>
+            </div>
+            <div class="a-att-row">
+              <span class="a-att-ic ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3.5 6.5h17v12h-17z"/><path d="m3.5 7 8.5 6.2L20.5 7"/></svg></span>
+              <div>
+                <div class="t">3 new leads, none dismissed</div>
+                <div class="s">Oldest is 2 days old — volunteer scheduling, ~40 users</div>
+              </div>
+              <span class="badge b-live">New</span>
+            </div>
+          </div>
+        </div>
+
+        <hr class="rule">
+
+        <div class="a-sec">
+          <div class="h-row"><p class="eyebrow">Active projects</p></div>
+          <div class="board">
+            <div class="brow">
+              <span class="dot"></span>
+              <div class="nm">Community lending ledger<i>Passaic Clifton Gemach</i></div>
+              <div class="wt">Per-lender statements — the last block before handover</div>
+              <div class="pg"><em>78%</em><span class="bar"><i style="width:78%"></i></span></div>
+              <span class="badge b-alert">3 open</span>
+            </div>
+            <div class="brow">
+              <span class="dot"></span>
+              <div class="nm">MSP time-compliance portal<i>CIS</i></div>
+              <div class="wt">In review — roster classification screen signed off</div>
+              <div class="pg"><em>92%</em><span class="bar"><i style="width:92%"></i></span></div>
+              <span class="badge b-warn">1 open</span>
+            </div>
+            <div class="brow">
+              <span class="dot idle"></span>
+              <div class="nm">Mortgage client portal<i>BridgeMortgage</i></div>
+              <div class="wt">Proposed — plan v4 with the client, awaiting approval</div>
+              <div class="pg"><em>0%</em><span class="bar"><i style="width:0%"></i></span></div>
+              <span class="badge b-mute">Proposed</span>
+            </div>
+            <div class="brow">
+              <span class="dot"></span>
+              <div class="nm">Multi-campus engagement platform<i>OLAMI · Thrive</i></div>
+              <div class="wt">Maintenance — Salesforce sync green, 2×/day</div>
+              <div class="pg"><em>100%</em><span class="bar"><i style="width:100%"></i></span></div>
+              <span class="badge b-warn">1 open</span>
+            </div>
+            <div class="brow">
+              <span class="dot"></span>
+              <div class="nm">Bilingual booking platform<i>Horse &amp; Harmony</i></div>
+              <div class="wt">Maintenance — horizon job green, 30 days ahead</div>
+              <div class="pg"><em>100%</em><span class="bar"><i style="width:100%"></i></span></div>
+              <span class="badge b-mute">1 open</span>
+            </div>
+          </div>
+        </div>
+
+        <hr class="rule">
+
+        <div class="a-sec">
+          <div class="a-grid">
+            <div class="card">
+              <div class="card-h"><h3>Recent activity</h3><a href="#">All →</a></div>
+              <div class="act">
+                <div class="act-row"><span class="avatar">YB</span><div class="tx"><b>Yitzchok Berger</b> opened ticket <b>#12</b> in Community lending ledger</div><span class="tm">2h</span></div>
+                <div class="act-row"><span class="avatar">OK</span><div class="tx"><b>Ohav</b> completed milestone <b>Fund basis correction</b></div><span class="tm">Yest.</span></div>
+                <div class="act-row"><span class="avatar">OK</span><div class="tx"><b>Ohav</b> saved plan <b>v4</b> for Mortgage client portal</div><span class="tm">Yest.</span></div>
+                <div class="act-row"><span class="avatar">OK</span><div class="tx"><b>Ohav</b> proposed <b>Mortgage client portal</b> to BridgeMortgage</div><span class="tm">3d</span></div>
+                <div class="act-row"><span class="avatar">OK</span><div class="tx"><b>Ohav</b> resolved ticket <b>#29</b> in MSP time-compliance portal</div><span class="tm">3d</span></div>
+                <div class="act-row"><span class="avatar">MA</span><div class="tx"><b>Meira Adler</b> commented on ticket <b>#8</b></div><span class="tm">4d</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-h"><h3>New leads</h3><span class="badge b-live">3 new</span></div>
+              <div class="lead-row">
+                <div class="lh"><span class="ln">Rivka Stein</span><span class="le">2d</span></div>
+                <div class="le">rivka@bethjacobnj.org · <b>Volunteer scheduling</b></div>
+                <div class="lm">"We run about 40 volunteers across four programmes on a WhatsApp group and a Google Sheet. Nobody knows who is covering Sunday until Sunday…"</div>
+              </div>
+              <div class="lead-row">
+                <div class="lh"><span class="ln">Dov Neuman</span><span class="le">4d</span></div>
+                <div class="le">office@ohrtorah.com · <b>Membership + billing</b></div>
+                <div class="lm">"Our membership renewals and the billing live in two places and they disagree every year…"</div>
+              </div>
+              <div class="lead-row">
+                <div class="lh"><span class="ln">Tali Weiss</span><span class="le">6d</span></div>
+                <div class="le">tali@harborlane.co</div>
+                <div class="lm">"Inherited a Laravel app from a developer who has stopped replying. Need someone to take it over."</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:34px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================================== -->
+<!-- ADMIN B — TRIAGE-FIRST                                                 -->
+<!-- ====================================================================== -->
+<section class="mk-panel" id="admin-b">
+  <div class="mk-note">
+    <p class="mk-eyebrow">Admin · direction 2 of 3</p>
+    <h2>Triage-first <small>the dashboard is a queue, not a report</small></h2>
+    <div class="mk-cols">
+      <div class="mk-col">
+        <h5>The premise</h5>
+        <p>On a normal morning the true answer is <b>between zero and eight things</b>. Today's dashboard makes you assemble that list yourself by scanning six cards — the metrics row, Needs Attention, Active Projects, Activity, Visitors and Contacts — and the list you assemble is the same one the server already computed. So compute it once, sort it, and put the action on the row: <b>resolve, approve and reply without opening the object</b>.</p>
+      </div>
+      <div class="mk-col">
+        <h5>What changes</h5>
+        <p>The six metrics compress into <b>one sentence</b>. Queue rows expand in place rather than navigating. Everything else — projects, clients, analytics, security — stays exactly as it is, one rail click away; this changes the landing screen only. Server-side it is one new aggregate endpoint over queries <code>/api/admin/dashboard</code> already runs.</p>
+      </div>
+      <div class="mk-col cost">
+        <h5>What it costs</h5>
+        <p>You lose the ambient numbers — the ones you notice without looking for them, like visitors doubling. And <b>a queue is only as honest as the rules that fill it</b>: a missing rule means a real problem never appears, and an empty queue is indistinguishable from a broken one. That needs a visible "last computed" and a rules list you can read.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-bar"><i></i><i></i><i></i><em><b>kaymen.dev</b>/admin</em></div>
+    <div class="screen">
+      <div class="ambient" aria-hidden="true"><i class="g1"></i><i class="g2"></i><i class="g3"></i></div>
+
+      <nav class="rail">
+        <a href="#" class="rail-brand">
+          <span class="mark">K</span>
+          <span class="rail-wordmark"><b>kaymen</b><span>.</span>dev<i>Admin</i></span>
+        </a>
+        <div class="rail-nav">
+          <a href="#" class="rail-link on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6h16M4 12h16M4 18h9"/></svg><span>Today</span><u class="hot">4</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2.5" y="6.5" width="19" height="13.5" rx="2.2"/><path d="M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/></svg><span>Projects</span><u>6</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 20v-1.6a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20"/><circle cx="9" cy="7" r="3.4"/></svg><span>Clients</span><u>5</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3.5 8.5 12 3l8.5 5.5v7L12 21l-8.5-5.5z"/></svg><span>Tickets</span><u>7</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 20h18"/><path d="M6 20V11M11 20V6M16 20v-6M21 20V9"/></svg><span>Analytics</span></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.8 4.5 6v6c0 4.6 3.1 8 7.5 9.2 4.4-1.2 7.5-4.6 7.5-9.2V6z"/></svg><span>Security</span><u>3</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><span>Settings</span></a>
+        </div>
+        <div class="rail-foot"><span class="pulse"></span><em>19 systems live now</em></div>
+      </nav>
+
+      <div class="body">
+        <div class="b-head">
+          <p class="eyebrow" style="margin-bottom:11px">16 August 2026</p>
+          <h1>Four things need you.</h1>
+          <p class="b-line">
+            <b>6</b> projects<s>·</s><b>7</b> open tickets<s>·</s><b>1</b> plan waiting<s>·</s><b>3</b> new leads<s>·</s><b>41</b> visitors today<s>·</s>all 19 systems responding
+          </p>
+        </div>
+
+        <div class="q-head">
+          <h2>Now</h2>
+          <span>sorted by how long it has been true · recomputed 40 seconds ago</span>
+        </div>
+
+        <div class="queue">
+          <!-- expanded by default so the in-place behaviour is visible -->
+          <div class="qi s-alert">
+            <div class="qi-h">
+              <div>
+                <div class="qi-t"><span class="badge b-alert">Urgent</span> Lender statement shows the pre-correction fund total <em>#12</em></div>
+                <div class="qi-s"><b>Passaic Clifton Gemach</b> · Community lending ledger · opened by Yitzchok Berger · 1 attachment</div>
+              </div>
+              <div class="qi-r">
+                <span class="qi-age">2h</span>
+                <button class="qi-do">Reply</button>
+                <button class="qi-do p">Take it</button>
+              </div>
+            </div>
+            <div class="qi-x">
+              <p>"The per-lender statement I sent to the trustees still totals <b>$1,633,917.56</b>. The dashboard says $1,586,533.86. Which one do I give them?"</p>
+              <p>Statement generation is still reading the money-in total. The dashboard moved to held-basis in the fund-basis correction; the statement query did not come with it.</p>
+              <div class="meta">
+                <div><b>Type</b>bug</div>
+                <div><b>Status</b>open</div>
+                <div><b>Assigned</b>unassigned</div>
+                <div><b>Project</b>78% · milestone 4 of 5</div>
+                <div><b>Attachment</b>statement-trustees-aug.pdf · 214 KB</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="qi s-warn">
+            <div class="qi-h">
+              <div>
+                <div class="qi-t"><span class="badge b-warn">4 days over</span><span>Milestone <b style="font-weight:700">Per-lender statements</b> is past target</span></div>
+                <div class="qi-s"><b>Passaic Clifton Gemach</b> · target 12 Aug · the last block before handover · <b>blocked by #12</b></div>
+              </div>
+              <div class="qi-r">
+                <span class="qi-age">4d</span>
+                <button class="qi-do">Move date</button>
+                <button class="qi-do p">Mark done</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="qi s-warn">
+            <div class="qi-h">
+              <div>
+                <div class="qi-t"><span class="badge b-warn">Waiting on client</span> Plan v4 sent 3 days ago, not approved</div>
+                <div class="qi-s"><b>BridgeMortgage</b> · Mortgage client portal · proposed 13 Aug · no portal login since</div>
+              </div>
+              <div class="qi-r">
+                <span class="qi-age">3d</span>
+                <button class="qi-do">Nudge</button>
+                <button class="qi-do">Open plan</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="qi s-ok">
+            <div class="qi-h">
+              <div>
+                <div class="qi-t"><span class="badge b-live">Lead</span> Rivka Stein — volunteer scheduling, ~40 volunteers</div>
+                <div class="qi-s">beth jacob nj · 2 days unanswered · reads like <b>Simple Site + Keep Running</b></div>
+              </div>
+              <div class="qi-r">
+                <span class="qi-age">2d</span>
+                <button class="qi-do">Dismiss</button>
+                <button class="qi-do p">Reply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="q-head" style="margin-top:26px">
+          <h2>Soon</h2>
+          <span>true, but not yet worth interrupting for</span>
+        </div>
+        <div class="queue">
+          <div class="qi">
+            <div class="qi-h">
+              <div>
+                <div class="qi-t">2 more leads unanswered <em>4d · 6d</em></div>
+                <div class="qi-s">Dov Neuman — membership + billing · Tali Weiss — inherited Laravel app, no developer</div>
+              </div>
+              <div class="qi-r"><button class="qi-do">Open</button></div>
+            </div>
+          </div>
+          <div class="qi">
+            <div class="qi-h">
+              <div>
+                <div class="qi-t">5 open tickets, none urgent <em>#31 #47 #8 #11 #3</em></div>
+                <div class="qi-s">Oldest is #8 at 9 days — Hebrew SMS reminder, in progress</div>
+              </div>
+              <div class="qi-r"><button class="qi-do">Open</button></div>
+            </div>
+          </div>
+          <div class="qi">
+            <div class="qi-h">
+              <div>
+                <div class="qi-t"><span>Dev key <b style="font-weight:700">claude-code-desk</b> unused for 11 days</span></div>
+                <div class="qi-s">If the sync service is down, resolved tickets stop closing themselves — that failure is silent</div>
+              </div>
+              <div class="qi-r"><button class="qi-do">Run check</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="b-clear">
+          <span class="pulse"></span>
+          <p><b>Nothing else is waiting.</b> 19 systems responding, Salesforce sync green at 06:00, booking horizon 30 days ahead, last backup verified 04:12.</p>
+        </div>
+
+        <div style="height:34px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================================== -->
+<!-- ADMIN C — DENSE CONSOLE                                                -->
+<!-- ====================================================================== -->
+<section class="mk-panel" id="admin-c">
+  <div class="mk-note">
+    <p class="mk-eyebrow">Admin · direction 3 of 3</p>
+    <h2>Dense console <small>one operator, who knows it cold</small></h2>
+    <div class="mk-cols">
+      <div class="mk-col">
+        <h5>The premise</h5>
+        <p>This panel has exactly one daily user and he wrote it. Every navigation round-trip is a tax on someone who already knows where he is going. So: <b>two panes</b> — projects left, the selected project entire on the right — milestone and ticket rows at roughly a third the height of the site's board rows, tabular numerals so columns of figures align, sparklines instead of Chart.js, and <b>⌘K</b> to jump to any project, ticket or org by name.</p>
+      </div>
+      <div class="mk-col">
+        <h5>What changes</h5>
+        <p>The most of the three. Project detail stops being a page you navigate to and becomes the right pane. The three stacked grids in <code>admin/app.js</code> — Milestones + Claude Code, Plan + Tickets, Members + Activity — collapse into one screen. The inline ticket status dropdown, which <b>already exists</b>, becomes the main way tickets move.</p>
+      </div>
+      <div class="mk-col cost">
+        <h5>What it costs</h5>
+        <p>Two real ones. It stops looking like kaymen.dev — a client who lands on <code>/admin</code> by accident sees a different product. And admin is an <b>installable PWA with a bottom tabbar and card-tables</b>; two panes have no phone layout, so mobile becomes a separately-designed surface rather than the same one narrowed. Also: the 224px rail is locked, and at this density it is the widest thing on screen doing the least — worth raising, not worth quietly shrinking.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-bar"><i></i><i></i><i></i><em><b>kaymen.dev</b>/admin#/projects/community-lending-ledger</em></div>
+    <div class="screen" style="min-height:640px">
+      <div class="ambient" aria-hidden="true"><i class="g1"></i><i class="g2"></i></div>
+
+      <nav class="rail">
+        <a href="#" class="rail-brand">
+          <span class="mark">K</span>
+          <span class="rail-wordmark"><b>kaymen</b><span>.</span>dev<i>Admin</i></span>
+        </a>
+        <div class="rail-nav">
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg><span>Dashboard</span></a>
+          <a href="#" class="rail-link on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2.5" y="6.5" width="19" height="13.5" rx="2.2"/><path d="M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/></svg><span>Projects</span><u>6</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 20v-1.6a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20"/><circle cx="9" cy="7" r="3.4"/></svg><span>Clients</span><u>5</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3.5 8.5 12 3l8.5 5.5v7L12 21l-8.5-5.5z"/></svg><span>Tickets</span><u class="hot">7</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 20h18"/><path d="M6 20V11M11 20V6M16 20v-6M21 20V9"/></svg><span>Analytics</span></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.8 4.5 6v6c0 4.6 3.1 8 7.5 9.2 4.4-1.2 7.5-4.6 7.5-9.2V6z"/></svg><span>Security</span><u>3</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span>Settings</span></a>
+        </div>
+        <div class="rail-foot"><span class="pulse"></span><em>19 systems live now</em></div>
+      </nav>
+
+      <div class="body">
+        <div class="c-top">
+          <h1>Projects</h1>
+          <span class="badge b-mute">6 active</span>
+          <div class="c-k"><span>Jump to anything</span><kbd>⌘</kbd><kbd>K</kbd></div>
+        </div>
+
+        <div class="c-panes">
+          <div class="c-list">
+            <div class="c-lh">In progress</div>
+            <div class="c-li on">
+              <div><div class="n">Community lending ledger</div><div class="o">Passaic Clifton Gemach</div></div>
+              <span class="c hot">3</span>
+              <span class="bar"><i style="width:78%"></i></span>
+            </div>
+            <div class="c-li">
+              <div><div class="n">MSP time-compliance portal</div><div class="o">CIS</div></div>
+              <span class="c">1</span>
+              <span class="bar"><i style="width:92%"></i></span>
+            </div>
+            <div class="c-lh">Proposed</div>
+            <div class="c-li">
+              <div><div class="n">Mortgage client portal</div><div class="o">BridgeMortgage</div></div>
+              <span class="c">—</span>
+              <span class="bar"><i style="width:0%"></i></span>
+            </div>
+            <div class="c-lh">Maintenance</div>
+            <div class="c-li">
+              <div><div class="n">Multi-campus engagement</div><div class="o">OLAMI · Thrive</div></div>
+              <span class="c">1</span>
+              <span class="bar"><i style="width:100%"></i></span>
+            </div>
+            <div class="c-li">
+              <div><div class="n">Bilingual booking platform</div><div class="o">Horse &amp; Harmony</div></div>
+              <span class="c">1</span>
+              <span class="bar"><i style="width:100%"></i></span>
+            </div>
+            <div class="c-li">
+              <div><div class="n">Torah Tracker</div><div class="o">Kaymen Group</div></div>
+              <span class="c">1</span>
+              <span class="bar"><i style="width:100%"></i></span>
+            </div>
+          </div>
+
+          <div class="c-detail">
+            <div class="c-dh">
+              <h2>Community lending ledger</h2>
+              <span class="badge b-live">In progress</span>
+              <div class="sp">
+                <span class="badge b-mute">PHP · MySQL</span>
+                <span class="badge b-mute">Coolify</span>
+              </div>
+            </div>
+            <p class="c-sub">Passaic Clifton Gemach · started 2 Jun 2026 · target 29 Aug 2026 · scaffolded 4 Jun · <a href="#" style="color:var(--accent-dark);font-weight:600">pcg.kaymen.dev ↗</a></p>
+
+            <div class="c-stats">
+              <div class="c-stat"><b>78%</b><span>Progress</span></div>
+              <div class="c-stat"><b>3 / 5</b><span>Milestones</span></div>
+              <div class="c-stat"><b class="hot">3</b><span>Open tickets</span></div>
+              <div class="c-stat"><b>75</b><span>Days active</span></div>
+              <div class="c-stat"><b class="hot">−4</b><span>Days remaining</span></div>
+            </div>
+
+            <div class="c-cols">
+              <div class="c-blk">
+                <h4>Milestones</h4>
+                <div class="c-ms">
+                  <div class="c-m is-done"><span class="mk done"></span><span class="mn">Loan ledger &amp; borrower records</span><span class="md">18 Jun</span></div>
+                  <div class="c-m is-done"><span class="mk done"></span><span class="mn">Drive contract sync + guarantor backfill</span><span class="md">9 Jul</span></div>
+                  <div class="c-m is-done"><span class="mk done"></span><span class="mn">Fund basis correction</span><span class="md">15 Aug</span></div>
+                  <div class="c-m"><span class="mk now"></span><span class="mn">Per-lender statements</span><span class="md" style="color:var(--alert);font-weight:600">12 Aug · −4</span></div>
+                  <div class="c-m"><span class="mk"></span><span class="mn" style="color:var(--muted)">Admin handover &amp; training</span><span class="md">29 Aug</span></div>
+                </div>
+
+                <h4 style="margin-top:20px">Plan</h4>
+                <div style="font-size:11.5px;color:var(--muted);line-height:1.6">
+                  <b style="color:var(--ink)">v6</b> · approved 3 Jun by Yitzchok Berger · last edited 14 Aug
+                </div>
+
+                <h4 style="margin-top:20px">Members</h4>
+                <div style="display:flex;gap:6px;margin-top:2px">
+                  <span class="avatar">OK</span><span class="avatar">YB</span><span class="avatar">SG</span>
+                </div>
+              </div>
+
+              <div class="c-blk">
+                <h4>Tickets</h4>
+                <table class="c-tb">
+                  <thead><tr><th style="width:26px">#</th><th>Title</th><th style="width:58px">Type</th><th style="width:52px">Pri</th><th style="width:96px">Status</th></tr></thead>
+                  <tbody>
+                    <tr>
+                      <td class="num">12</td>
+                      <td class="ti">Lender statement shows pre-correction total</td>
+                      <td class="num">bug</td>
+                      <td><span class="badge b-alert">Urgent</span></td>
+                      <td><select class="c-sel"><option>open</option><option>in_progress</option><option>review</option><option>completed</option><option>closed</option></select></td>
+                    </tr>
+                    <tr>
+                      <td class="num">11</td>
+                      <td class="ti">Can we export the statement as PDF?</td>
+                      <td class="num">question</td>
+                      <td><span class="badge b-mute">Low</span></td>
+                      <td><select class="c-sel"><option>review</option><option>open</option><option>in_progress</option><option>completed</option><option>closed</option></select></td>
+                    </tr>
+                    <tr>
+                      <td class="num">10</td>
+                      <td class="ti">Guarantor name blank on 6 older contracts</td>
+                      <td class="num">bug</td>
+                      <td><span class="badge b-warn">High</span></td>
+                      <td><select class="c-sel"><option>in_progress</option><option>open</option><option>review</option><option>completed</option><option>closed</option></select></td>
+                    </tr>
+                    <tr>
+                      <td class="num">9</td>
+                      <td class="ti">Round repayment schedule to the nearest dollar</td>
+                      <td class="num">modification</td>
+                      <td><span class="badge b-mute">Low</span></td>
+                      <td><select class="c-sel"><option>closed</option><option>open</option><option>in_progress</option><option>review</option><option>completed</option></select></td>
+                    </tr>
+                    <tr>
+                      <td class="num">8</td>
+                      <td class="ti">Fund total does not match the bank</td>
+                      <td class="num">bug</td>
+                      <td><span class="badge b-mute">High</span></td>
+                      <td><select class="c-sel"><option>closed</option><option>open</option><option>in_progress</option><option>review</option><option>completed</option></select></td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div class="c-log">
+                  <h4 style="margin-bottom:7px">Activity</h4>
+                  <div class="c-lr"><span><b>Yitzchok Berger</b> ticket_created #12</span><span class="t">2h</span></div>
+                  <div class="c-lr"><span><b>Ohav</b> milestone_completed — Fund basis correction</span><span class="t">Yest.</span></div>
+                  <div class="c-lr"><span><b>Ohav</b> comment_added #10 <em style="font-style:normal;color:var(--warn);font-weight:600">internal</em></span><span class="t">2d</span></div>
+                  <div class="c-lr"><span><b>Ohav</b> plan_updated — v6</span><span class="t">2d</span></div>
+                  <div class="c-lr"><span><b>Ohav</b> ticket_resolved #9</span><span class="t">5d</span></div>
+                  <div class="c-lr"><span><b>Ohav</b> milestone_status_changed — Per-lender statements → in_progress</span><span class="t">6d</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="height:20px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================================== -->
+<!-- PORTAL A — REASSURANCE                                                 -->
+<!-- ====================================================================== -->
+<section class="mk-panel" id="portal-a">
+  <div class="mk-note">
+    <p class="mk-eyebrow">Portal · direction 1 of 2</p>
+    <h2>Reassurance <small>answer the question before they scroll</small></h2>
+    <div class="mk-cols">
+      <div class="mk-col">
+        <h5>The premise</h5>
+        <p>A client logs in a couple of times a month and almost always for one reason: <b>is my thing on track, and does anyone still care about it</b>. Today they have to read a progress ring, count milestone dots and infer. So say it — in Sora, at the top, in a sentence — then show the evidence underneath. This is also the direct payoff of the <b>No hostages</b> section: the site promises transparency and this is where it either happens or does not.</p>
+      </div>
+      <div class="mk-col">
+        <h5>What changes</h5>
+        <p>Least of any direction. The ring, the phase bar and the milestone timeline all exist in <code>portal/app.js</code> — they get re-tinted, not rebuilt. The new part is a <b>status sentence</b> derived from data already in the dashboard response: <code>next_milestone</code>, <code>days_remaining</code>, <code>milestones_done</code>. Activity becomes dated prose instead of icon rows.</p>
+      </div>
+      <div class="mk-col cost">
+        <h5>What it costs</h5>
+        <p><b>A portal that only reassures is a portal nobody opens twice.</b> Nothing here creates a reason to return, and nothing invites the client to tell you something — which is a real loss, because client tickets are the cheapest requirements you will ever get. It is also the direction that ages worst: the sentence has to stay true, so any project that quietly stalls now says so in 38px Sora.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-bar"><i></i><i></i><i></i><em><b>kaymen.dev</b>/portal</em></div>
+    <div class="screen">
+      <div class="ambient" aria-hidden="true"><i class="g1"></i><i class="g2"></i><i class="g3"></i></div>
+
+      <nav class="rail">
+        <a href="#" class="rail-brand">
+          <span class="mark">K</span>
+          <span class="rail-wordmark"><b>kaymen</b><span>.</span>dev<i>Portal</i></span>
+        </a>
+        <div class="rail-nav">
+          <a href="#" class="rail-link on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg><span>Overview</span></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.5z"/><path d="M14 2.5v5h5"/></svg><span>The plan</span></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg><span>Milestones</span></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.2 9.2 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.3 8.3 0 0 1 3.6 11.5a8.4 8.4 0 0 1 8.9-8.4 8.4 8.4 0 0 1 8.5 8.4z"/></svg><span>Tickets</span><u>3</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.4l3.4 2"/></svg><span>Activity</span></a>
+        </div>
+        <div class="rail-foot"><span class="pulse"></span><em>Passaic Clifton Gemach</em></div>
+      </nav>
+
+      <div class="body">
+        <div class="p-hero">
+          <p class="eyebrow">Community lending ledger</p>
+          <h1>On track, with <span>one thing</span> being fixed.</h1>
+          <p class="lead">Three of five stages are done. We are on <b>per-lender statements</b>, which is running four days behind because of the fund-total mismatch you reported this morning — that is being worked on now, and it is the same fix. Handover and training are still set for <b>29 August</b>.</p>
+          <div class="p-actions">
+            <a href="#" class="btn btn-primary">Read the plan</a>
+            <a href="#" class="btn btn-ghost">Tell us something</a>
+          </div>
+        </div>
+
+        <hr class="rule">
+
+        <div class="p-grid">
+          <div>
+            <p class="eyebrow" style="margin-bottom:18px">Where it stands</p>
+            <div class="tl lit">
+              <div class="tl-i done">
+                <h4>Loan ledger &amp; borrower records</h4>
+                <p>Borrowers, guarantors, repayment schedules and per-lender balances.</p>
+                <div class="when">Completed 18 June</div>
+              </div>
+              <div class="tl-i done">
+                <h4>Contract sync + guarantor backfill</h4>
+                <p>Contracts pulled from Drive and tied to the loan; guarantors read back out of the documents.</p>
+                <div class="when">Completed 9 July</div>
+              </div>
+              <div class="tl-i done">
+                <h4>Fund basis correction</h4>
+                <p>Fund size now counts what is held, not what came in. The $47,383.70 gap is reported as spent rather than unexplained.</p>
+                <div class="when">Completed 15 August</div>
+              </div>
+              <div class="tl-i now">
+                <h4>Per-lender statements</h4>
+                <p>Each lender's money at work, as a share of what the fund holds.</p>
+                <div class="when">In progress · was due 12 August</div>
+              </div>
+              <div class="tl-i">
+                <h4>Admin handover &amp; training</h4>
+                <p>The document and the session that mean you can run this without us.</p>
+                <div class="when">Due 29 August</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ring-wrap">
+            <div class="ring">
+              <svg width="132" height="132" viewBox="0 0 132 132">
+                <defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#2bbcb3"/><stop offset="100%" stop-color="#229e96"/>
+                </linearGradient></defs>
+                <circle class="tr" cx="66" cy="66" r="58" fill="none" stroke-width="9"/>
+                <circle class="fg" cx="66" cy="66" r="58" fill="none" stroke-width="9"
+                        stroke-dasharray="364.4" stroke-dashoffset="80.2"/>
+              </svg>
+              <div class="lbl"><b>78%</b><span>Complete</span></div>
+            </div>
+            <div class="sub">
+              <b>3 of 5 stages done</b>
+              75 days in · handover 29 August
+            </div>
+          </div>
+        </div>
+
+        <div class="p-story">
+          <p class="eyebrow">What has happened</p>
+          <div class="story">
+            <div class="story-i"><span class="d">Today</span><span class="b">You reported that the trustee statement still shows the old fund total. <b>Ohav picked it up</b> — it is the statement query, not the correction.</span></div>
+            <div class="story-i"><span class="d">15 Aug</span><span class="b"><b>Fund basis correction went live.</b> The dashboard now reconciles to the bank with nothing unexplained.</span></div>
+            <div class="story-i"><span class="d">14 Aug</span><span class="b">Plan updated to <b>v6</b> — the statement wording you asked about on the call.</span></div>
+            <div class="story-i"><span class="d">11 Aug</span><span class="b">Six older contracts came back with a blank guarantor. <b>Logged as #10</b>, being backfilled from the PDFs.</span></div>
+            <div class="story-i"><span class="d">9 Jul</span><span class="b"><b>Contract sync completed.</b> Every loan now links to its signed contract.</span></div>
+          </div>
+        </div>
+
+        <div style="height:30px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================================== -->
+<!-- PORTAL B — WORKSPACE                                                   -->
+<!-- ====================================================================== -->
+<section class="mk-panel" id="portal-b">
+  <div class="mk-note">
+    <p class="mk-eyebrow">Portal · direction 2 of 2</p>
+    <h2>Workspace <small>what is yours to do, beside where it stands</small></h2>
+    <div class="mk-cols">
+      <div class="mk-col">
+        <h5>The premise</h5>
+        <p>People return to places where they have an open loop, not to status pages. So the landing screen leads with <b>the client's own to-do list</b> — a plan awaiting their approval, a question we are blocked on, their open tickets — and puts progress in the side column. The compose box sits <b>on the landing screen</b>: reporting something should cost one action, because a client who does not report is a client who tells you at handover instead.</p>
+      </div>
+      <div class="mk-col">
+        <h5>What changes</h5>
+        <p>Tickets get promoted from a tab to the primary object, and plan approval moves out of its own page onto the front. Server-side this is close to free — <code>/api/portal/dashboard</code> already returns <code>recentTickets</code>, <code>ticketStats</code>, <code>activeMilestones</code> and the pending plan. Mostly it is a re-ordering of what the API already sends.</p>
+      </div>
+      <div class="mk-col cost">
+        <h5>What it costs</h5>
+        <p>It <b>puts work on the client</b>, and some clients read that as being managed by their vendor. And the empty state is load-bearing: a client with nothing to do lands on a blank left column, which reads as neglect exactly when things are going well. That state has to be designed properly, not left as a dash.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-bar"><i></i><i></i><i></i><em><b>kaymen.dev</b>/portal</em></div>
+    <div class="screen">
+      <div class="ambient" aria-hidden="true"><i class="g1"></i><i class="g2"></i><i class="g3"></i></div>
+
+      <nav class="rail">
+        <a href="#" class="rail-brand">
+          <span class="mark">K</span>
+          <span class="rail-wordmark"><b>kaymen</b><span>.</span>dev<i>Portal</i></span>
+        </a>
+        <div class="rail-nav">
+          <a href="#" class="rail-link on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg><span>Your desk</span><u class="hot">2</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.2 9.2 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.3 8.3 0 0 1 3.6 11.5a8.4 8.4 0 0 1 8.9-8.4 8.4 8.4 0 0 1 8.5 8.4z"/></svg><span>Tickets</span><u>3</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.5z"/><path d="M14 2.5v5h5"/></svg><span>The plan</span><u class="hot">1</u></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg><span>Milestones</span></a>
+          <a href="#" class="rail-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.4l3.4 2"/></svg><span>Activity</span></a>
+        </div>
+        <div class="rail-foot"><span class="pulse"></span><em>Passaic Clifton Gemach</em></div>
+      </nav>
+
+      <div class="body">
+        <div class="w-head">
+          <div>
+            <h1>Two things are waiting on you.</h1>
+            <p>Community lending ledger · 78% · handover 29 August</p>
+          </div>
+          <span class="badge b-live">All systems responding</span>
+        </div>
+
+        <div class="w-grid">
+          <div class="w-lane">
+            <h3>Yours to do <u>2</u></h3>
+            <div class="todo">
+              <div class="td hero">
+                <div class="td-t"><span class="badge b-live">Needs your approval</span><h4>Statement wording — plan v6</h4></div>
+                <p>We changed how the fund total is described, so the lender statement wording changed with it. Read the two paragraphs and approve, or tell us what to say instead.</p>
+                <div class="td-a">
+                  <a href="#" class="btn btn-primary">Read &amp; approve</a>
+                  <a href="#" class="btn btn-ghost">Request changes</a>
+                  <span class="note">Sent 14 Aug by Ohav</span>
+                </div>
+              </div>
+
+              <div class="td">
+                <div class="td-t"><span class="badge b-warn">We are blocked</span><h4>#10 — six contracts have no guarantor named</h4></div>
+                <p>These six PDFs predate the current template and we cannot find a guarantor in them. Were they guaranteed, and by whom? If they were not, say so and we will mark them.</p>
+                <div class="td-meta"><span class="avatar">OK</span> Ohav asked 5 days ago · 6 contracts listed</div>
+                <div class="td-a"><a href="#" class="btn btn-ghost">See the six</a><a href="#" class="btn btn-ghost">Reply</a></div>
+              </div>
+            </div>
+
+            <h3 style="margin-top:26px">Your open tickets <u>3</u></h3>
+            <div class="todo">
+              <div class="td">
+                <div class="td-t"><span class="badge b-alert">Urgent</span><h4>#12 — Lender statement shows the old fund total</h4></div>
+                <div class="td-meta">You opened this 2 hours ago · <b style="color:var(--accent-dark);font-weight:600">Ohav picked it up 40 minutes ago</b></div>
+              </div>
+              <div class="td">
+                <div class="td-t"><span class="badge b-mute">In review</span><h4>#11 — Can we export the statement as a PDF?</h4></div>
+                <div class="td-meta">You opened this 6 days ago · 1 reply</div>
+              </div>
+              <div class="td">
+                <div class="td-t"><span class="badge b-warn">In progress</span><h4>#10 — Guarantor name blank on 6 older contracts</h4></div>
+                <div class="td-meta">Opened 11 Aug · waiting on your answer above</div>
+              </div>
+            </div>
+
+            <h3 style="margin-top:26px">Tell us something</h3>
+            <div class="compose">
+              <textarea rows="3" placeholder="Something broken, something missing, or a question. Plain words are fine — you do not need to know what to call it."></textarea>
+              <div class="compose-f">
+                <select><option>Something is broken</option><option>Something is missing</option><option>A question</option><option>A change</option></select>
+                <span class="clip">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.5 12.5 21a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L10 18.9a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg>
+                  Attach
+                </span>
+                <button class="btn btn-primary">Send</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-side">
+            <div class="w-stat">
+              <div class="top"><b>78%</b><span>3 of 5 stages</span></div>
+              <div class="bar"><i style="width:78%"></i></div>
+              <div class="nx">Now: <b>per-lender statements</b> — four days behind, tied to #12.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-h"><h3>Stages</h3><a href="#">All →</a></div>
+              <div class="w-mini">
+                <div class="r"><span>Loan ledger &amp; borrowers</span><span class="t">18 Jun ✓</span></div>
+                <div class="r"><span>Contract sync + guarantors</span><span class="t">9 Jul ✓</span></div>
+                <div class="r"><span>Fund basis correction</span><span class="t">15 Aug ✓</span></div>
+                <div class="r"><b>Per-lender statements</b><span class="t" style="color:var(--warn)">12 Aug · late</span></div>
+                <div class="r"><span>Handover &amp; training</span><span class="t">29 Aug</span></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-h"><h3>Recently</h3><a href="#">All →</a></div>
+              <div class="w-mini">
+                <div class="r"><span><b>Ohav</b> picked up #12</span><span class="t">40m</span></div>
+                <div class="r"><span><b>Fund basis correction</b> went live</span><span class="t">Yest.</span></div>
+                <div class="r"><span><b>Ohav</b> replied on #11</span><span class="t">2d</span></div>
+                <div class="r"><span>Plan updated to <b>v6</b></span><span class="t">2d</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="height:20px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================================== -->
+<!-- EMAIL                                                                  -->
+<!-- ====================================================================== -->
+<section class="mk-panel" id="email">
+  <div class="mk-note">
+    <p class="mk-eyebrow">Email · server/utils/email.js</p>
+    <h2>The re-skin <small>one direction — email is not where you offer three</small></h2>
+    <div class="mk-cols">
+      <div class="mk-col">
+        <h5>The premise</h5>
+        <p>The wrapper is still <code>#09090b</code> with a <code>#3b82f6</code> accent and JetBrains Mono — the theme the site dropped on 15 August. The wordmark already says kaymen, which makes it worse, not better: <b>every invite, reset and ticket notification a client receives looks like a different company than the site they just came from</b>, and the invite is usually the very first thing a new client ever gets from us.</p>
+      </div>
+      <div class="mk-col">
+        <h5>What changes</h5>
+        <p>One <code>emailWrapper()</code>, four bodies — invite, reset, new ticket, ticket resolved — and every one of them already routes through that single function. A <code>--deep</code> masthead carries the one dark band; the card is white; the accent appears exactly once per email, on the button. Tables and inline styles throughout.</p>
+      </div>
+      <div class="mk-col cost">
+        <h5>What it costs</h5>
+        <p>Almost nothing, and it is the smallest of the four jobs on this page. Two constraints are real though — see the notes under the previews. It should probably ship <b>before</b> either panel, because it is the surface a client sees first and it is a two-hour change.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="e-grid">
+
+    <!-- INVITE -->
+    <div class="e-slot">
+      <div class="e-slot-h"><b>Invitation</b><code>sendWelcomeEmail()</code></div>
+      <div class="e-stage">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(22,48,61,.10)">
+          <tr><td style="background:#16303d;padding:26px 32px 24px">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td style="padding-right:11px">
+                <div style="width:30px;height:30px;border-radius:9px;background:#2bbcb3;color:#ffffff;font-family:'Sora',-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:800;font-size:14px;text-align:center;line-height:30px">K</div>
+              </td>
+              <td style="font-family:'Sora',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:15px;font-weight:700;color:#ffffff;letter-spacing:-.02em">
+                kaymen<span style="color:#2bbcb3">.</span>dev
+              </td>
+            </tr></table>
+            <div style="font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#7fb3ad;margin-top:18px">Client portal</div>
+          </td></tr>
+          <tr><td style="padding:30px 32px 8px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;color:#1a1b1e">
+            <div style="font-family:'Sora',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:22px;font-weight:700;letter-spacing:-.035em;line-height:1.2;margin-bottom:14px">Your project is set up.</div>
+            <p style="font-size:14.5px;line-height:1.65;color:#5f6368;margin:0 0 14px">Hi Yitzchok — the portal for <b style="color:#1a1b1e">Community lending ledger</b> is ready. You can see where the build has got to, read the plan, and tell us when something is wrong.</p>
+            <p style="font-size:14.5px;line-height:1.65;color:#5f6368;margin:0">Set a password and it is yours.</p>
+          </td></tr>
+          <tr><td style="padding:22px 32px 26px">
+            <a href="#" style="display:inline-block;background:#2bbcb3;color:#ffffff;padding:13px 30px;border-radius:11px;text-decoration:none;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:600;font-size:14.5px">Set your password</a>
+            <div style="font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:12px;color:#8b9096;margin-top:14px">This link expires in 7 days.</div>
+          </td></tr>
+          <tr><td style="padding:16px 32px 22px;border-top:1px solid #e2e4e8;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:11.5px;color:#8b9096;line-height:1.6">
+            The code lives in your account, the servers are in your name, and you can export your data any time you ask. If you were not expecting this, ignore it — nothing happens until you set a password.
+          </td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- NEW TICKET (to admin) -->
+    <div class="e-slot">
+      <div class="e-slot-h"><b>New ticket → admin/staff</b><code>sendTicketNotification()</code></div>
+      <div class="e-stage">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(22,48,61,.10)">
+          <tr><td style="background:#16303d;padding:22px 32px 20px">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+              <td width="37" style="padding-right:11px">
+                <div style="width:26px;height:26px;border-radius:8px;background:#2bbcb3;color:#ffffff;font-family:'Sora',-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:800;font-size:12px;text-align:center;line-height:26px">K</div>
+              </td>
+              <td style="font-family:'Sora',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:14px;font-weight:700;color:#ffffff;letter-spacing:-.02em">
+                kaymen<span style="color:#2bbcb3">.</span>dev
+              </td>
+              <td align="right" style="font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#e8908a">Urgent</td>
+            </tr></table>
+          </td></tr>
+          <tr><td style="padding:26px 32px 6px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;color:#1a1b1e">
+            <p style="font-size:13.5px;line-height:1.6;color:#5f6368;margin:0 0 16px"><b style="color:#1a1b1e">Yitzchok Berger</b> opened a ticket in <b style="color:#1a1b1e">Community lending ledger</b>.</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f5f7;border-radius:11px">
+              <tr><td style="padding:16px 18px;border-left:3px solid #b8443c;border-radius:11px">
+                <div style="font-family:'Sora',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:15.5px;font-weight:700;letter-spacing:-.02em;line-height:1.3;color:#1a1b1e">#12 — Lender statement shows the pre-correction fund total</div>
+                <div style="font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:12px;color:#5f6368;margin-top:9px">bug · urgent · unassigned · 1 attachment</div>
+              </td></tr>
+            </table>
+            <p style="font-size:13.5px;line-height:1.65;color:#5f6368;margin:16px 0 0">"The per-lender statement I sent to the trustees still totals $1,633,917.56. The dashboard says $1,586,533.86. Which one do I give them?"</p>
+          </td></tr>
+          <tr><td style="padding:20px 32px 28px">
+            <a href="#" style="display:inline-block;background:#2bbcb3;color:#ffffff;padding:12px 26px;border-radius:10px;text-decoration:none;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:600;font-size:14px">Open ticket</a>
+          </td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- TICKET RESOLVED (to client) -->
+    <div class="e-slot">
+      <div class="e-slot-h"><b>Ticket resolved → client</b><code>sendTicketResolvedEmail()</code></div>
+      <div class="e-stage">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(22,48,61,.10)">
+          <tr><td style="background:#16303d;padding:22px 32px 20px">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
+              <td width="37" style="padding-right:11px">
+                <div style="width:26px;height:26px;border-radius:8px;background:#2bbcb3;color:#ffffff;font-family:'Sora',-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:800;font-size:12px;text-align:center;line-height:26px">K</div>
+              </td>
+              <td style="font-family:'Sora',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:14px;font-weight:700;color:#ffffff;letter-spacing:-.02em">
+                kaymen<span style="color:#2bbcb3">.</span>dev
+              </td>
+              <td align="right" style="font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#7fb3ad">Fixed</td>
+            </tr></table>
+          </td></tr>
+          <tr><td style="padding:28px 32px 6px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;color:#1a1b1e">
+            <div style="font-family:'Sora',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:21px;font-weight:700;letter-spacing:-.035em;line-height:1.25;margin-bottom:13px">That is fixed.</div>
+            <p style="font-size:14px;line-height:1.65;color:#5f6368;margin:0 0 16px"><b style="color:#1a1b1e">#12 — Lender statement shows the pre-correction fund total</b></p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f4f5f7;border-radius:11px">
+              <tr><td style="padding:16px 18px;border-left:3px solid #2bbcb3;border-radius:11px">
+                <div style="font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:13.5px;line-height:1.65;color:#5f6368">
+                  The statement was still totalling money-in while the dashboard had moved to what the fund actually holds. Both now read from the same figure, so a statement and the dashboard cannot disagree again. The one you sent the trustees was the old number — a corrected copy is in the portal.
+                </div>
+              </td></tr>
+            </table>
+          </td></tr>
+          <tr><td style="padding:20px 32px 26px">
+            <a href="#" style="display:inline-block;background:#2bbcb3;color:#ffffff;padding:12px 26px;border-radius:10px;text-decoration:none;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:600;font-size:14px">See it in the portal</a>
+            <div style="font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:12px;color:#8b9096;margin-top:14px">Not right yet? Reply here, or open another ticket from the portal.</div>
+          </td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- PASSWORD RESET -->
+    <div class="e-slot">
+      <div class="e-slot-h"><b>Password reset</b><code>sendPasswordResetEmail()</code></div>
+      <div class="e-stage">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(22,48,61,.10)">
+          <tr><td style="background:#16303d;padding:22px 32px 20px">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td style="padding-right:11px">
+                <div style="width:26px;height:26px;border-radius:8px;background:#2bbcb3;color:#ffffff;font-family:'Sora',-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:800;font-size:12px;text-align:center;line-height:26px">K</div>
+              </td>
+              <td style="font-family:'Sora',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:14px;font-weight:700;color:#ffffff;letter-spacing:-.02em">
+                kaymen<span style="color:#2bbcb3">.</span>dev
+              </td>
+            </tr></table>
+          </td></tr>
+          <tr><td style="padding:28px 32px 6px;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;color:#1a1b1e">
+            <div style="font-family:'Sora',-apple-system,'Segoe UI',Roboto,sans-serif;font-size:21px;font-weight:700;letter-spacing:-.035em;line-height:1.25;margin-bottom:13px">Set a new password.</div>
+            <p style="font-size:14px;line-height:1.65;color:#5f6368;margin:0">Your password was reset by an administrator. This link works once and expires in 7 days.</p>
+          </td></tr>
+          <tr><td style="padding:22px 32px 26px">
+            <a href="#" style="display:inline-block;background:#2bbcb3;color:#ffffff;padding:12px 26px;border-radius:10px;text-decoration:none;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-weight:600;font-size:14px">Set new password</a>
+          </td></tr>
+          <tr><td style="padding:16px 32px 22px;border-top:1px solid #e2e4e8;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;font-size:11.5px;color:#8b9096;line-height:1.6">
+            If you did not ask for this and did not expect an administrator to, reply to this email — do not use the link.
+          </td></tr>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="e-note">
+    <h5>Two constraints these previews are honest about</h5>
+    <ul>
+      <li><b>Sora will not render in most inboxes.</b> Outlook, the Gmail app and Yahoo all ignore webfonts, so every heading above falls back to the system sans in the stack — which is why the design leans on <b>size, weight and the dark masthead</b> rather than on the face. What you see here in Chrome is the best case, not the common one.</li>
+      <li><b>Dark-mode clients will invert this.</b> Apple Mail and Outlook auto-darken a white card and can force-invert text colours; the <code>#16303d</code> masthead survives that better than a white one, but the body still needs testing in a real dark client before it ships. The current dark wrapper is accidentally immune to this — it is the one thing being given up.</li>
+      <li><b>Everything is tables and inline styles</b>, as the current wrapper already is. No <code>&lt;style&gt;</code> block, no flexbox, no CSS variables — Gmail strips the first and ignores the rest.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<script>
+/* mockup chrome only — panel switcher */
+document.querySelectorAll('.mk-tab').forEach(function (tab) {
+  tab.addEventListener('click', function () {
+    var id = tab.dataset.go;
+    document.querySelectorAll('.mk-tab').forEach(function (t) { t.classList.toggle('on', t === tab); });
+    document.querySelectorAll('.mk-panel').forEach(function (p) { p.classList.toggle('on', p.id === id); });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+/* triage rows expand in place — the behaviour is the argument, so it is live */
+document.querySelectorAll('.qi-h').forEach(function (head) {
+  head.addEventListener('click', function (e) {
+    if (e.target.closest('.qi-do')) return;
+    var item = head.parentElement;
+    var body = item.querySelector('.qi-x');
+    if (!body) return;
+    body.style.display = body.style.display === 'none' ? '' : 'none';
+  });
+});
+
+/* dense console — selecting in the left pane is the whole point of two panes */
+document.querySelectorAll('.c-li').forEach(function (row) {
+  row.addEventListener('click', function () {
+    document.querySelectorAll('.c-li').forEach(function (r) { r.classList.toggle('on', r === row); });
+  });
+});
+</script>
+</body>
+</html>

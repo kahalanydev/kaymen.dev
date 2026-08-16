@@ -72,19 +72,13 @@ app.post('/api/contact', async (req, res) => {
 
   // Try to send email notification
   try {
-    const { sendEmail } = require('./utils/email');
-    const projectLine = project_name ? `<p><strong>Project:</strong> ${project_name}</p>` : '';
-    await sendEmail({
+    const { sendContactNotification } = require('./utils/email');
+    await sendContactNotification({
       to: 'hello@kaymen.dev',
-      subject: `New project inquiry from ${name}${project_name ? ` — ${project_name}` : ''}`,
-      html: `<div style="font-family:sans-serif;padding:20px;background:#1a1a2e;color:#e0e0e0;border-radius:12px;max-width:500px">
-        <h2 style="color:#3b82f6;margin-bottom:16px">New Project Inquiry</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> <a href="mailto:${email}" style="color:#3b82f6">${email}</a></p>
-        ${projectLine}
-        <p><strong>Message:</strong></p>
-        <div style="background:#0d0d1a;padding:16px;border-radius:8px;margin-top:8px;white-space:pre-wrap">${message}</div>
-      </div>`
+      name,
+      email: email.trim(),
+      projectName: project_name ? project_name.trim() : null,
+      message
     });
   } catch {}
 

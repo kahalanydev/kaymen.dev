@@ -268,12 +268,8 @@ router.put('/smtp/config', requireAuth, requireRole('admin'), (req, res) => {
 });
 
 router.post('/smtp/test', requireAuth, requireRole('admin'), async (req, res) => {
-  const { sendEmail } = require('../utils/email');
-  const sent = await sendEmail({
-    to: req.user.email,
-    subject: 'kaymen.dev — SMTP Test',
-    html: '<div style="font-family:sans-serif;padding:20px;background:#09090b;color:#e4e4e7;border-radius:12px"><h2 style="color:#3b82f6">SMTP is working!</h2><p>Your email configuration is correct.</p></div>'
-  });
+  const { sendSmtpTestEmail } = require('../utils/email');
+  const sent = await sendSmtpTestEmail({ to: req.user.email });
   if (sent) res.json({ success: true, data: { message: `Test email sent to ${req.user.email}` } });
   else res.status(400).json({ success: false, error: 'SMTP not configured or send failed. Check server logs.' });
 });

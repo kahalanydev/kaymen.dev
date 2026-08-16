@@ -4,20 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Admin — kaymen.dev</title>
-    <meta name="theme-color" content="#09090b">
+    <!-- light-first, matching the site — the dark variant was dropped, not deferred -->
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="KD Admin">
     <link rel="manifest" href="/admin/manifest.json">
     <link rel="apple-touch-icon" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/admin/styles.css">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
 <body>
+    <!-- glass needs something to refract; same three washes as the site -->
+    <div class="ambient" aria-hidden="true"><i class="g1"></i><i class="g2"></i><i class="g3"></i></div>
     <div id="app"></div>
     <script src="/admin/app.js"></script>
 </body>

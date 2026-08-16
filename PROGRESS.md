@@ -1292,6 +1292,88 @@ manual `POST /api/v1/deploy?uuid=…` trigger is now a fallback, not the only pa
 the repo root, so they were publicly reachable in the built image.
 
 ### Still not done
-- OG cards in `assets/og/*.png` are still the old dark palette and now clash with the site.
+- ~~OG cards in `assets/og/*.png` are still the old dark palette~~ — rebuilt later the same day in
+  commit `feef1f3`, one figure per card. See handoff §3 step 6.
 - Seeded demo tenants — still the highest-value asset gap.
 - Per-project client naming (`CLIENT_NAMING` is still a global switch).
+- **The back office was never redesigned.** `admin/styles.css` and `portal/styles.css` are both
+  still `#09090b` on `#3b82f6`, and `emailWrapper()` in `server/utils/email.js` with them — so a
+  client goes from the new site to an invite email and a portal that look like a different
+  company. Directions for all three: `mockup/back-office.html` (2026-08-16).
+
+---
+
+## 2026-08-16 — Back office onto the site's design system (email + admin dashboard)
+
+Active build doc: **`HANDOFF-BACKOFFICE-2026-08-16.md`**. Read it before continuing this work —
+it carries the locked direction picks, the traps, and the recipe for screenshotting a logged-in
+panel. This entry is the record of what landed; that file is the instruction.
+
+### Directions chosen
+
+`mockup/back-office.html` (new, self-contained) offered three admin directions, two portal
+directions and the email re-skin, each with a premise / what-changes / **what-it-costs** column.
+Ohav picked: **Continuity** for the dashboard, **Dense console** for the projects page,
+**Reassurance plus a "needs you" block** for the portal, and dropped the Claude Code chat widget
+from the design entirely — it is to be replaced by an agent that scans incoming tickets.
+
+### Email — done
+
+`server/utils/email.js` rewritten. The wrapper was still `#09090b` on `#3b82f6` with JetBrains
+Mono while the wordmark said kaymen, so every invite, reset and ticket notification looked like a
+different company than the site the client had just left.
+
+**Three more old-theme emails were living outside `email.js`** and only turned up by grepping call
+sites: the contact notification in `server/index.js` (on `#1a1a2e` — older than the theme being
+replaced), the SMTP test in `server/routes/auth.js`, and a *second* invite design in
+`server/routes/admin.js` competing with `sendWelcomeEmail`. All three are now functions in
+`email.js`; there is one invite design, not two.
+
+Three changes beyond the re-skin: everything user-supplied is **escaped** (a contact-form
+submitter controls `name` and `message`, and those went raw into HTML landing in Ohav's inbox); a
+**`text/plain` alternative** on every message, because HTML-only mail is a spam signal and the
+invite is the first thing a new client receives; and the new-ticket email now **quotes the client's
+description**, without which it is a link you have to open to triage.
+
+`scripts/preview-emails.js` renders all eight to a gitignored file without sending. It calls the
+real functions — only the config read and nodemailer's transport are stubbed — and exits non-zero
+if the deliberately-hostile `<script>` sample ever renders as markup or a text part goes missing.
+
+### Admin — foundation + dashboard done
+
+`admin/styles.css` rebuilt on the locked palette, Sora + Inter and the glass rail. Emoji nav icons
+replaced with line icons: emoji cannot take `currentColor`, so the active state could never tint
+them. The dark/light toggle is **gone** on the same grounds the site dropped its own — and a
+leftover `admin_theme` key is now actively cleared, since it would set `data-theme` on a stylesheet
+with no `[data-theme]` rules left.
+
+The dashboard is the marketing site's own vocabulary pointed at the panel's data: the evidence
+strip as the metric row, the no-hostages tick-row inverted to carry a problem, and the running
+board as the project list. Verified against a live server with seeded orgs, projects, milestones,
+a plan, a client user, tickets and leads — not against mock markup.
+
+Contact submissions had been rendering in **two** places (their own card and the leads count), so
+dismissing one left the other showing a lead already dealt with. They are one card now.
+
+`server/routes/admin.js` gained `p.description` in the dashboard projects query — the only API
+change in this work.
+
+### The bug worth remembering
+
+The icon-chip tone class `alert` collided with the `.alert` message-box component and inherited its
+`padding:13px 16px`, silently squeezing the glyph out of a 26px box. Nothing errored; the icon was
+simply absent. Tone classes are `t-alert` / `t-warn` / `t-ok` now. The mockup could not have caught
+it — it has no `.alert` component.
+
+### Not done
+
+- **Admin projects page → Dense console.** All the CSS is written and currently unused
+  (`.c-panes`, `.c-list`, `.c-detail`, `.c-stats`, `.c-ms`, `.c-tb`, `.c-log` …); `renderLayout`
+  already accepts `{ wide: true }` for it.
+- **The whole portal.** `portal/styles.css` is untouched and still dark; `portal/app.js` still has
+  its theme toggle.
+- Security, Analytics, Settings, Clients and ticket detail were not restructured. They render
+  coherently through the legacy token bridge, but still carry inline styles.
+- Ohav's main-site rail tweaks (gutter-centring, upward nudge, collapsed-dot mobile rail) remain
+  queued — cause diagnosed, fix not written. See the handoff §6.
+- Not committed, not pushed.

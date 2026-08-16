@@ -67,7 +67,7 @@ router.get('/dashboard', (req, res, next) => {
 
   // --- Active projects ---
   const projects = db.prepare(`
-    SELECT p.id, p.name, p.status, p.progress_percent, o.name as org_name,
+    SELECT p.id, p.name, p.status, p.progress_percent, p.description, o.name as org_name,
       (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.id AND t.status IN ('open', 'in_progress')) as open_tickets
     FROM projects p JOIN organizations o ON p.org_id = o.id
     WHERE p.status IN ('planning', 'proposed', 'approved', 'in_progress', 'review')
@@ -176,19 +176,13 @@ router.post('/contacts/:id/convert', (req, res) => {
 
   if (inviteUrl) {
     try {
-      const { sendEmail, emailWrapper } = require('../utils/email');
-      sendEmail({
-        to: email,
-        subject: `You've been invited to the ${orgName} project portal`,
-        html: emailWrapper(`
-          <h2 style="color:#3b82f6;margin-bottom:16px">Welcome to Your Project Portal</h2>
-          <p>Hi ${contact.name},</p>
-          <p>Your project <strong>${projName}</strong> has been set up. Click below to create your password and access your portal.</p>
-          <div style="text-align:center;margin:24px 0">
-            <a href="${inviteUrl}" style="background:#3b82f6;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Set Up Your Account</a>
-          </div>
-          <p style="font-size:12px;color:#888">This link expires in 7 days.</p>
-        `)
+      const { sendWelcomeEmail } = require('../utils/email');
+      sendWelcomeEmail({
+        email,
+        name: contact.name,
+        role: 'client',
+        inviteUrl,
+        projectName: projName
       }).catch(() => {});
     } catch {}
   }
