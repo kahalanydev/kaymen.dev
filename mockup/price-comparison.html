@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>kaymen.dev — what the work actually took</title>
+<title>kaymen.dev — why working with us pays off</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ============================================================================
-   kaymen.dev — "What the work actually took"
+   kaymen.dev — "Why working with us pays off"
 
-   Fourth pass, and the framing finally holds up.
+   Fifth pass.
 
    THE SLIDER IS THE RATE, not the project picker — Ohav's correction, and it is
    the right call for a reason beyond feel: it deletes the placeholder problem.
@@ -33,9 +33,21 @@
      history: distinct days carrying a commit, per project, Feb–Aug 2026.
      Server-rendered from that file in production, so they regenerate.
    · SCALE METRICS — verbatim from content/projects.js.
-   · THE SLIDER'S BANDS — researched, sources at the bottom of this file.
+   · THE SLIDER'S BANDS — researched, sources at the bottom of this file. The
+     offshore and nearshore bands were RESEARCHED AND THEN REMOVED on Ohav's
+     note, and he is right: printing "$20-50/hr, offshore" on your own pricing
+     page argues the other side's case for you, in your own typeface. The scale
+     starts at a small US shop now. The research stays in the source below as
+     provenance for where the remaining bands came from.
    · OUR RATE — the published $165/hr. One constant; try 125 or 145 to see where
      the marker lands against the market.
+
+   STILL UNRESOLVED — see the note to Ohav. This models an HOURLY-BILLED
+   engagement on both sides, and that is not how kaymen.dev actually charges:
+   builds are priced per project and ongoing work is a FLAT MONTHLY. Reflecting
+   that correctly makes the comparison stronger, not weaker, but it needs two
+   facts nobody has written down yet: how a build is quoted, and how many hours
+   $1,800/mo includes before the $165 overflow starts.
 
    THE ONE ASSUMPTION, stated on screen: a day that carried a commit is treated
    as HOURS_PER_COMMIT_DAY hours of work, and the comparison assumes the other
@@ -156,6 +168,20 @@ a{color:inherit}
 .verdict.lose b{color:var(--warn)}
 .again{font-size:12.5px;color:var(--warn);line-height:1.6;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
 .again b{color:var(--ink);font-weight:600}
+/* the part of the argument that is not a number. It sits BELOW the money on
+   purpose: the price gets them to read, this is what they actually buy. */
+.own{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:22px;border-top:1px solid var(--line)}
+.own div{padding:16px 22px 0 0;border-right:1px solid var(--line)}
+.own div:last-child{border-right:0;padding-right:0}
+.own div + div{padding-left:22px}
+.own b{
+  display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:13.5px;
+  font-weight:700;letter-spacing:-.02em;margin-bottom:6px;
+}
+.own b svg{width:15px;height:15px;flex:none;stroke:var(--accent-dark);stroke-width:1.9;fill:none}
+.own p{font-size:12.5px;color:var(--muted);line-height:1.6}
+.own p em{font-style:normal;color:var(--ink);font-weight:600}
+
 .close{font-size:12.5px;color:var(--muted);margin-top:16px;line-height:1.7;max-width:98ch}
 .close b{color:var(--ink);font-weight:600}
 
@@ -182,8 +208,8 @@ a{color:inherit}
 
 <div class="wrap">
   <div class="mk-note">
-    <p class="mk-eyebrow">Fourth pass</p>
-    <h2>What the work actually took <small>slider on the rate, and a headline that is actually true</small></h2>
+    <p class="mk-eyebrow">Fifth pass</p>
+    <h2>Why working with us pays off <small>offshore off the scale, $200 default, and the ownership case</small></h2>
     <div class="mk-cols">
       <div class="mk-col">
         <h5>The slider is the rate now</h5>
@@ -206,8 +232,8 @@ a{color:inherit}
   <div class="screen">
     <div class="wrap">
 
-      <p class="eyebrow">Our rate against the market</p>
-      <h2 class="sec">What the work actually took</h2>
+      <p class="eyebrow">The comparison</p>
+      <h2 class="sec">Why working with us pays off</h2>
       <p class="sec-sub">Six systems running in production right now, and the real number of working days each one took — <b>counted out of the repositories, not estimated</b>. Pick one, and see what those days cost at our rate against what they cost at the going rate. Starts at a <b>typical US mid-market agency</b>; drag it to whatever you are actually being quoted.</p>
 
       <div class="chips-wrap"><div class="chips" id="chips"></div></div>
@@ -215,11 +241,11 @@ a{color:inherit}
       <div class="rate">
         <div class="rate-q">
           <span>The rate you are comparing against</span>
-          <b id="rateVal">$185/hr</b>
+          <b id="rateVal">$200/hr</b>
           <span class="band" id="rateBand"></span>
         </div>
         <div class="rate-wrap">
-          <input type="range" id="rate" min="20" max="400" value="185" step="5" aria-label="Rate you are being quoted, per hour">
+          <input type="range" id="rate" min="90" max="400" value="200" step="5" aria-label="Rate you are being quoted, per hour">
           <span class="ours" id="oursMark" data-l="us"></span>
         </div>
         <div class="scale" id="scale"></div>
@@ -248,8 +274,23 @@ a{color:inherit}
         <p class="again" id="again"></p>
       </div>
 
+      <div class="own">
+        <div>
+          <b><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="10.5" width="17" height="10.5" rx="2"/><path d="M7.5 10.5V7a4.5 4.5 0 0 1 9 0v3.5"/></svg>You own it from day one</b>
+          <p>The repository, the server and the credentials are in <em>your</em> name, not ours. Not transferred at the end — yours the whole time.</p>
+        </div>
+        <div>
+          <b><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5h16"/><path d="m14.5 7 5.5 5.5-5.5 5.5"/></svg>You can leave on 30 days' notice</b>
+          <p>Handover is <em>in the contract</em>, not a negotiation you have to win. Worth asking any shop what happens to your repo and your keys if you stop paying.</p>
+        </div>
+        <div>
+          <b><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></svg>You can watch it happen</b>
+          <p>Every working day on this page came out of a real repository. You get the <em>same view we have</em> — commits, milestones, tickets, in the portal.</p>
+        </div>
+      </div>
+
       <p class="close">
-        This is a <b>rate comparison, not a bill</b> — the days are real, and the money is what those days come to at our rate against the market rate you pick. Days come out of the repositories and regenerate on every deploy. The comparison assumes the other shop needs <b>the same hours</b>, which is generous to them: an agency bills coordination time a one-team shop does not have. <b>Drag below our rate and we lose</b> — that is the honest part, and if price is the only thing you are choosing on, the left-hand end of that slider is where you should be looking.
+        This is a <b>rate comparison, not a bill</b> — the days are real, and the money is what those days come to at our rate against the market rate you pick. Days come out of the repositories and regenerate on every deploy. The comparison assumes the other shop needs <b>the same hours</b>, which is generous to them: an agency bills coordination time a one-team shop does not have. <b>Drag below our rate and we lose</b> — that is the honest part, and it is a fair thing to check.
       </p>
     </div>
   </div>
@@ -277,16 +318,12 @@ var HOURS_PER_COMMIT_DAY = 6;
    ramp, comms and attrition put the LOADED cost at 1.4–1.8× the headline.
 ------------------------------------------------------------------------- */
 var BANDS = [
-  { to:  50, name: 'offshore rates',        w: 1 },
-  { to:  90, name: 'nearshore senior',      w: 1 },
-  { to: 120, name: 'a small US shop',       w: 1 },
-  { to: 250, name: 'US mid-market agency',  w: 2 },
-  { to: 350, name: 'big-business agency',   w: 1 },
-  { to: 400, name: 'enterprise firm',       w: 1 }
+  { to: 120, name: 'a small US shop' },
+  { to: 250, name: 'US mid-market agency' },
+  { to: 350, name: 'big-business agency' },
+  { to: 400, name: 'enterprise firm' }
 ];
 var SCALE = [
-  ['$20–50',   'offshore'],
-  ['$50–90',   'nearshore'],
   ['$90–120',  'small US shop'],
   ['$120–250', 'mid-market agency'],
   ['$250–350', 'big business'],
@@ -366,7 +403,7 @@ function paint() {
   document.getElementById('rateVal').textContent = '$' + r + '/hr';
   document.getElementById('rateBand').textContent = '— ' + bandFor(r);
   var mark = document.getElementById('oursMark');
-  mark.style.left = ((OUR_HOURLY - 20) / 380 * 100) + '%';
+  mark.style.left = ((OUR_HOURLY - 90) / 310 * 100) + '%';
   mark.dataset.l = 'us · $' + OUR_HOURLY;
 
   document.getElementById('pStatus').innerHTML = p.status;
