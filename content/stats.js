@@ -85,20 +85,6 @@ const FLEET = [
       0,
       5
     ]
-  },
-  {
-    "slug": "claude-code-desk",
-    "name": "Claude Code Desk",
-    "kind": "Platform",
-    "days": [
-      0,
-      3,
-      7,
-      0,
-      5,
-      4,
-      10
-    ]
   }
 ];
 

@@ -46,7 +46,6 @@ const PROJECT_REPOS = {
   'msp-time-compliance-portal': 'Personal/Autotask - tech metrics',
   'bilingual-booking-platform': 'Clients/HorseHarmony',
   'torah-tracker': 'Personal/TorahTracker',
-  'claude-code-desk': 'Claude-Code-Desk-Mobile',
 };
 
 /* Short labels for the hero panel — the full case-study names are too long for
@@ -57,7 +56,6 @@ const SHORT_NAMES = {
   'msp-time-compliance-portal': 'MSP compliance portal',
   'bilingual-booking-platform': 'Bilingual booking',
   'torah-tracker': 'Torah Tracker',
-  'claude-code-desk': 'Claude Code Desk',
 };
 
 const { CASE_STUDIES, MORE_WORK, areaById } = require('../content/projects');

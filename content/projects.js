@@ -9,16 +9,20 @@
    ---------------------------------------------------------------------------
    CLIENT NAMING POLICY
    ---------------------------------------------------------------------------
-   CHANNEL-PLAN.md §7 decision 4 (2026-08-12): no client name, logo, domain or
-   product name appears anywhere — screenshots, case studies, posts, OG images.
-   Work is described by shape instead. That decision is what removes the need
-   for client consent, so it is an interlock, not a style preference.
+   CHANNEL-PLAN.md §7 decision 4 (2026-08-12) made every client anonymous, on
+   the grounds that describing work by shape is what removes the need to ask.
 
-   `CLIENT_NAMING` below is the one switch. Every client project carries both
-   its anonymous shape name and its real identity; only the anonymous form is
-   ever emitted while this is 'anonymous'. Flipping it to 'named' is a content
-   decision, not a rewrite — but it also re-opens the consent question, so it
-   should only move when Ohav says so.
+   AMENDED 2026-08-16, on Ohav's instruction. Consent is recorded PER PROJECT
+   now, not by one global switch, because the real situation is per project:
+   Thrive, PCG and ShipHero-AI are his own or in-house, and BridgeMortgage and
+   Horse & Harmony are third-party businesses he confirms have agreed. One
+   switch would have named all of them together, including any client added
+   later who was never asked.
+
+   So: a case study's TITLE is always the shape name. `client.named: true` adds
+   the client's own name beside it. The default is false, which means a project
+   added without thinking about this stays anonymous rather than leaking.
+   `CLIENT_NAMING` survives as a global override and stays 'anonymous'.
    ============================================================================ */
 
 const CLIENT_NAMING = 'anonymous'; // 'anonymous' | 'named'
@@ -77,7 +81,7 @@ const PRACTICE_AREAS = [
 ];
 
 /* ---------------------------------------------------------------------------
-   Case studies — six, deep.
+   Case studies. Deep, and led by the one closest to the buyer we want.
    Template (MARKETING-PLAN.md §7): problem → constraints → what we built →
    the hard part → outcome → stack. `hardPart` is the section that does the
    actual selling, so it is written as a specific failure and its fix, not as
@@ -86,11 +90,69 @@ const PRACTICE_AREAS = [
 
 const CASE_STUDIES = [
   {
+    slug: 'mortgage-broker-client-portal',
+    pricing: { tier: 'platform', addons: ['portal', 'migrate'] },
+    area: 'platforms',
+    name: 'Mortgage broker and client portal',
+    client: { real: 'BridgeMortgage', named: true },
+    tagline: 'A brokerage running on board software, a Word document and an inbox.',
+    summary:
+      'A mortgage brokerage tracked live deals on a board tool, sent its application form as a Word document by email, and collected client paperwork as attachments. We replaced all three with one portal: a six-step client journey, an application form inside it, and a document vault the broker can actually search.',
+    year: '2026',
+    status: 'Live in production',
+    scale: [
+      { value: '313', label: 'live deals migrated into the new journey' },
+      { value: '54', label: 'application fields, off paper and into the portal' },
+      { value: '6', label: 'stages matching the real mortgage process' },
+    ],
+    problem: [
+      'The pipeline lived on a board tool, one card per deal, priced per seat. It held the broker\'s view of a deal and nothing of the client\'s. Everything the client had to supply arrived by email and was reconciled by hand.',
+      'The application itself was a Word document, emailed out and emailed back. Fifty-four fields, retyped into the pipeline by somebody every time, with no validation and no way to tell which client had answered what.',
+      'A first attempt modelled the client journey in four steps. The broker\'s reaction was that four steps is not how a mortgage works, which meant the data model was wrong rather than the copy.',
+    ],
+    problemShort: [
+      'Deal pipeline on a per-seat board tool that held the broker\'s view and none of the client\'s.',
+      'The application form was a Word document, emailed both ways, then retyped by hand.',
+      'The first four-step journey did not match the real mortgage process, so the model was wrong.',
+    ],
+    constraints: [
+      'Real financial documents and identity paperwork, so storage had to be encrypted, virus-scanned and permission-checked rather than a shared folder.',
+      'Deals already in flight. A migration had to place every existing deal into the new journey without a broker sorting them by hand.',
+      'The people using the admin side are brokers, not operators. The internal UI had to hit the same bar as the client-facing one.',
+      'A returning client buying a second property must not end up with a duplicate login, and must not see the wrong deal.',
+    ],
+    built: [
+      'A six-step client journey built from the broker\'s description of the real process, with the stage copy and the paperwork bound to each stage both editable at runtime rather than in code.',
+      'The application form moved inside the portal as a wizard, so answers land in the database validated instead of arriving as a document to be retyped.',
+      'A document vault laid out per client and per deal, encrypted at rest and virus-scanned on upload, with filenames on disk that carry no client information.',
+      'A broker pipeline over the same data, so the client view and the broker view are two readings of one record rather than two systems to reconcile.',
+      'An idempotent invite: a returning client gets a fresh sign-in link against their existing account, never a second login.',
+    ],
+    hardPart: {
+      title: 'The switch that had to be off before it existed',
+      body: [
+        'The brokerage was mid-migration with real client records already loaded, and the instruction was unambiguous: no automatic email may reach an existing client. Not "we will turn it off before launch". Off, now, on production.',
+        'The obvious implementation is a settings flag defaulting to false. The trap is that a settings row which has never been written does not read as false. It reads as absent, and absent is not false unless somebody decides it is. A flag that defaults to off in code but reads null from an unwritten row is a flag that is off in the developer\'s head and undefined in production.',
+        'So the read path treats an absent row as off, deliberately, and the deployment carries no migration to create it. The setting is safe on production precisely because nothing had to run successfully for it to be safe. A missing row is the safe state rather than an unknown one.',
+        'Verifying it produced the more useful finding. The number everyone had been quoting for how many clients were reachable counted rows in the clients table. The number that matters counts clients with a portal login, because only those can be emailed at all. Those are different tables and, at that moment, very different numbers: one hundred and forty one against four.',
+      ],
+      lesson:
+        'A default is only a default if the code that reads it agrees. Anything configurable has an unwritten state as well as true and false, and the unwritten state is the one that ships first. Decide what it means before it means something by accident.',
+    },
+    outcome: [
+      'One system holds the deal, the application and the documents, so nothing is retyped between them.',
+      'Every existing deal was placed into the new journey by migration rather than by hand.',
+      'Per-seat cost is gone. Adding a broker or a client costs nothing, because there is nobody to pay per head.',
+      'The brokerage owns the server, the repository and the data, and can move all three without asking us.',
+    ],
+    stack: ['Next.js', 'TypeScript', 'MySQL', 'Knex', 'Redis', 'ClamAV', 'Docker', 'Coolify'],
+  },
+  {
     slug: 'multi-campus-engagement-platform',
     pricing: { tier: 'platform', addons: ['tenant', 'connect', 'mobile'] },
     area: 'platforms',
     name: 'Multi-campus engagement platform',
-    client: { real: 'Thrive / OLAMI', named: false },
+    client: { real: 'Thrive / OLAMI', named: true },
     tagline: 'Four campuses, one database, isolation that had to be provably real.',
     summary:
       'A network of campus organisations ran on a 135,000-line WordPress plugin. One install per campus, student records duplicated across sites, no shared reporting, and a Salesforce org nobody trusted. We replaced it with a single multi-tenant platform.',
@@ -150,7 +212,7 @@ const CASE_STUDIES = [
     pricing: { tier: 'stack', addons: ['connect', 'migrate'] },
     area: 'platforms',
     name: 'Community lending ledger',
-    client: { real: 'Passaic Clifton Gemach', named: false },
+    client: { real: 'Passaic Clifton Gemach', named: true },
     tagline: 'A $1.58M interest-free loan fund whose headline number was wrong by $47,383.',
     summary:
       'An interest-free community loan fund ran on spreadsheets, contracts in Google Drive, and a bookkeeping tool with no transaction export. We built the ledger, and in the process found that the number everyone quoted was measuring the wrong side of the balance sheet.',
@@ -199,6 +261,64 @@ const CASE_STUDIES = [
       'The growth chart was relabelled rather than redrawn. It charts money in, which is a real series, instead of being forced onto a basis the underlying data cannot support.',
     ],
     stack: ['PHP', 'MySQL', 'Google Drive API', 'Docker', 'Coolify'],
+    shots: [],
+  },
+
+  {
+    slug: 'torah-tracker',
+    pricing: { tier: 'stack', addons: ['mobile'] },
+    area: 'apps',
+    name: 'Torah Tracker',
+    client: { real: 'Torah Tracker', named: true },
+    own: true,
+    liveUrl: 'https://torahtracker.app',
+    tagline: 'A rewrite shipped to an installed base, without reaching zero users.',
+    summary:
+      'Shipping a rewrite to an installed base without dropping anyone. A daily-habit app moved from a progressive web app to React Native in both stores. The rewrite was the easy half. The hard half was delivering updates to people who already had the old build on their phone.',
+    year: '2026',
+    status: 'Live: App Store & Google Play',
+    scale: [
+      { value: 'iOS + Android', label: 'native, in both stores' },
+      { value: 'OTA', label: 'updates without a store round-trip' },
+      { value: '0', label: 'users a mismatched update reaches' },
+    ],
+    problem: [
+      'The original product was a progressive web app. It worked, but it could not do the things that make a daily-habit app stick on a phone. Reliable notifications, a home-screen presence people trust, and offline behaviour that survives a commute.',
+      'Rewriting it native meant taking on the entire release-engineering problem that a web app simply does not have.',
+    ],
+    problemShort: [
+      "A progressive web app that could not do reliable notifications or real offline.",
+      "Real users already on the old build: a rewrite that stranded them is a downgrade.",
+      "Store review on every fix is not a viable loop for a small team.",
+    ],
+    constraints: [
+      'Real users on the existing build. A rewrite that stranded them would have been a downgrade dressed as a launch.',
+      'Over-the-air updates were essential: waiting on store review for every fix is not a viable loop for a small team.',
+      'Android notification delivery is not uniform. Some vendors defer background work aggressively enough to make a reminder app useless by default.',
+    ],
+    built: [
+      'A React Native / Expo rewrite that replaced the PWA as the production app on iOS, Android and web.',
+      'An OTA update pipeline gated on runtime version, so an update can only publish to a runtime that shipped builds actually have.',
+      'A TypeScript check as a release gate, ahead of any publish.',
+      'Notification handling that accounts for vendor-specific battery restrictions rather than assuming a stock Android.',
+    ],
+    hardPart: {
+      title: 'The update that publishes successfully to nobody',
+      body: [
+        'Expo over-the-air updates are matched to a **runtime version**. A device only accepts an update published to the runtime its installed binary was built with. That is the correct design: it is what stops JavaScript expecting a native module the installed app does not contain.',
+        'It also means a version bump in the wrong place is a silent, total delivery failure. The app config had been moved to 2.1.0 while the build in the store was 2.0.1. A publish from that state completes without warning, reports success, and lands on a runtime that no installed device has. Every user stays on the old code, indefinitely, and the dashboard says the update shipped.',
+        'There is a matching trap one layer down: adding a native module in JavaScript without shipping a binary that contains it produces an update that installs and then crashes on the code path that needs it. A break introduced by the delivery mechanism itself.',
+        'Both are now procedural rather than remembered. Runtime version is verified against the shipped build before any publish, native-module changes are pinned to a matching binary release, and a type check gates the publish so a broken bundle cannot reach the channel in the first place.',
+      ],
+      lesson:
+        'For anything with an installed base, "did it publish" and "did it arrive" are different questions with different answers. The second one needs its own check, because the first one will happily report success.',
+    },
+    outcome: [
+      'Live in the App Store and on Google Play, with the PWA retired.',
+      'Fixes reach existing users over the air, without a store review cycle.',
+      'Update delivery is verified against the installed base rather than assumed from a successful publish.',
+    ],
+    stack: ['React Native', 'Expo / EAS', 'TypeScript', 'Node.js', 'Docker', 'Coolify'],
     shots: [],
   },
 
@@ -265,7 +385,7 @@ const CASE_STUDIES = [
     pricing: { tier: 'stack', addons: ['lang'] },
     area: 'apps',
     name: 'Bilingual therapeutic-riding booking platform',
-    client: { real: 'Horse & Harmony', named: false },
+    client: { real: 'Horse & Harmony', named: true },
     tagline: 'The booking calendar rendered perfectly, and it was empty.',
     summary:
       'A therapeutic horse-riding practice took bookings by phone and WhatsApp. We built a bilingual Hebrew/English booking site with a self-service admin, then hit a failure mode that produces no error at all.',
@@ -316,120 +436,6 @@ const CASE_STUDIES = [
     shots: [{ src: '/assets/work/bilingual-booking-platform/home-desktop.png', alt: 'Booking site home page', from: 'horse-harmony', gated: true }],
   },
 
-  {
-    slug: 'torah-tracker',
-    pricing: { tier: 'stack', addons: ['mobile'] },
-    area: 'apps',
-    name: 'Torah Tracker',
-    client: { real: 'Torah Tracker', named: true },
-    own: true,
-    liveUrl: 'https://torahtracker.app',
-    tagline: 'A rewrite shipped to an installed base, without reaching zero users.',
-    summary:
-      'A learning-tracker app that started as a PWA and was rewritten in React Native for the App Store and Google Play. The interesting part was not the rewrite: it was delivering updates to people who already had the old build installed.',
-    year: '2026',
-    status: 'Live: App Store & Google Play',
-    scale: [
-      { value: 'iOS + Android', label: 'native, in both stores' },
-      { value: 'OTA', label: 'updates without a store round-trip' },
-      { value: '0', label: 'users a mismatched update reaches' },
-    ],
-    problem: [
-      'The original product was a progressive web app. It worked, but it could not do the things that make a daily-habit app stick on a phone. Reliable notifications, a home-screen presence people trust, and offline behaviour that survives a commute.',
-      'Rewriting it native meant taking on the entire release-engineering problem that a web app simply does not have.',
-    ],
-    problemShort: [
-      "A progressive web app that could not do reliable notifications or real offline.",
-      "Real users already on the old build: a rewrite that stranded them is a downgrade.",
-      "Store review on every fix is not a viable loop for a small team.",
-    ],
-    constraints: [
-      'Real users on the existing build. A rewrite that stranded them would have been a downgrade dressed as a launch.',
-      'Over-the-air updates were essential: waiting on store review for every fix is not a viable loop for a small team.',
-      'Android notification delivery is not uniform. Some vendors defer background work aggressively enough to make a reminder app useless by default.',
-    ],
-    built: [
-      'A React Native / Expo rewrite that replaced the PWA as the production app on iOS, Android and web.',
-      'An OTA update pipeline gated on runtime version, so an update can only publish to a runtime that shipped builds actually have.',
-      'A TypeScript check as a release gate, ahead of any publish.',
-      'Notification handling that accounts for vendor-specific battery restrictions rather than assuming a stock Android.',
-    ],
-    hardPart: {
-      title: 'The update that publishes successfully to nobody',
-      body: [
-        'Expo over-the-air updates are matched to a **runtime version**. A device only accepts an update published to the runtime its installed binary was built with. That is the correct design: it is what stops JavaScript expecting a native module the installed app does not contain.',
-        'It also means a version bump in the wrong place is a silent, total delivery failure. The app config had been moved to 2.1.0 while the build in the store was 2.0.1. A publish from that state completes without warning, reports success, and lands on a runtime that no installed device has. Every user stays on the old code, indefinitely, and the dashboard says the update shipped.',
-        'There is a matching trap one layer down: adding a native module in JavaScript without shipping a binary that contains it produces an update that installs and then crashes on the code path that needs it. A break introduced by the delivery mechanism itself.',
-        'Both are now procedural rather than remembered. Runtime version is verified against the shipped build before any publish, native-module changes are pinned to a matching binary release, and a type check gates the publish so a broken bundle cannot reach the channel in the first place.',
-      ],
-      lesson:
-        'For anything with an installed base, "did it publish" and "did it arrive" are different questions with different answers. The second one needs its own check, because the first one will happily report success.',
-    },
-    outcome: [
-      'Live in the App Store and on Google Play, with the PWA retired.',
-      'Fixes reach existing users over the air, without a store review cycle.',
-      'Update delivery is verified against the installed base rather than assumed from a successful publish.',
-    ],
-    stack: ['React Native', 'Expo / EAS', 'TypeScript', 'Node.js', 'Docker', 'Coolify'],
-    shots: [],
-  },
-
-  {
-    slug: 'claude-code-desk',
-    area: 'platforms',
-    name: 'Claude Code Desk & Mobile',
-    client: { real: 'Claude Code Desk/Mobile', named: true },
-    own: true,
-    tagline: 'The internal tool the rest of this portfolio is built in.',
-    summary:
-      'A desktop and mobile interface for running AI coding sessions across every project on one machine. Built because the alternative was a wall of terminals, and kept because it is now the delivery environment for everything else here.',
-    year: '2026',
-    status: 'Live: desktop app + installable PWA',
-    scale: [
-      { value: '25+', label: 'projects driven from one interface' },
-      { value: 'Desktop + PWA', label: 'same session, either device' },
-      { value: 'Push', label: 'notified when a run needs input' },
-    ],
-    problem: [
-      'Running AI-assisted development across two dozen repositories means a lot of parallel, long-running sessions. In raw terminals that is unmanageable: no history worth searching, no way to see which run is waiting on you, and no access at all from a phone.',
-      'The specific failure was attention. A run that finishes or stalls while you are elsewhere costs the whole gap until you happen to look.',
-    ],
-    problemShort: [
-      "Two dozen repositories, each with long-running AI coding sessions.",
-      "Raw terminals give no searchable history and no view of which run is waiting on you.",
-      "A run that stalls while you are elsewhere costs the whole gap until you look.",
-    ],
-    constraints: [
-      'It had to work off the machine: the phone client is not a demo, it is how sessions get checked from outside the office.',
-      'Streaming output is heavy. Naive rendering of a live token stream will pin a CPU and make the interface worse than the terminal it replaced.',
-      'The desktop app is packaged. Deployment is not "save the file."',
-    ],
-    built: [
-      'An Electron desktop app and an installable PWA sharing one server, so a session started on the desktop is readable from a phone.',
-      'A headless server that starts at boot as a scheduled task before login, which the desktop app attaches to rather than spawning its own.',
-      'Web push when a session changes state: waiting, done, or errored. A stalled run announces itself.',
-      'Local voice transcription for dictated input.',
-      'Progressive streaming, markdown rendering moved to a Web Worker, batched git status, and scroll coalescing. The difference between usable and unusable on a long session.',
-    ],
-    hardPart: {
-      title: 'The identifier you need is not where the event is',
-      body: [
-        'The task panel shows how much of a long run is done. It sat at 0 of N for the entire session, then jumped to complete at the end. Useless precisely when progress information is worth having.',
-        'The cause was an ordering assumption. Task creation is announced as a tool call, but the real task identifier is only assigned in the tool **result**. Every subsequent update carried that real id, matched nothing in a panel keyed on the announcement, and was silently dropped. Nothing errored: updates simply landed against keys that did not exist yet.',
-        'The fix threads the tool-use id through from the server so the result can be tied back to the call that produced it, and re-keys the panel when the real identifier arrives. Both clients had to agree on this, since they share a stream.',
-        'The deployment trap is worth naming too, because it wastes an hour every time it is forgotten: the desktop app ships as a packaged archive, so editing source changes nothing until the archive is extracted, patched and repacked. A change that appears to do nothing is usually a change that was never actually deployed.',
-      ],
-      lesson:
-        'When updates go missing without erroring, the bug is almost always a key that does not exist yet rather than a message that never arrived. Correlating on an id that is assigned later means threading it back, not guessing it earlier.',
-    },
-    outcome: [
-      'Every project in this portfolio is now driven from one interface, desktop or phone.',
-      'Long runs are monitored by notification rather than by watching.',
-      'Task progress is live, which is the only time it is worth anything.',
-    ],
-    stack: ['Electron', 'Node.js', 'PWA / Service Workers', 'Web Push', 'Whisper', 'WebSockets'],
-    shots: [],
-  },
 ];
 
 /* ---------------------------------------------------------------------------
@@ -445,7 +451,6 @@ const MORE_WORK = [
   { name: 'TapSend', area: 'apps', note: 'Bulk messaging with a manual send gate', own: true },
   { name: 'Same-day delivery network', area: 'integrations', note: 'Multi-carrier rate-shop injected into checkout', own: false },
   { name: 'Warehouse operations assistant', area: 'integrations', note: 'Natural-language interface over 3PL operations', own: false },
-  { name: 'Mortgage client portal', area: 'platforms', note: 'Application intake, document vault, broker pipeline', own: false },
   { name: 'Campus site builder', area: 'platforms', note: 'Drag-and-drop public sites, multi-tenant', own: false },
   { name: 'Client project portal', area: 'platforms', note: 'Milestones, tickets and plan approval: this site runs it', own: true, url: '/portal' },
   { name: 'Investment firm site', area: 'apps', note: 'Marketing site and content platform', own: false },
@@ -468,15 +473,25 @@ const EVIDENCE = [
 const bySlug = Object.fromEntries(CASE_STUDIES.map((c) => [c.slug, c]));
 const areaById = Object.fromEntries(PRACTICE_AREAS.map((a) => [a.id, a]));
 
-/** Public display name — honours the client-naming policy. */
+/** Public display name. The title is always the shape name; naming a client
+    adds their name alongside it rather than replacing it. */
 function displayName(item) {
-  if (item.own || item.client?.named || CLIENT_NAMING === 'named') return item.name;
   return item.name;
+}
+
+/** The client's own name, only where that client has agreed to be named.
+    Returns '' for anyone who has not, which is the safe default: a project
+    added without a `named` flag stays anonymous without anyone remembering to
+    make it so. Our own products return '' too — there is no client to credit. */
+function clientName(item) {
+  if (item.own || !item.client) return '';
+  if (CLIENT_NAMING === 'anonymous' && !item.client.named) return '';
+  return item.client.real || '';
 }
 
 /** Whether a live/outbound link may be shown for this item. */
 function mayLink(item) {
-  return Boolean(item.own || CLIENT_NAMING === 'named');
+  return Boolean(item.own || item.client?.named || CLIENT_NAMING === 'named');
 }
 
 module.exports = {
@@ -488,5 +503,6 @@ module.exports = {
   bySlug,
   areaById,
   displayName,
+  clientName,
   mayLink,
 };

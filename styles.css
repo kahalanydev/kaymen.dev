@@ -64,9 +64,12 @@
     + var(--wrap-pad)
   );
 
-  /* dead centre reads as "parked". A small lift puts the rail where the eye
-     already is. One number — raise or lower it here, nowhere else. */
-  --rail-lift:clamp(0px,5.5vh,58px);
+  /* The rail sits level with the top of the page title rather than floating in
+     the middle of the viewport. Vertical centring meant its position depended on
+     the window height, so it landed somewhere different on every screen and
+     lined up with nothing. This is the fallback; script.js measures the real
+     title and overwrites it, so it stays correct if the hero padding changes. */
+  --rail-top:171px;
 
   --ease:cubic-bezier(.4,0,.2,1);
   --spring:cubic-bezier(.34,1.4,.64,1);
@@ -117,19 +120,24 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.03em;line-height:1.1;fon
 .ambient .g3{width:480px;height:480px;bottom:-280px;left:20%;background:rgba(28,35,51,.03)}
 
 /* ================================================================ THE RAIL
-   Floating, vertically centred, glass, always labelled. Never pushes the
-   page — it floats over it.                                               */
+   Floating, glass, always labelled, and level with the top of the page title.
+   Never pushes the page: it floats over it.                               */
 .rail{
   position:fixed;
-  top:calc(50% - var(--rail-lift));
-  transform:translateY(-50%);
+  top:var(--rail-top);
+  /* a short window must scroll the rail rather than let it run off the bottom */
+  max-height:calc(100vh - var(--rail-top) - 24px);
+  overflow-y:auto;
   z-index:80;
   width:var(--rail-w);
   padding:10px 9px;
   border-radius:26px;
   display:flex;flex-direction:column;gap:2px;
   transition:box-shadow .38s var(--ease);
-  overflow:hidden;
+  /* overflow-x only: a plain overflow:hidden here would override the
+     overflow-y:auto above and clip the rail on a short window instead of
+     letting it scroll */
+  overflow-x:hidden;
 
   /* --- the glass itself --- */
   background:rgba(255,255,255,.55);
@@ -713,6 +721,8 @@ footer{padding:36px 0 46px;border-top:1px solid var(--line);margin-top:80px}
 }
 .case-meta .case-area{color:var(--accent-dark)}
 .case-dot{opacity:.4}
+.case-client{font-size:12.5px;color:var(--muted);margin-top:10px}
+.case-client b{color:var(--ink);font-weight:600}
 .case-tagline{font-size:19px;font-weight:500;line-height:1.5;margin-top:18px;max-width:52ch}
 .case-summary{font-size:15px;color:var(--muted);line-height:1.75;margin-top:16px;max-width:60ch}
 .case-live{margin-top:24px}

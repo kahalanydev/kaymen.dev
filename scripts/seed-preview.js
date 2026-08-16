@@ -31,8 +31,19 @@ const PREVIEW_FILES = [
   path.join(ROOT, 'portal', '_preview.html'),
 ];
 
+/* Wipe the throwaway data, but never die trying. A headless Chrome started for
+   a screenshot run keeps a lock on .preview-data/chrome-profile, and rmSync
+   throws EPERM on Windows when it hits one. Losing the old database is the
+   point; losing the whole run because a browser is still open is not. */
 const keep = process.argv.includes('--keep');
-if (!keep && fs.existsSync(DATA_DIR)) fs.rmSync(DATA_DIR, { recursive: true, force: true });
+if (!keep && fs.existsSync(DATA_DIR)) {
+  try {
+    fs.rmSync(DATA_DIR, { recursive: true, force: true });
+  } catch (err) {
+    try { fs.rmSync(path.join(DATA_DIR, 'analytics.db'), { force: true }); } catch {}
+    console.log(`  (could not clear ${DATA_DIR}: ${err.code}. Dropped the database and carried on.)`);
+  }
+}
 
 let server;
 let stopping = false;

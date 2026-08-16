@@ -318,15 +318,35 @@
   var railFrame = 0;
   function syncRailGutter() {
     railFrame = 0;
+    var root = document.documentElement;
+
     var wrap = document.querySelector('.page .wrap') || document.querySelector('.wrap');
-    if (!wrap) return;
-    var rect = wrap.getBoundingClientRect();
-    if (!rect.width) return;
-    var pad = parseFloat(getComputedStyle(wrap).paddingLeft) || 0;
-    var edge = document.body.classList.contains('rail-right')
-      ? document.documentElement.clientWidth - rect.right + pad
-      : rect.left + pad;
-    document.documentElement.style.setProperty('--text-left', Math.round(edge) + 'px');
+    if (wrap) {
+      var rect = wrap.getBoundingClientRect();
+      if (rect.width) {
+        var pad = parseFloat(getComputedStyle(wrap).paddingLeft) || 0;
+        var edge = document.body.classList.contains('rail-right')
+          ? root.clientWidth - rect.right + pad
+          : rect.left + pad;
+        root.style.setProperty('--text-left', Math.round(edge) + 'px');
+      }
+    }
+
+    /* Vertical: level the rail with the top of the page title. Measured rather
+       than hard-coded so it survives a change to the hero padding, and measured
+       in DOCUMENT coordinates because the rail is fixed and the reader lands at
+       the top of the page. Every page has a first h1: the hero on the homepage,
+       the case title on a case study. */
+    var title = document.querySelector('.page h1') || document.querySelector('h1');
+    if (title) {
+      /* offsetTop, not getBoundingClientRect: the hero carries the .rv reveal,
+         which starts life translated down the page. A rect measured before the
+         reveal fires is the animated position, not the layout one, and the rail
+         ends up 14px low forever. The offset chain ignores transforms. */
+      var top = 0;
+      for (var el = title; el; el = el.offsetParent) top += el.offsetTop;
+      if (top > 0) root.style.setProperty('--rail-top', Math.round(top) + 'px');
+    }
   }
   function queueRailGutter() {
     if (!railFrame) railFrame = requestAnimationFrame(syncRailGutter);

@@ -19,6 +19,7 @@ const {
   MORE_WORK,
   bySlug,
   areaById,
+  clientName,
   mayLink,
 } = require('../content/projects');
 const { demoFor } = require('../content/demos');
@@ -508,6 +509,7 @@ function caseStudyPage(slug) {
           <span class="case-year">${esc(s.year)}</span>
         </div>
         <h1>${esc(s.name)}</h1>
+        ${clientName(s) ? `<p class="case-client">Built for <b>${esc(clientName(s))}</b></p>` : ''}
         <p class="case-tagline">${esc(s.tagline)}</p>
         <p class="case-summary">${esc(s.summary)}</p>
         ${
@@ -623,7 +625,7 @@ function workIndexPage() {
   <header class="work-hero">
     <div class="wrap prose">
       <p class="eyebrow">Selected work</p>
-      <h1>Six builds, and what was <em>hard</em> about each</h1>
+      <h1>The builds, and what was <em>hard</em> about each</h1>
       <p>Each case study covers the problem, the constraints, what we built, and one specific thing that went wrong along the way. The last part is the one worth reading.</p>
     </div>
   </header>
