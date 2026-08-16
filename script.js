@@ -64,6 +64,28 @@
     onScroll();
   }
 
+  /* ---- the mobile brand chip retracts while scrolling down --------------
+     It is position:fixed, so without this it covers whatever happens to be
+     under it for the entire page — it was sitting on a case-study title and on
+     the pricing eyebrow. Down hides it, up brings it back, and the top of the
+     page always shows it. Threshold so a one-pixel jitter does not flicker it. */
+  (function () {
+    if (!document.querySelector('.brandbar')) return;
+    var last = window.scrollY, pending = false;
+    window.addEventListener('scroll', function () {
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(function () {
+        var y = window.scrollY;
+        if (Math.abs(y - last) > 6) {
+          document.body.classList.toggle('nav-down', y > last && y > 120);
+          last = y;
+        }
+        pending = false;
+      });
+    }, { passive: true });
+  })();
+
   /* ---- reveal on scroll --------------------------------------------------
      Without IntersectionObserver .rv would stay at opacity 0 forever, so the
      fallback reveals everything rather than hiding the page. */

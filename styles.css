@@ -298,6 +298,11 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
   body.rail-right .hero-fx{left:calc(-1 * var(--page-pr));right:calc(-1 * var(--page-pl))}
 }
 .hero-fx canvas{display:block;width:100%;height:100%}
+/* Below the two-column breakpoint the copy fills the full width, so the mesh
+   crosses every line of it and the source node lands on top of a benefit
+   block. It is a desktop flourish; on a phone it costs legibility and battery
+   for nothing. The ambient blooms stay, so the hero is still not flat. */
+@media (max-width:900px){.hero-fx{display:none}}
 /* two soft blooms, the site's own ambient treatment brought up enough to see */
 .hero::before,.hero::after{
   content:"";position:absolute;pointer-events:none;z-index:0;border-radius:50%;
@@ -751,6 +756,11 @@ footer{padding:36px 0 46px;border-top:1px solid var(--line);margin-top:80px}
       0 0 0 1px rgba(226,228,232,.7),
       inset 0 1px 0 rgba(255,255,255,.9);
   }
+  /* Fixed means it covered whatever was under it for the entire page — it was
+     sitting on a case-study title and on the pricing eyebrow in Ohav's
+     screenshots. Retract on the way down, return on the way up. */
+  .brandbar{transition:transform .32s var(--ease),opacity .32s var(--ease)}
+  body.nav-down .brandbar{transform:translateY(-120%);opacity:0}
   .brandbar::before{
     content:"";position:absolute;inset:0;border-radius:22px;pointer-events:none;mix-blend-mode:screen;
     background:linear-gradient(180deg,rgba(255,255,255,.6) 0%,rgba(255,255,255,.12) 30%,rgba(255,255,255,0) 58%);
