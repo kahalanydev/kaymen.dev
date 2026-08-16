@@ -23,6 +23,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <!-- iOS ignores an SVG here and screenshots the page instead, so this one has to be a PNG -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 </head>
 <body>
 
@@ -33,7 +35,7 @@
   <div class="rail-prog" aria-hidden="true"><i id="prog"></i></div>
 
   <a href="#start" class="rail-brand">
-    <span class="mark">K</span>
+    <span class="mark"></span>
     <span class="rail-wordmark"><b>kaymen</b><span>.</span>dev</span>
   </a>
 
@@ -42,7 +44,7 @@
     <a href="#start" class="rail-link on" data-sec="start" data-track="nav-start">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg><span>Start</span>
     </a>
-    <a href="#need" class="rail-link" data-sec="need" data-track="nav-need">
+    <a href="#price" class="rail-link" data-sec="price" data-track="nav-price">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9.1 9a3 3 0 1 1 4.2 2.7c-.8.4-1.3 1.1-1.3 2v.4"/><circle cx="12" cy="17.5" r=".8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="9.2"/></svg><span>What you need</span>
     </a>
     <a href="#running" class="rail-link" data-sec="running" data-track="nav-running">
@@ -50,9 +52,6 @@
     </a>
     <a href="#work" class="rail-link" data-sec="work" data-track="nav-work">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2.5" y="6.5" width="19" height="13.5" rx="2.2"/><path d="M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/></svg><span>The work</span>
-    </a>
-    <a href="#price" class="rail-link" data-sec="price" data-track="nav-price">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5v19M16.8 6.3H9.9a3.1 3.1 0 0 0 0 6.2h4.2a3.1 3.1 0 0 1 0 6.2H6.7"/></svg><span>What it costs</span>
     </a>
     <a href="#terms" class="rail-link" data-sec="terms" data-track="nav-terms">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.8 4.5 6v6c0 4.6 3.1 8 7.5 9.2 4.4-1.2 7.5-4.6 7.5-9.2V6z"/><path d="M9.2 12.2l2 2 3.6-3.9"/></svg><span>No hostages</span>
@@ -96,7 +95,7 @@
         <h1>We build it.<br>Then we <span>run it</span>.</h1>
         <p class="lead">Multi-tenant platforms, hard integrations, and apps in the stores. Built and run by the same people. A portfolio shows finished work. Everything here is still switched on.</p>
         <div class="actions">
-          <a href="#need" class="btn btn-primary" data-track="cta-what-you-need">What do you need?</a>
+          <a href="#price" class="btn btn-primary" data-track="cta-what-you-need">What do you need?</a>
           <a href="#running" class="btn btn-ghost" data-track="cta-see-running">See what's running</a>
         </div>
       </div>
@@ -110,48 +109,41 @@
   <hr class="rule">
 
   <!-- ============================================================== ROUTING -->
-  <section id="need">
+  <!-- One section where there used to be two. #need asked "what do you need?"
+       and #price asked "roughly what are we talking about?", which is the same
+       question with a number attached, so the page asked it twice for 2,046px.
+       This answers it once, in 835px, and keeps id="price" so the case-study
+       cost blocks can keep linking to /#price.
+
+       Everything in it is rendered by script.js from window.KD_PRICING
+       (content/pricing.js). The shell below is empty on purpose. -->
+  <section id="price">
     <div class="wrap">
-      <div class="prose rv">
-        <p class="eyebrow">Start here</p>
-        <h2 class="sec">What do you need?</h2>
-        <p class="sec-sub">Pick the one that sounds like you.</p>
+      <p class="eyebrow rv">Start here</p>
+      <!-- No full stop after the button: the phrase is long enough to wrap, and
+           a trailing "." lands alone on the next line whenever the last word
+           fills the measure. The chevron terminates the sentence instead. -->
+      <h2 class="ask-say rv">I need <button class="pick" id="askSay" aria-haspopup="listbox"></button></h2>
+      <p class="ask-note rv" id="askNote"></p>
+      <ul class="ask-ticks rv" id="askTicks"></ul>
+
+      <p class="ask-hint rv">or pick the closest</p>
+      <div class="ask-chips rv" id="askChips" role="listbox" aria-label="What you need"></div>
+
+      <div class="ask-out rv">
+        <div class="n" id="askBuild"></div>
+        <div class="sep">/</div>
+        <div class="m" id="askMonthly"></div>
+        <a href="#talk" class="btn btn-primary" data-track="ask-talk">Talk it through →</a>
       </div>
 
-      <div class="qcards rv">
-        <button class="q" data-answer="build" aria-pressed="false" aria-controls="answer" data-track="route-build">
-          <h3>Something built</h3>
-          <p>An idea, a spreadsheet that outgrew itself, or six tools that do not talk to each other.</p>
-          <span class="go">See how that goes →</span>
-        </button>
-        <button class="q" data-answer="run" aria-pressed="false" aria-controls="answer" data-track="route-run">
-          <h3>Something kept alive</h3>
-          <p>It exists and it works. The person who built it is leaving, or already has.</p>
-          <span class="go">See how that goes →</span>
-        </button>
-        <button class="q" data-answer="unsure" aria-pressed="false" aria-controls="answer" data-track="route-unsure">
-          <h3>Not sure yet</h3>
-          <p>You know the problem. You do not know if software is the answer. You want someone to say so.</p>
-          <span class="go">See how that goes →</span>
-        </button>
-      </div>
-
-      <div class="answer" id="answer">
-        <div class="answer-in">
-          <div>
-            <h4 id="aTitle"></h4>
-            <p id="aBody"></p>
-            <ul id="aList"></ul>
-          </div>
-          <div class="price-block">
-            <div class="amt" id="aPrice"></div>
-            <div class="per" id="aPer"></div>
-            <a href="#talk" class="btn btn-primary" style="margin-top:16px" data-track="route-start">Start with this →</a>
-          </div>
-        </div>
-      </div>
+      <p class="ask-fine rv"><b>An estimate, not a quote.</b> Nothing is booked and you owe nothing. <b>What moves it from there:</b> an app in the stores, connecting the systems you already run, logins for your own customers, more than one location, bringing your old data across, a second language, SSO and audit. We price those on the call.</p>
+      <p class="fine rv">Overflow beyond the monthly is $125/hr. Nonprofits get 25% off, publicly and without asking. Sometimes the answer is that you should not build anything yet, and we will say so.</p>
     </div>
   </section>
+
+  <div class="ask-veil" id="askVeil" hidden></div>
+  <div class="ask-pop" id="askPop" role="listbox" hidden></div>
 
   <hr class="rule">
 
@@ -160,60 +152,6 @@
        This placeholder must survive any rewrite of this file. Without it the
        two sections silently vanish and only render.js logs it. -->
   <!--{{WORK}}-->
-
-  <!-- =============================================================== PRICE -->
-  <section id="price">
-    <div class="wrap">
-      <div class="prose rv">
-        <p class="eyebrow">Pricing</p>
-        <h2 class="sec">Roughly what are we talking about?</h2>
-        <p class="sec-sub">Tick what sounds like you. The number moves as you go.</p>
-      </div>
-
-      <div class="nb rv">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 11v5.5M12 7.6v.5"/></svg>
-        <p><b>This is an estimate, not a quote. You are not paying for anything and nothing is booked.</b> It exists so you can see the shape of it before we talk. The real number comes out of that conversation, and it can go down as easily as up.</p>
-      </div>
-
-      <!-- The estimate builder. Options and prices live in script.js so there is
-           one source of truth for them; this is only the shell it renders into. -->
-      <div class="est rv">
-        <div>
-          <div class="step">
-            <h3>1 · What are you replacing?</h3>
-            <div id="estBases"></div>
-          </div>
-
-          <div class="pilot">
-            <b>Not sure which of these you are?</b>
-            <p><span>$750, one week.</span> A written plan and a working prototype of the single thing that matters most, enough to know whether the rest is worth building. <em>Credited in full against the build</em> if you go ahead.</p>
-          </div>
-
-          <div class="step" id="estAddonStep">
-            <h3>2 · What else does it need?</h3>
-            <div id="estAddons"></div>
-          </div>
-        </div>
-
-        <div class="tot">
-          <span class="lbl" id="estLbl">Starting around</span>
-          <div class="big" id="estTotal"></div>
-          <div class="then">
-            <div class="m" id="estMonthly"></div>
-            <p id="estPlan"></p>
-          </div>
-          <div class="picked" id="estPicked"></div>
-          <div class="flip" id="estFlip" hidden></div>
-          <a href="#talk" class="btn btn-primary" data-track="estimate-talk">Talk it through →</a>
-          <p class="free"><b>No cost, no commitment.</b> A conversation, and a straight answer about whether this is worth building at all.</p>
-        </div>
-      </div>
-
-      <p class="fine rv">Overflow beyond the monthly is $125/hr. Nonprofits get 25% off, publicly and without asking. Sometimes the answer is that you should not build anything yet, and we will say so.</p>
-    </div>
-  </section>
-
-  <hr class="rule">
 
   <!-- =============================================================== TERMS -->
   <section id="terms">
@@ -297,6 +235,9 @@
   </footer>
 </main>
 
+<!-- The price ladder, same file the server require()s. Must load BEFORE
+     script.js, which reads window.KD_PRICING to build the picker. -->
+<script src="/content/pricing.js"></script>
 <script src="/script.js"></script>
 <script src="/tracker.js" defer></script>
 </body>

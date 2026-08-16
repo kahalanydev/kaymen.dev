@@ -180,9 +180,8 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.03em;line-height:1.1;fon
 }
 .mark{
   width:30px;height:30px;flex:none;border-radius:9px;
-  background:linear-gradient(150deg,var(--accent) 0%,var(--accent-dark) 100%);
-  color:#fff;font-family:var(--display);font-weight:800;font-size:14px;
-  display:flex;align-items:center;justify-content:center;letter-spacing:-.04em;
+  background-image:url("/assets/mark.svg"),linear-gradient(150deg,var(--accent) 0%,var(--accent-dark) 100%);
+  background-size:76% 76%,auto;background-position:center;background-repeat:no-repeat;
   box-shadow:0 4px 12px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.45);
 }
 .rail-wordmark{
@@ -369,44 +368,6 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
 }
 .fleet-foot b{color:var(--ink);font-weight:600}
 
-/* -------------------------------------------------------------- routing Q */
-.qcards{display:grid;gap:12px;margin-top:32px}
-@media (min-width:760px){.qcards{grid-template-columns:repeat(3,1fr);gap:14px}}
-.q{
-  text-align:left;padding:22px 20px;border-radius:16px;
-  background:rgba(255,255,255,.72);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-  border:1px solid var(--line);
-  transition:all .3s var(--ease);
-}
-.q:hover{border-color:rgba(43,188,179,.5);transform:translateY(-2px);box-shadow:0 12px 32px rgba(22,48,61,.07)}
-.q h3{font-size:16px;font-weight:700;letter-spacing:-.02em}
-.q p{font-size:13.5px;color:var(--muted);margin-top:8px;line-height:1.55}
-.q .go{margin-top:14px;font-size:12.5px;font-weight:700;color:var(--accent-dark);display:flex;align-items:center;gap:5px;transition:gap .25s var(--ease)}
-.q:hover .go{gap:9px}
-.q[aria-pressed="true"]{
-  border-color:var(--accent);background:var(--accent-soft);
-  box-shadow:0 0 0 1px var(--accent),0 12px 32px var(--accent-glow);
-}
-.answer{
-  display:none;margin-top:16px;border-radius:18px;overflow:hidden;
-  border:1px solid var(--line);background:#fff;
-  box-shadow:0 14px 40px rgba(22,48,61,.06);
-}
-.answer.on{display:block;animation:drop .45s var(--ease)}
-@keyframes drop{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
-.answer-in{padding:26px 24px;display:grid;gap:20px}
-@media (min-width:760px){.answer-in{grid-template-columns:1fr auto;align-items:center;padding:30px 32px}}
-.answer h4{font-size:19px;font-weight:700}
-.answer p{font-size:14px;color:var(--muted);margin-top:8px;max-width:46ch;line-height:1.6}
-.answer ul{margin-top:14px;display:grid;gap:7px}
-.answer li{font-size:13px;color:var(--muted);padding-left:16px;position:relative}
-.answer li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
-.price-block{text-align:left}
-@media (min-width:760px){.price-block{text-align:right;padding-left:26px;border-left:1px solid var(--line)}}
-.price-block .amt{font-family:var(--display);font-size:34px;font-weight:800;letter-spacing:-.04em;line-height:1}
-.price-block .per{font-size:12px;color:var(--muted);margin-top:5px}
-
 /* ----------------------------------------------------------------- board */
 .board{margin-top:26px;border-top:1px solid var(--line)}
 /* mobile: dot in its own narrow column, everything else stacked beside it */
@@ -497,83 +458,103 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
 .cases .case:hover .meta .rd{gap:9px}
 .cases .case .meta .rd svg{width:12px;height:12px}
 
-/* ------------------------------------------------------- the estimate builder
-   Replaced the four fixed plan cards on 2026-08-16. Those published a ladder
-   ($600 / $1,800 / $4,500) aimed at a bigger client than the ones we actually
-   want, and a fixed card grid cannot serve a three-seat brokerage and a
-   four-campus network at once. Here the client assembles it and the number is a
-   consequence of scope, so only the "from" is ever published. Options and prices
-   live in script.js — one source of truth, this is just how they look. */
+/* -------------------------------------------------------------- the picker
+   Replaced BOTH #need (the three routing cards) and #price (the eleven-row
+   estimate builder) on 2026-08-16. They asked the same question — "which of
+   these are you" — and both ended in a price, so the homepage asked it twice
+   for 2,046px, 29% of the page. This is one section in their place at ~835px.
 
-/* the disclaimer is deliberately loud, not fine print: nothing here is owed */
-.nb{
-  display:flex;align-items:flex-start;gap:13px;margin-top:26px;padding:15px 18px;
-  border:1px solid rgba(43,188,179,.34);border-radius:14px;background:var(--accent-soft);
-  max-width:74ch;
+   Two controls, one state. The sentence is the one to notice; the pills are the
+   fallback for anyone who does not, and they mirror each other because both
+   read from the same `askSel` in script.js. */
+.ask-say{
+  font-family:var(--display);font-size:clamp(1.5rem,3vw,2.1rem);font-weight:700;
+  letter-spacing:-.035em;line-height:1.34;max-width:26ch;margin-top:2px;
 }
-.nb svg{width:18px;height:18px;flex:none;margin-top:2px;stroke-width:1.8}
-.nb p{font-size:13px;line-height:1.6;color:var(--muted)}
-.nb b{color:var(--ink);font-weight:600}
+/* the phrase is a <button> inside the heading. Underline + chevron is the
+   standard "this is editable" signal; without it the line reads as decoration
+   and the whole mechanism goes undiscovered. */
+.ask-say .pick{
+  display:inline;font:inherit;letter-spacing:inherit;color:var(--accent-dark);
+  background:none;border:0;border-bottom:2px solid var(--accent);border-radius:3px;
+  padding:0 3px;margin:0 -1px;cursor:pointer;text-align:left;
+  transition:background .2s var(--ease);
+}
+.ask-say .pick:hover{background:var(--accent-soft)}
+.ask-say .pick:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.ask-say .pick::after{content:'⌄';font-size:.62em;margin-left:7px;opacity:.7;position:relative;top:-.2em}
 
-.est{display:grid;grid-template-columns:minmax(0,1fr);gap:30px;margin-top:28px;align-items:start}
-@media (min-width:960px){.est{grid-template-columns:minmax(0,1fr) 330px}}
+.ask-note{color:var(--muted);font-size:14.5px;margin-top:12px;max-width:64ch;line-height:1.65;min-height:48px}
 
-.step{margin-bottom:24px}
-.step h3{
-  font-family:var(--body);font-size:10.5px;font-weight:700;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--muted);margin-bottom:11px;
+/* the three differentiators #need used to hide behind a click, flattened to one
+   row so they cost ~26px instead of ~80px */
+.ask-ticks{list-style:none;display:flex;flex-wrap:wrap;gap:7px 20px;margin-top:12px}
+.ask-ticks li{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.ask-ticks li::before{
+  content:'';width:13px;height:13px;flex:none;border-radius:50%;
+  background:var(--accent-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23229e96' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/9px no-repeat;
 }
-.opt{
-  display:flex;align-items:flex-start;gap:13px;padding:13px 16px;border:1px solid var(--line);
-  border-radius:13px;cursor:pointer;margin-bottom:7px;background:#fff;transition:all .2s var(--ease);
-}
-.opt:hover{border-color:#d7dae0}
-.opt.on{border-color:rgba(43,188,179,.5);background:var(--accent-soft)}
-.opt input{margin-top:3px;accent-color:var(--accent);flex:none}
-.opt .t{flex:1;min-width:0}
-.opt .t b{display:block;font-size:13.5px;font-weight:600;letter-spacing:-.01em}
-.opt .t span{display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5}
-.opt .p{
-  font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:-.02em;
-  color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;
-}
-.opt.on .p{color:var(--accent-dark)}
 
-/* the way in for anyone who cannot pick a row yet */
-.pilot{
-  border:1px dashed rgba(43,188,179,.5);border-radius:14px;padding:15px 18px;margin:-4px 0 24px;
-  background:linear-gradient(180deg,var(--accent-soft) 0%,rgba(255,255,255,0) 80%);
+.ask-hint{
+  display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-top:22px;
 }
-.pilot b{display:block;font-family:var(--display);font-size:14px;font-weight:700;letter-spacing:-.02em;margin-bottom:5px}
-.pilot p{font-size:12.5px;color:var(--muted);line-height:1.6}
-.pilot p span{color:var(--accent-dark);font-weight:700}
-.pilot p em{font-style:normal;color:var(--ink);font-weight:600}
+.ask-hint::after{content:'';flex:1;height:1px;background:var(--line)}
 
-.tot{border:1px solid var(--line);border-radius:18px;padding:24px 26px;background:#fff}
-@media (min-width:960px){.tot{position:sticky;top:30px}}
-.tot .lbl{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
-.tot .big{
-  font-family:var(--display);font-size:36px;font-weight:800;letter-spacing:-.05em;
-  line-height:1.05;margin-top:6px;font-variant-numeric:tabular-nums;
+.ask-chips{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-top:14px}
+@media (max-width:1000px){.ask-chips{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){.ask-chips{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ask-chip{
+  border:1px solid var(--line);border-radius:13px;padding:12px 15px;background:#fff;
+  cursor:pointer;text-align:left;transition:all .2s var(--ease);
 }
-.tot .big small{font-family:var(--body);font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0}
-.tot .then{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
-.tot .then .m{font-family:var(--display);font-size:23px;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
-.tot .then .m span{font-family:var(--body);font-size:12.5px;font-weight:500;color:var(--muted);letter-spacing:0}
-.tot .then p{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.55}
-.tot .picked{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:grid;gap:5px}
-.tot .picked div{display:grid;grid-template-columns:1fr auto;gap:10px;font-size:11.5px;color:var(--muted)}
-.tot .picked div b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
-.tot .btn{width:100%;margin-top:20px;justify-content:center}
-.tot .free{font-size:11.5px;color:var(--muted);text-align:center;margin-top:11px;line-height:1.5}
-.tot .free b{color:var(--ink);font-weight:600}
+.ask-chip:hover{border-color:#d0d3d9}
+.ask-chip.on{border-color:rgba(43,188,179,.55);background:var(--accent-soft)}
+.ask-chip b{display:block;font-size:13.5px;font-weight:600;letter-spacing:-.01em;line-height:1.35}
+.ask-chip span{
+  display:block;font-family:var(--display);font-size:12.5px;font-weight:700;
+  letter-spacing:-.02em;color:var(--muted);margin-top:5px;font-variant-numeric:tabular-nums;
+}
+.ask-chip.on span{color:var(--accent-dark)}
+/* the escape hatch reads as a different kind of thing, not a fifth price tier */
+.ask-chip.alt{border-style:dashed}
+.ask-chip.alt.on{border-style:solid}
 
-/* past a certain scope a fixed build price stops being honest, so it stops
-   quoting one and offers the twelve-month partnership instead */
-.flip{margin-top:16px;padding:15px 17px;border-radius:14px;background:var(--bg-alt);border:1px solid var(--line)}
-.flip b{display:block;font-family:var(--display);font-size:13.5px;font-weight:700;letter-spacing:-.02em;margin-bottom:5px}
-.flip p{font-size:12px;color:var(--muted);line-height:1.6}
-.flip p em{font-style:normal;color:var(--accent-dark);font-weight:600}
+/* build on the left, monthly on the right, split by a rule: the distinction the
+   whole section exists to make is that one is once and one is forever */
+.ask-out{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-top:26px;padding-top:22px;border-top:1px solid var(--line)}
+.ask-out .n{font-family:var(--display);font-size:36px;font-weight:800;letter-spacing:-.05em;font-variant-numeric:tabular-nums;line-height:1}
+.ask-out .sep{color:var(--line);font-size:24px}
+.ask-out .m{font-family:var(--display);font-size:25px;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
+.ask-out .n span,.ask-out .m span{
+  display:block;font-family:var(--body);font-size:12.5px;font-weight:500;
+  color:var(--muted);letter-spacing:0;margin-top:5px;max-width:34ch;
+}
+.ask-out .btn{margin-left:auto}
+@media (max-width:700px){.ask-out .btn{margin-left:0;width:100%;justify-content:center}}
+
+.ask-fine{font-size:12.5px;color:var(--muted);margin-top:18px;line-height:1.7;max-width:72ch}
+.ask-fine b{color:var(--ink);font-weight:600}
+
+.ask-veil{position:fixed;inset:0;z-index:55}
+.ask-pop{
+  position:fixed;z-index:60;background:#fff;border:1px solid var(--line);border-radius:15px;
+  box-shadow:0 18px 50px rgba(22,48,61,.16);padding:8px;width:min(430px,calc(100vw - 36px));
+  max-height:70vh;overflow-y:auto;
+}
+.ask-pop button{
+  display:block;width:100%;padding:11px 13px;border-radius:10px;border:0;background:none;
+  font:inherit;font-size:13.5px;font-weight:500;line-height:1.45;color:inherit;
+  text-align:left;cursor:pointer;transition:background .15s;
+}
+.ask-pop button:hover{background:var(--bg-alt)}
+.ask-pop button.on{background:var(--accent-soft);color:var(--accent-dark);font-weight:600}
+.ask-pop button i{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:2px}
+.ask-pop button.on i{color:var(--accent-dark);opacity:.8}
+.ask-pop .hd{
+  font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);padding:9px 13px 6px;
+}
 
 .fine{font-size:12.5px;color:var(--muted);margin-top:26px;line-height:1.65;max-width:64ch}
 

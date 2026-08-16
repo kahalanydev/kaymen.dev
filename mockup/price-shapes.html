@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pricing section — three shorter shapes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ---- tokens lifted verbatim from styles.css so this renders as the real site ---- */
+:root{
+  --bg:#ffffff; --bg-alt:#f4f5f7; --ink:#1a1b1e; --muted:#5f6368;
+  --accent:#2bbcb3; --accent-dark:#229e96; --accent-soft:rgba(43,188,179,.08);
+  --accent-glow:rgba(43,188,179,.18); --line:#e2e4e8; --deep:#16303d;
+  --display:'Sora',sans-serif; --body:'Inter',sans-serif;
+  --w-prose:760px; --w-page:1120px;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.6}
+a{text-decoration:none;color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
+.wrap{max-width:var(--w-page);margin:0 auto;padding:0 22px}
+.prose{max-width:var(--w-prose)}
+section{padding:74px 0}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:14px}
+h2.sec{font-family:var(--display);font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700;letter-spacing:-.03em;line-height:1.15}
+.sec-sub{color:var(--muted);font-size:15.5px;margin-top:14px;max-width:56ch;line-height:1.7}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 24px;border-radius:11px;font-size:14px;font-weight:600;transition:all .3s var(--ease)}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 16px var(--accent-glow)}
+.btn-primary:hover{background:var(--accent-dark);transform:translateY(-1px)}
+.btn-ghost{border:1.5px solid var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent-dark)}
+.fine{font-size:12.5px;color:var(--muted);margin-top:26px;line-height:1.65;max-width:64ch}
+.opt{display:flex;align-items:flex-start;gap:13px;padding:13px 16px;border:1px solid var(--line);border-radius:13px;cursor:pointer;margin-bottom:7px;background:#fff;transition:all .2s var(--ease)}
+.opt:hover{border-color:#d7dae0}
+.opt.on{border-color:rgba(43,188,179,.5);background:var(--accent-soft)}
+.opt input{margin-top:3px;accent-color:var(--accent);flex:none}
+.opt .t{flex:1;min-width:0}
+.opt .t b{display:block;font-size:13.5px;font-weight:600;letter-spacing:-.01em}
+.opt .t span{display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5}
+.opt .p{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:-.02em;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.opt.on .p{color:var(--accent-dark)}
+.step h3{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:11px}
+
+/* ---------------------------------------------------------------- harness */
+.bar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.93);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.bar .in{max-width:var(--w-page);margin:0 auto;padding:12px 22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.bar .ttl{font-family:var(--display);font-weight:800;letter-spacing:-.03em;font-size:14px;margin-right:8px}
+.tab{padding:7px 14px;border:1px solid var(--line);border-radius:100px;font-size:12.5px;font-weight:600;color:var(--muted);transition:all .2s var(--ease)}
+.tab:hover{border-color:#d0d3d9}
+.tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.bar .h{margin-left:auto;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar .h b{color:var(--ink);font-family:var(--display);font-weight:800}
+.note{max-width:var(--w-page);margin:0 auto;padding:26px 22px 0}
+.note .card{border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 14px 14px 0;padding:16px 20px;background:var(--bg-alt);max-width:74ch}
+.note h4{font-family:var(--display);font-size:14.5px;font-weight:700;letter-spacing:-.02em}
+.note p{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.65}
+.note p b{color:var(--ink);font-weight:600}
+.note .cost{margin-top:9px;padding-top:9px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.note .cost b{color:#a8541f;font-weight:600}
+.view{display:none}.view.on{display:block}
+.edge{border-top:1px dashed #cfd3da;border-bottom:1px dashed #cfd3da;position:relative}
+.edge::before{content:'section starts';position:absolute;top:-8px;left:22px;background:#fff;padding:0 8px;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:#b6bac1;font-weight:700}
+.edge::after{content:'section ends';position:absolute;bottom:-8px;left:22px;background:#fff;padding:0 8px;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:#b6bac1;font-weight:700}
+
+/* ============================================================ A — one question */
+.a-nb{font-size:13px;color:var(--muted);margin-top:20px;max-width:70ch;line-height:1.65}
+.a-nb b{color:var(--ink);font-weight:600}
+.a-grid{display:grid;gap:26px;margin-top:24px;align-items:start}
+@media(min-width:960px){.a-grid{grid-template-columns:minmax(0,1fr) 300px}}
+.a-tot{border:1px solid var(--line);border-radius:18px;padding:22px 24px;background:#fff;position:sticky;top:70px}
+.a-tot .lbl{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.a-tot .big{font-family:var(--display);font-size:34px;font-weight:800;letter-spacing:-.05em;line-height:1.05;margin-top:5px;font-variant-numeric:tabular-nums}
+.a-tot .big small{font-family:var(--body);font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0}
+.a-tot .m{font-family:var(--display);font-size:21px;font-weight:800;letter-spacing:-.04em;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.a-tot .m span{font-family:var(--body);font-size:12.5px;font-weight:500;color:var(--muted);letter-spacing:0}
+.a-tot .btn{width:100%;margin-top:18px;justify-content:center}
+.a-tot .free{font-size:11.5px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.5}
+.a-tot .free b{color:var(--ink);font-weight:600}
+.a-more{font-size:12.5px;color:var(--muted);margin-top:14px;line-height:1.65;max-width:64ch;padding-left:14px;border-left:2px solid var(--line)}
+.a-more b{color:var(--ink);font-weight:600}
+
+/* ============================================================ B — one at a time */
+.b-q{margin-top:26px}
+.b-head{display:flex;align-items:center;gap:11px;margin-bottom:13px}
+.b-num{width:22px;height:22px;flex:none;border-radius:50%;background:var(--ink);color:#fff;font-family:var(--display);font-size:11px;font-weight:800;display:grid;place-items:center}
+.b-head h3{font-family:var(--display);font-size:16px;font-weight:700;letter-spacing:-.02em}
+.b-head .skip{margin-left:auto;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line)}
+.b-head .skip:hover{color:var(--accent-dark);border-color:var(--accent)}
+.b-2{max-height:0;opacity:0;overflow:hidden;transition:max-height .5s var(--ease),opacity .35s var(--ease)}
+.b-2.open{max-height:760px;opacity:1}
+.b-ans{display:flex;align-items:center;gap:10px;padding:11px 15px;border:1px solid rgba(43,188,179,.4);background:var(--accent-soft);border-radius:12px;font-size:13px;margin-bottom:20px}
+.b-ans b{font-weight:600}
+.b-ans .ch{margin-left:auto;font-size:12px;color:var(--accent-dark);font-weight:600}
+.b-rest{max-height:0;opacity:0;overflow:hidden;transition:max-height .5s var(--ease),opacity .35s var(--ease)}
+.b-rest.open{max-height:900px;opacity:1}
+.b-foot{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}
+.b-foot .n{font-family:var(--display);font-size:30px;font-weight:800;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.b-foot .n small{font-family:var(--body);font-size:12.5px;font-weight:500;color:var(--muted);letter-spacing:0;display:block;margin-top:1px}
+.b-foot .btn{margin-left:auto}
+.b-pilot{font-size:12.5px;color:var(--muted);margin-top:16px;line-height:1.65;max-width:70ch}
+.b-pilot b{color:var(--ink);font-weight:600}
+.b-pilot span{color:var(--accent-dark);font-weight:700}
+
+/* ============================================================ C — the sentence */
+.c-say{font-family:var(--display);font-size:clamp(1.15rem,2.4vw,1.6rem);font-weight:600;letter-spacing:-.025em;line-height:1.85;margin-top:28px;max-width:30ch}
+.c-say .pick{display:inline;border-bottom:2px solid var(--accent);color:var(--accent-dark);cursor:pointer;transition:background .2s var(--ease);border-radius:3px;padding:0 2px}
+.c-say .pick:hover{background:var(--accent-soft)}
+.c-say .pick::after{content:'⌄';font-size:.75em;margin-left:5px;opacity:.65;position:relative;top:-.16em}
+.c-out{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+.c-out .n{font-family:var(--display);font-size:38px;font-weight:800;letter-spacing:-.05em;font-variant-numeric:tabular-nums;line-height:1}
+.c-out .sep{color:var(--line);font-size:26px}
+.c-out .m{font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
+.c-out .m span,.c-out .n span{font-family:var(--body);font-size:12.5px;font-weight:500;color:var(--muted);letter-spacing:0;display:block;margin-top:5px}
+.c-out .btn{margin-left:auto}
+.c-fine{font-size:12.5px;color:var(--muted);margin-top:18px;line-height:1.65;max-width:70ch}
+.c-fine b{color:var(--ink);font-weight:600}
+.pop{position:fixed;z-index:60;background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:0 18px 50px rgba(22,48,61,.16);padding:8px;width:min(430px,calc(100vw - 36px));display:none;max-height:70vh;overflow-y:auto}
+.pop.on{display:block}
+.pop button{display:block;width:100%;padding:11px 13px;border-radius:10px;font-size:13.5px;font-weight:500;line-height:1.45;transition:background .15s}
+.pop button:hover{background:var(--bg-alt)}
+.pop button.on{background:var(--accent-soft);color:var(--accent-dark);font-weight:600}
+.pop button i{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:2px}
+.pop button.on i{color:var(--accent-dark);opacity:.8}
+.pop .hd{font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);padding:9px 13px 6px}
+.pop .dn{margin:6px 4px 2px;padding:10px;background:var(--ink);color:#fff;border-radius:10px;text-align:center;font-weight:600;font-size:13px}
+.veil{position:fixed;inset:0;z-index:55;display:none}.veil.on{display:block}
+
+/* ====================================================== D — A's rows, C's voice
+   The sentence replaces the h2 rather than sitting under it: it is the heading
+   AND the live readout, so it costs no extra height. Because it carries the long
+   descriptive phrase, the four options can shrink to one-line chips, which is
+   where most of the saving comes from. */
+.d-say{font-family:var(--display);font-size:clamp(1.5rem,3vw,2.1rem);font-weight:700;letter-spacing:-.035em;line-height:1.34;max-width:26ch}
+/* the phrase is a button inside the heading. Underline + chevron is the standard
+   "this is editable" signal; without it the line reads as decoration and the
+   whole mechanism goes undiscovered. */
+.d-say .pick{display:inline;font:inherit;letter-spacing:inherit;color:var(--accent-dark);
+  border-bottom:2px solid var(--accent);border-radius:3px;padding:0 3px;margin:0 -1px;
+  cursor:pointer;transition:background .2s var(--ease)}
+.d-say .pick:hover{background:var(--accent-soft)}
+.d-say .pick::after{content:'⌄';font-size:.62em;margin-left:7px;opacity:.7;position:relative;top:-.2em}
+.d-hint{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);margin-top:22px}
+.d-hint::after{content:'';flex:1;height:1px;background:var(--line)}
+.d-note{color:var(--muted);font-size:14.5px;margin-top:12px;max-width:64ch;line-height:1.65;min-height:48px}
+/* the three differentiators #need used to carry in its answer panel, kept but
+   flattened to one row so they cost ~26px instead of ~80px */
+.d-ticks{list-style:none;display:flex;flex-wrap:wrap;gap:7px 20px;margin-top:12px}
+.d-ticks li{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.d-ticks li::before{content:'';width:13px;height:13px;flex:none;border-radius:50%;
+  background:var(--accent-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23229e96' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/9px no-repeat}
+.d-chips{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-top:24px}
+@media(max-width:1000px){.d-chips{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:640px){.d-chips{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* the escape hatch reads as a different kind of thing, not a fifth price tier */
+.d-chip.alt{border-style:dashed}
+.d-chip.alt.on{border-style:solid}
+.d-chip{border:1px solid var(--line);border-radius:13px;padding:12px 15px;background:#fff;transition:all .2s var(--ease)}
+.d-chip:hover{border-color:#d0d3d9}
+.d-chip.on{border-color:rgba(43,188,179,.55);background:var(--accent-soft)}
+.d-chip b{display:block;font-size:13.5px;font-weight:600;letter-spacing:-.01em;line-height:1.35}
+.d-chip span{display:block;font-family:var(--display);font-size:12.5px;font-weight:700;letter-spacing:-.02em;color:var(--muted);margin-top:5px;font-variant-numeric:tabular-nums}
+.d-chip.on span{color:var(--accent-dark)}
+.d-out{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-top:26px;padding-top:22px;border-top:1px solid var(--line)}
+.d-out .n{font-family:var(--display);font-size:36px;font-weight:800;letter-spacing:-.05em;font-variant-numeric:tabular-nums;line-height:1}
+.d-out .sep{color:var(--line);font-size:24px}
+.d-out .m{font-family:var(--display);font-size:25px;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
+.d-out .n span,.d-out .m span{display:block;font-family:var(--body);font-size:12.5px;font-weight:500;color:var(--muted);letter-spacing:0;margin-top:5px}
+.d-out .btn{margin-left:auto}
+.d-fine{font-size:12.5px;color:var(--muted);margin-top:18px;line-height:1.7;max-width:72ch}
+.d-fine b{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+
+<div class="bar"><div class="in">
+  <span class="ttl">Pricing section</span>
+  <button class="tab on" data-v="cur">Current (live)</button>
+  <button class="tab" data-v="a">A · One question</button>
+  <button class="tab" data-v="b">B · One at a time</button>
+  <button class="tab" data-v="c">C · The sentence</button>
+  <button class="tab" data-v="d">D · A + C</button>
+  <span class="h">section height <b id="hOut">—</b></span>
+</div></div>
+
+<!-- ============================================================ CURRENT -->
+<div class="view on" id="v-cur">
+  <div class="note"><div class="card">
+    <h4>What is live today</h4>
+    <p><b>Eleven tickable rows, a disclaimer panel, a pilot box and a fine-print line.</b> It answers every question a buyer could have, which is exactly why it is the tallest section on the homepage — 22% of the whole page, more than the case studies.</p>
+    <p class="cost">The problem: <b>nobody reads eleven options.</b> They scroll past, and the number they leave with is none.</p>
+  </div></div>
+  <div class="edge"><section id="s-cur"><div class="wrap">
+    <div class="prose">
+      <p class="eyebrow">Pricing</p>
+      <h2 class="sec">Roughly what are we talking about?</h2>
+      <p class="sec-sub">Tick what sounds like you. The number moves as you go.</p>
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:13px;margin-top:26px;padding:15px 18px;border:1px solid rgba(43,188,179,.34);border-radius:14px;background:var(--accent-soft);max-width:74ch">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" style="width:18px;height:18px;flex:none;margin-top:2px;stroke-width:1.8"><circle cx="12" cy="12" r="9.2"/><path d="M12 11v5.5M12 7.6v.5"/></svg>
+      <p style="font-size:13px;line-height:1.6;color:var(--muted)"><b style="color:var(--ink)">This is an estimate, not a quote. You are not paying for anything and nothing is booked.</b> It exists so you can see the shape of it before we talk. The real number comes out of that conversation, and it can go down as easily as up.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:30px;margin-top:28px;align-items:start">
+      <div>
+        <div class="step" style="margin-bottom:24px"><h3>1 · What are you replacing?</h3><div id="cur-b"></div></div>
+        <div style="border:1px dashed rgba(43,188,179,.5);border-radius:14px;padding:15px 18px;margin:-4px 0 24px;background:linear-gradient(180deg,var(--accent-soft),rgba(255,255,255,0) 80%)">
+          <b style="display:block;font-family:var(--display);font-size:14px;font-weight:700;letter-spacing:-.02em;margin-bottom:5px">Not sure which of these you are?</b>
+          <p style="font-size:12.5px;color:var(--muted);line-height:1.6"><span style="color:var(--accent-dark);font-weight:700">$750, one week.</span> A written plan and a working prototype of the single thing that matters most, enough to know whether the rest is worth building. <em style="font-style:normal;color:var(--ink);font-weight:600">Credited in full against the build</em> if you go ahead.</p>
+        </div>
+        <div class="step"><h3>2 · What else does it need?</h3><div id="cur-a"></div></div>
+      </div>
+      <div style="border:1px solid var(--line);border-radius:18px;padding:24px 26px;background:#fff;position:sticky;top:70px">
+        <span style="font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)">Starting around</span>
+        <div style="font-family:var(--display);font-size:36px;font-weight:800;letter-spacing:-.05em;margin-top:6px" id="cur-t">$6,500</div>
+        <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--line)">
+          <div style="font-family:var(--display);font-size:23px;font-weight:800;letter-spacing:-.04em" id="cur-m">$450<span style="font-family:var(--body);font-size:12.5px;font-weight:500;color:var(--muted);letter-spacing:0">/month</span></div>
+          <p style="font-size:12px;color:var(--muted);margin-top:6px">Kept running, plus the small changes as they come up.</p>
+        </div>
+        <a href="#" class="btn btn-primary" style="width:100%;margin-top:20px;justify-content:center">Talk it through →</a>
+        <p style="font-size:11.5px;color:var(--muted);text-align:center;margin-top:11px;line-height:1.5"><b style="color:var(--ink)">No cost, no commitment.</b> A conversation, and a straight answer about whether this is worth building at all.</p>
+      </div>
+    </div>
+    <p class="fine">Overflow beyond the monthly is $125/hr. Nonprofits get 25% off, publicly and without asking. Sometimes the answer is that you should not build anything yet, and we will say so.</p>
+  </div></section></div>
+</div>
+
+<!-- ============================================================ A -->
+<div class="view" id="v-a">
+  <div class="note"><div class="card">
+    <h4>A · One question — subtract the second step</h4>
+    <p><b>Four rows, one number, done.</b> The seven add-ons come off the page entirely and become a single line underneath: the things that move the price, named but not priced. The pilot moves into the summary card where the person who cannot pick a row is actually looking.</p>
+    <p class="cost">What it costs you: <b>the add-ons stop selling.</b> Nobody discovers on their own that you do mobile apps or multi-tenant, so the ceiling of what people imagine buying drops with the height of the section.</p>
+  </div></div>
+  <div class="edge"><section id="s-a"><div class="wrap">
+    <div class="prose">
+      <p class="eyebrow">Pricing</p>
+      <h2 class="sec">Roughly what are we talking about?</h2>
+    </div>
+    <p class="a-nb"><b>An estimate, not a quote.</b> Nothing is booked and you owe nothing. The real number comes out of a conversation, and it can go down as easily as up.</p>
+    <div class="a-grid">
+      <div>
+        <div id="a-b"></div>
+        <p class="a-more"><b>What moves it from there:</b> an app in the stores, connecting the systems you already run, logins for your own customers, more than one location, bringing your old data across, a second language, SSO and audit. We price those on the call.</p>
+      </div>
+      <div class="a-tot">
+        <span class="lbl">Starting around</span>
+        <div class="big" id="a-t">$6,500</div>
+        <div class="m" id="a-m">$450<span>/month after</span></div>
+        <a href="#" class="btn btn-primary">Talk it through →</a>
+        <p class="free"><b>No cost, no commitment.</b> Or start with a <b>$750 one-week pilot</b>, credited against the build.</p>
+      </div>
+    </div>
+    <p class="fine">Overflow beyond the monthly is $125/hr. Nonprofits get 25% off, publicly and without asking. Sometimes the answer is that you should not build anything yet, and we will say so.</p>
+  </div></section></div>
+</div>
+
+<!-- ============================================================ B -->
+<div class="view" id="v-b">
+  <div class="note"><div class="card">
+    <h4>B · One at a time — defer the second step</h4>
+    <p><b>Nothing is lost, it is just not all at once.</b> Question two does not exist until question one is answered, and answering one collapses it to a single line you can click to change. A skimmer sees four rows. Someone who engages still gets all eleven.</p>
+    <p class="cost">What it costs you: <b>two clicks instead of zero</b>, and the add-ons are invisible to anyone who never picks a row. The height you see below is the collapsed state — it grows to roughly the current height once opened, but only for people who asked for it.</p>
+  </div></div>
+  <div class="edge"><section id="s-b"><div class="wrap">
+    <div class="prose">
+      <p class="eyebrow">Pricing</p>
+      <h2 class="sec">Roughly what are we talking about?</h2>
+      <p class="sec-sub">Two questions. <b style="color:var(--ink);font-weight:600">An estimate, not a quote</b> — nothing is booked and you owe nothing.</p>
+    </div>
+    <div class="b-q">
+      <div id="b-1">
+        <div class="b-head"><span class="b-num">1</span><h3>What are you replacing?</h3></div>
+        <div id="b-b"></div>
+      </div>
+      <div class="b-2" id="b-2">
+        <div class="b-ans" id="b-ans"><span id="b-ansT"></span><button class="ch" id="b-chg">change</button></div>
+        <div class="b-head"><span class="b-num">2</span><h3>Anything else?</h3><button class="skip" id="b-skip">nothing else →</button></div>
+        <div id="b-a"></div>
+      </div>
+      <div class="b-rest" id="b-rest">
+        <div class="b-foot">
+          <div class="n" id="b-t">$6,500<small>to build</small></div>
+          <div class="n" id="b-m">$450<small>a month after</small></div>
+          <a href="#" class="btn btn-primary">Talk it through →</a>
+        </div>
+        <p class="b-pilot"><b>No cost, no commitment.</b> If you cannot pick a row yet, that is what the pilot is for: <span>$750, one week</span> — a written plan and a working prototype of the thing that matters most, credited in full against the build.</p>
+      </div>
+    </div>
+    <p class="fine">Overflow beyond the monthly is $125/hr. Nonprofits get 25% off, publicly and without asking. Sometimes the answer is that you should not build anything yet, and we will say so.</p>
+  </div></section></div>
+</div>
+
+<!-- ============================================================ C -->
+<div class="view" id="v-c">
+  <div class="note"><div class="card">
+    <h4>C · The sentence — compress both steps into one line</h4>
+    <p><b>The whole estimator reads as one sentence with two blanks in it.</b> Click a blank, pick from the list, the sentence and the number update. Same eleven options, same maths, roughly a third of the height — and it states the offer as a sentence rather than a form.</p>
+    <p class="cost">What it costs you: <b>the options are behind a click</b>, so the range is not scannable at a glance, and it is the least conventional of the three — a visitor has to notice the underlines are interactive.</p>
+  </div></div>
+  <div class="edge"><section id="s-c"><div class="wrap">
+    <div class="prose">
+      <p class="eyebrow">Pricing</p>
+      <h2 class="sec">Roughly what are we talking about?</h2>
+    </div>
+    <p class="c-say">I want to fix <button class="pick" id="c-base">work spread across tools that do not talk to each other</button>, and I also need <button class="pick" id="c-add">nothing else</button>.</p>
+    <div class="c-out">
+      <div class="n" id="c-t">$6,500<span>to build, once</span></div>
+      <div class="sep">/</div>
+      <div class="m" id="c-m">$450<span>a month after that</span></div>
+      <a href="#" class="btn btn-primary">Talk it through →</a>
+    </div>
+    <p class="c-fine"><b>An estimate, not a quote.</b> Nothing is booked and you owe nothing — the real number comes out of the conversation, and it can go down as easily as up. Not sure which line you are? <b>$750 buys a one-week pilot</b>: a plan and a working prototype of the thing that matters most, credited in full against the build.</p>
+    <p class="fine">Overflow beyond the monthly is $125/hr. Nonprofits get 25% off, publicly and without asking. Sometimes the answer is that you should not build anything yet, and we will say so.</p>
+  </div></section></div>
+</div>
+
+<!-- ============================================================ D -->
+<div class="view" id="v-d">
+  <div class="note"><div class="card">
+    <h4>D · One section instead of two</h4>
+    <p><b>This replaces #need AND #price.</b> Both currently ask "which of these are you" and both end in a price, which is why the page asks the same question twice. Together they are 2,046px, 29% of the homepage. This is one section in their place, sitting where #need does now, carrying the "Start here" eyebrow.</p>
+    <p><b>The sentence is the control.</b> Click the underlined phrase and the picker opens; the pill below moves to match. Click a pill instead and the sentence rewrites itself. Two ways into one state, so nobody gets stuck on the one they did not notice.</p>
+    <p><b>Nothing from #need is lost.</b> Its three routes map onto these options, and the three bullets it hid behind a click are now the tick row under the sentence, at about a third of the height.</p>
+    <p><b>"Not sure yet" is the fifth option</b>, and it is where the pilot now lives. Free for the conversation, $750 only if they want a working prototype too. Previously the pilot was mentioned only in fine print.</p>
+    <p class="cost">What it costs you: <b>the add-ons stay named but not priced</b>, so someone skimming never learns you build store apps. And pricing now sits high on the page rather than after the case studies.</p>
+  </div></div>
+  <div class="edge"><section id="s-d"><div class="wrap">
+    <p class="eyebrow">Start here</p>
+    <!-- no full stop after the button: the phrase is long enough to wrap, and a
+         trailing "." lands alone on the next line whenever the last word fills
+         the measure. The chevron terminates the sentence instead. -->
+    <h2 class="d-say">I need <button class="pick" id="d-say"></button></h2>
+    <p class="d-note" id="d-note"></p>
+    <ul class="d-ticks" id="d-ticks"></ul>
+    <p class="d-hint">or pick the closest</p>
+    <div class="d-chips" id="d-chips"></div>
+    <div class="d-out">
+      <div class="n" id="d-t"></div>
+      <div class="sep">/</div>
+      <div class="m" id="d-m"></div>
+      <a href="#" class="btn btn-primary">Talk it through →</a>
+    </div>
+    <p class="d-fine"><b>An estimate, not a quote.</b> Nothing is booked and you owe nothing. <b>What moves it from there:</b> an app in the stores, connecting the systems you already run, logins for your own customers, more than one location, bringing your old data across, a second language, SSO and audit. We price those on the call.</p>
+    <p class="fine">Overflow beyond the monthly is $125/hr. Nonprofits get 25% off, publicly and without asking. Sometimes the answer is that you should not build anything yet, and we will say so.</p>
+  </div></section></div>
+</div>
+
+<div class="veil" id="veil"></div>
+<div class="pop" id="pop"></div>
+
+<script>
+/* the real ladder, copied from content/pricing.js */
+var BASES=[
+ {id:'running',from:0,mo:450,name:'It already exists. It just needs someone to run it.',note:'Code we did not write takes more looking after, which is why this is not the cheapest line here.',plan:'Patched, backed up, monitored, and small changes as they come up.',say:'a system that already exists and just needs running'},
+ {id:'tool',from:2500,mo:200,name:'One job you still do by hand',note:'A form, a tracker, the report somebody rebuilds every week. One thing, done properly.',plan:'Patched, backed up, monitored, and we answer.',say:'one job I still do by hand'},
+ {id:'stack',from:6500,mo:450,name:'Work spread across tools that do not talk to each other',note:'You have the software. What you do not have is one place where the answer lives, so somebody reconciles it by hand.',plan:'Kept running, plus the small changes as they come up.',say:'work spread across tools that do not talk to each other'},
+ {id:'platform',from:15000,mo:1200,name:'Several systems, several teams, and the reporting across all of it',note:'Questions that can only be answered today by exporting everything and merging it.',plan:'10 hours of development a month, rolling over one month.',say:'several systems, several teams and the reporting across all of it'}
+];
+var ADDONS=[
+ {id:'mobile',add:5000,mo:300,name:'An app in the App Store and Google Play',note:'Native, in both stores, updated over the air.',say:'an app in the stores'},
+ {id:'connect',add:2500,mo:0,name:'Connect to something you already run',note:'A CRM, an accounting system, a bank feed. Per system connected.',say:'to connect what I already run'},
+ {id:'portal',add:2500,mo:0,name:'Logins for your own customers',note:'They see their own data and nothing else.',say:'logins for my customers'},
+ {id:'tenant',add:3500,mo:300,name:'More than one location, brand or tenant',note:'Separate data, one platform, reporting across all of them.',say:'more than one location'},
+ {id:'migrate',add:1500,mo:0,name:'Bring your existing data across',note:'The spreadsheets, the old system, the history. Reconciled, not just imported.',say:'my old data brought across'},
+ {id:'lang',add:1500,mo:0,name:'A second language',note:'Including right-to-left, which is a layout problem rather than a translation one.',say:'a second language'},
+ {id:'sso',add:2500,mo:500,name:'SSO, audit trail, compliance',note:'Single sign-on, an immutable log of who did what.',say:'SSO and an audit trail'}
+];
+var PARTNER_AT=15000;
+function money(n){return '$'+n.toLocaleString('en-US')}
+function quote(id,ids){var b=BASES.filter(function(x){return x.id===id})[0];
+ var p=ids.map(function(i){return ADDONS.filter(function(a){return a.id===i})[0]}).filter(Boolean);
+ var build=b.from,mo=b.mo;p.forEach(function(a){build+=a.add;mo+=a.mo});
+ return{base:b,picked:p,build:build,monthly:mo,partnership:build>=PARTNER_AT}}
+
+/* ---------- shared row rendering ---------- */
+function rows(host,list,type,name,state,on){
+  host.innerHTML='';
+  list.forEach(function(o){
+    var l=document.createElement('label');l.className='opt';
+    var price=type==='radio'?(o.from===0?'no build':'from '+money(o.from)):'+'+money(o.add);
+    l.innerHTML='<input type="'+type+'" name="'+name+'"><span class="t"><b></b><span></span></span><span class="p">'+price+'</span>';
+    l.querySelector('b').textContent=o.name;l.querySelector('.t span').textContent=o.note;
+    var input=l.querySelector('input');
+    input.addEventListener('change',function(){on(o.id,input.checked)});
+    l.dataset.id=o.id;host.appendChild(l);
+  });
+  return function paint(){
+    Array.prototype.forEach.call(host.children,function(l){
+      var sel=state.indexOf(l.dataset.id)>-1;
+      l.classList.toggle('on',sel);l.querySelector('input').checked=sel;
+    });
+  };
+}
+
+/* ---------- CURRENT ---------- */
+(function(){
+  var base='stack',adds=[],pb,pa;
+  function upd(){var q=quote(base,adds);
+    document.getElementById('cur-t').textContent=q.partnership?'Let us talk':money(q.build);
+    document.getElementById('cur-m').innerHTML=money(q.monthly)+'<span style="font-family:var(--body);font-size:12.5px;font-weight:500;color:var(--muted);letter-spacing:0">/month</span>';
+    pb();pa();}
+  pb=rows(document.getElementById('cur-b'),BASES,'radio','cb',{indexOf:function(id){return id===base?0:-1}},function(id){base=id;upd()});
+  pa=rows(document.getElementById('cur-a'),ADDONS,'checkbox','ca',adds,function(id,on){
+    if(on)adds.push(id);else adds.splice(adds.indexOf(id),1);upd()});
+  upd();
+})();
+
+/* ---------- A ---------- */
+(function(){
+  var base='stack',pb;
+  function upd(){var q=quote(base,[]);
+    document.getElementById('a-t').textContent=q.base.from===0?'No build':money(q.build);
+    document.getElementById('a-m').innerHTML=money(q.monthly)+'<span>/month after</span>';pb();}
+  pb=rows(document.getElementById('a-b'),BASES,'radio','ab',{indexOf:function(id){return id===base?0:-1}},function(id){base=id;upd()});
+  upd();
+})();
+
+/* ---------- B ---------- */
+(function(){
+  var base=null,adds=[],pb,pa;
+  var s2=document.getElementById('b-2'),rest=document.getElementById('b-rest');
+  function upd(){
+    if(!base)return;
+    var q=quote(base,adds);
+    document.getElementById('b-ansT').innerHTML='<b>'+q.base.name+'</b>';
+    document.getElementById('b-t').innerHTML=(q.partnership?'Let us talk':money(q.build))+'<small>to build</small>';
+    document.getElementById('b-m').innerHTML=money(q.monthly)+'<small>a month after</small>';
+    pb();pa();
+  }
+  pb=rows(document.getElementById('b-b'),BASES,'radio','bb',{indexOf:function(id){return id===base?0:-1}},function(id){
+    base=id;document.getElementById('b-1').style.display='none';s2.classList.add('open');upd();measure();});
+  pa=rows(document.getElementById('b-a'),ADDONS,'checkbox','ba',adds,function(id,on){
+    if(on)adds.push(id);else adds.splice(adds.indexOf(id),1);rest.classList.add('open');upd();measure();});
+  document.getElementById('b-chg').addEventListener('click',function(){
+    document.getElementById('b-1').style.display='';s2.classList.remove('open');rest.classList.remove('open');base=null;measure();});
+  document.getElementById('b-skip').addEventListener('click',function(){rest.classList.add('open');measure();});
+})();
+
+/* ---------- shared popover ----------
+   C and D both open it, so it lives outside either. isSel/onPick are passed in
+   rather than the state itself: the popover never owns what is selected, it only
+   reports the click. That is what lets D keep the sentence and the pills in sync
+   without either one being the source of truth. */
+var POP=(function(){
+  var pop=document.getElementById('pop'),veil=document.getElementById('veil');
+  function close(){pop.classList.remove('on');veil.classList.remove('on')}
+  function open(anchor,list,multi,isSel,onPick,fmt){
+    fmt=fmt||function(o){return multi?'+'+money(o.add):(o.from===0?'no build':'from '+money(o.from))};
+    pop.innerHTML='<div class="hd">'+(multi?'Tick anything that applies':'Pick the closest')+'</div>';
+    list.forEach(function(o){
+      var b=document.createElement('button');
+      b.className=isSel(o.id)?'on':'';
+      b.innerHTML='<span></span><i></i>';
+      b.querySelector('span').textContent=o.name;
+      b.querySelector('i').textContent=o.note+'  ·  '+fmt(o);
+      b.addEventListener('click',function(){
+        onPick(o.id);
+        if(multi)open(anchor,list,multi,isSel,onPick,fmt);else close();
+      });
+      pop.appendChild(b);
+    });
+    if(multi){var d=document.createElement('div');d.className='dn';d.textContent='Done';d.addEventListener('click',close);pop.appendChild(d)}
+    pop.classList.add('on');veil.classList.add('on');
+    var r=anchor.getBoundingClientRect();
+    var top=r.bottom+8,w=pop.offsetWidth;
+    var left=Math.min(Math.max(12,r.left),window.innerWidth-w-12);
+    if(top+pop.offsetHeight>window.innerHeight-12)top=Math.max(12,r.top-pop.offsetHeight-8);
+    pop.style.top=top+'px';pop.style.left=left+'px';
+  }
+  veil.addEventListener('click',close);
+  return {open:open,close:close};
+})();
+
+/* ---------- C ---------- */
+(function(){
+  var base='stack',adds=[];
+  function say(){
+    var b=BASES.filter(function(x){return x.id===base})[0];
+    document.getElementById('c-base').textContent=b.say;
+    var p=adds.map(function(i){return ADDONS.filter(function(a){return a.id===i})[0].say});
+    var t=p.length===0?'nothing else':p.length===1?p[0]:p.slice(0,-1).join(', ')+' and '+p[p.length-1];
+    document.getElementById('c-add').textContent=t;
+    var q=quote(base,adds);
+    document.getElementById('c-t').innerHTML=(q.partnership?'Let us talk':money(q.build))+'<span>'+(q.partnership?'past a fixed price':'to build, once')+'</span>';
+    document.getElementById('c-m').innerHTML=money(q.monthly)+'<span>a month after that</span>';
+  }
+  document.getElementById('c-base').addEventListener('click',function(){
+    POP.open(this,BASES,false,function(id){return base===id},function(id){base=id;say()});
+  });
+  document.getElementById('c-add').addEventListener('click',function(){
+    POP.open(this,ADDONS,true,function(id){return adds.indexOf(id)>-1},function(id){
+      var i=adds.indexOf(id);if(i>-1)adds.splice(i,1);else adds.push(id);say();
+    });
+  });
+  say();
+})();
+
+/* ---------- D ----------
+   D carries its own copy table because it now says things neither #need nor
+   #price said. In the real build this becomes the single table in
+   content/pricing.js and both old sections read from it.
+
+   chip is short on purpose: the long descriptive phrase lives in the sentence,
+   so repeating it in the option would have the visitor read it twice.
+   ticks are the three differentiators #need used to hide behind a click. */
+var D_OPTS=[
+ {id:'running',chip:'Something that exists',chipP:'no build',
+  name:'Keep alive something that already works',
+  say:'someone to keep a system alive that already works',
+  note:'It exists and it runs. The person who built it is leaving, or already has.',
+  ticks:['Backups verified, not assumed','Patches and dependency updates','Someone who answers when it breaks'],
+  n1:'No build fee',s1:'we take it as it is',n2:'$450',s2:'a month'},
+
+ /* The $2,500 line used to read "one job you still do by hand", which made the
+    price sound steep by making the work sound small. The fix is to say the job
+    repeats: a one-off price against a recurring cost reads as payback, not spend. */
+ {id:'tool',chip:'One job, every week',chipP:'from $2,500',
+  name:'The job that comes back every week',
+  say:'the job somebody redoes by hand every week to stop coming back',
+  note:'The report rebuilt from scratch every Monday. The tracker that lives in one person’s head. Built properly once, and then nobody does it again.',
+  ticks:['Working builds as we go, not a reveal at the end','Yours, on your infrastructure and in your accounts','Ends with a handover document, not a support ticket'],
+  n1:'$2,500',s1:'to build, once',n2:'$200',s2:'a month after that'},
+
+ {id:'stack',chip:'Tools that do not talk',chipP:'from $6,500',
+  name:'Work spread across tools that do not talk to each other',
+  say:'one place where the answer lives, not six tools that do not talk',
+  note:'You have the software. What you do not have is one place where the answer lives, so somebody reconciles it by hand.',
+  ticks:['One source of truth, not six exports','No per-seat licence, add who you like','Yours to take elsewhere at any time'],
+  n1:'$6,500',s1:'to build, once',n2:'$450',s2:'a month after that'},
+
+ {id:'platform',chip:'Several systems at once',chipP:'from $15,000',
+  name:'Several systems, several teams, and the reporting across all of it',
+  say:'several systems, several teams, and reporting that crosses all of them',
+  note:'Questions that can only be answered today by exporting everything and merging it by hand.',
+  ticks:['Ten hours of development a month','Reporting across every team','Rolls over one month if unused'],
+  n1:'$15,000',s1:'to build, from',n2:'$1,200',s2:'a month after that'},
+
+ /* the escape hatch. It also gives the pilot a home in the picker instead of
+    the fine print, which is the only place it was mentioned before. */
+ {id:'unsure',chip:'Not sure yet',chipP:'free',
+  name:'A straight answer about whether this is software at all',
+  say:'a straight answer about whether this is software at all',
+  note:'Sometimes it is a process problem wearing a software costume, and the honest answer is to build nothing. We will say so.',
+  ticks:['No payment, no commitment','We name the cheaper option if there is one','You leave with a shape and a number, or a reason not to'],
+  n1:'Free',s1:'one conversation',n2:'$750',s2:'only if you want a working prototype too, credited in full'}
+];
+(function(){
+  var sel='stack',host=document.getElementById('d-chips'),sayEl=document.getElementById('d-say');
+  var byId=function(id){return D_OPTS.filter(function(o){return o.id===id})[0]};
+  D_OPTS.forEach(function(o){
+    var b=document.createElement('button');
+    b.className='d-chip'+(o.id==='unsure'?' alt':'');b.dataset.id=o.id;
+    b.innerHTML='<b></b><span></span>';
+    b.querySelector('b').textContent=o.chip;b.querySelector('span').textContent=o.chipP;
+    b.addEventListener('click',function(){sel=o.id;upd()});
+    host.appendChild(b);
+  });
+  /* Two ways into the same state. The sentence is the one to notice, but if a
+     visitor does not spot that it is clickable the pills still work, so the
+     mechanism cannot leave anyone stuck. */
+  sayEl.addEventListener('click',function(){
+    POP.open(sayEl,D_OPTS,false,function(id){return sel===id},function(id){sel=id;upd()},
+      function(o){return o.chipP});
+  });
+  function upd(){
+    var o=byId(sel);
+    sayEl.textContent=o.say;
+    document.getElementById('d-note').textContent=o.note;
+    document.getElementById('d-ticks').innerHTML=o.ticks.map(function(t){
+      var li=document.createElement('li');li.textContent=t;return li.outerHTML}).join('');
+    document.getElementById('d-t').innerHTML=o.n1+'<span>'+o.s1+'</span>';
+    document.getElementById('d-m').innerHTML=o.n2+'<span>'+o.s2+'</span>';
+    Array.prototype.forEach.call(host.children,function(c){c.classList.toggle('on',c.dataset.id===sel)});
+  }
+  upd();
+})();
+
+/* ---------- harness ---------- */
+var cur='cur';
+function measure(){
+  setTimeout(function(){
+    var s=document.getElementById('s-'+cur);
+    document.getElementById('hOut').textContent=s?Math.round(s.getBoundingClientRect().height)+'px':'—';
+  },560);
+}
+Array.prototype.forEach.call(document.querySelectorAll('.tab'),function(t){
+  t.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on')});
+    document.querySelectorAll('.view').forEach(function(x){x.classList.remove('on')});
+    t.classList.add('on');cur=t.dataset.v;
+    document.getElementById('v-'+cur).classList.add('on');
+    window.scrollTo(0,0);measure();
+  });
+});
+measure();window.addEventListener('resize',measure);
+</script>
+</body>
+</html>

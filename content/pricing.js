@@ -3,13 +3,18 @@
 
    SINGLE SOURCE OF TRUTH. Everything that quotes a price reads this file:
 
-     · the estimate builder on /#price      (script.js, via window.KD_PRICING)
+     · the picker on the homepage           (script.js, via window.KD_PRICING)
      · the cost block on every case study   (server/render.js)
-     · the routing-question answers         (script.js)
 
    It used to live inside script.js, which meant the case studies could not see
    it and would have had to repeat the numbers. Repeated numbers drift, and a
    pricing page that disagrees with a case study is worse than either alone.
+
+   This file is loaded BOTH ways: require()d by the server and served straight
+   to the browser as a static .js, where it sets window.KD_PRICING. Until
+   2026-08-16 the header claimed that already happened; it did not, and
+   script.js carried a second copy of the ladder that had to be kept in step by
+   hand. See the dual export at the bottom.
 
    WHERE THE NUMBERS CAME FROM
    Build tiers and add-on increments are derived from measured build effort in
@@ -38,32 +43,66 @@ const PILOT = { price: 750, weeks: 1 };
 const PARTNER_AT = 15000;
 const PARTNER = { monthly: 3500, months: 12 };
 
+/* Each tier carries three shapes of the same idea, because the homepage says it
+   three times in three widths:
+     name  — the full line, used in the picker list
+     chip  — three or four words, used in the pill row
+     say   — how it reads inside "I need ___", so it must start mid-sentence
+   ticks are the three differentiators the old #need section hid behind a click. */
 const BASES = [
   {
     id: 'running', from: 0, mo: 450,
-    name: 'It already exists. It just needs someone to run it.',
-    note: 'Code we did not write takes more looking after, which is why this is not the cheapest line here.',
+    chip: 'Something that exists',
+    name: 'Keep alive something that already works',
+    say: 'someone to keep a system alive that already works',
+    note: 'It exists and it runs. The person who built it is leaving, or already has.',
+    ticks: ['Backups verified, not assumed', 'Patches and dependency updates', 'Someone who answers when it breaks'],
     plan: 'Patched, backed up, monitored, and small changes as they come up.',
   },
   {
+    /* This line used to read "one job you still do by hand", which made $2,500
+       sound steep by making the work sound small. Saying the job REPEATS is the
+       fix: a one-off price against a recurring cost reads as payback, not spend. */
     id: 'tool', from: 2500, mo: 200,
-    name: 'One job you still do by hand',
-    note: 'A form, a tracker, the report somebody rebuilds every week. One thing, done properly.',
+    chip: 'One job, every week',
+    name: 'The job that comes back every week',
+    say: 'the job somebody redoes by hand every week to stop coming back',
+    note: 'The report rebuilt from scratch every Monday. The tracker that lives in one person’s head. Built properly once, and then nobody does it again.',
+    ticks: ['Working builds as we go, not a reveal at the end', 'Yours, on your infrastructure and in your accounts', 'Ends with a handover document, not a support ticket'],
     plan: 'Patched, backed up, monitored, and we answer.',
   },
   {
     id: 'stack', from: 6500, mo: 450,
+    chip: 'Tools that do not talk',
     name: 'Work spread across tools that do not talk to each other',
+    say: 'one place where the answer lives, not six tools that do not talk',
     note: 'You have the software. What you do not have is one place where the answer lives, so somebody reconciles it by hand.',
+    ticks: ['One source of truth, not six exports', 'No per-seat licence, add who you like', 'Yours to take elsewhere at any time'],
     plan: 'Kept running, plus the small changes as they come up.',
   },
   {
     id: 'platform', from: 15000, mo: 1200,
+    chip: 'Several systems at once',
     name: 'Several systems, several teams, and the reporting across all of it',
-    note: 'Questions that can only be answered today by exporting everything and merging it.',
+    say: 'several systems, several teams, and reporting that crosses all of them',
+    note: 'Questions that can only be answered today by exporting everything and merging it by hand.',
+    ticks: ['Ten hours of development a month', 'Reporting across every team', 'Rolls over one month if unused'],
     plan: '10 hours of development a month, rolling over one month.',
   },
 ];
+
+/* The escape hatch, and the only place the pilot is offered. It used to be
+   buried in fine print under the builder, which is the worst possible spot for
+   the thing that converts somebody who cannot pick a row. It is deliberately
+   NOT a fifth price tier: quote() does not know about it. */
+const UNSURE = {
+  id: 'unsure',
+  chip: 'Not sure yet',
+  name: 'A straight answer about whether this is software at all',
+  say: 'a straight answer about whether this is software at all',
+  note: 'Sometimes it is a process problem wearing a software costume, and the honest answer is to build nothing. We will say so.',
+  ticks: ['No payment, no commitment', 'We name the cheaper option if there is one', 'You leave with a shape and a number, or a reason not to'],
+};
 
 const ADDONS = [
   { id: 'mobile', add: 5000, mo: 300, name: 'An app in the App Store and Google Play',
@@ -104,7 +143,39 @@ function quote(tierId, addonIds) {
   return { base, picked, build, monthly, partnership: build >= PARTNER_AT };
 }
 
-module.exports = {
+const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
+
+/** The picker list, display-ready.
+ *
+ *  Every string the homepage shows is derived here rather than written twice.
+ *  The two figures either side of the slash are the build/monthly split, which
+ *  is the distinction the section exists to make: one is once, one is forever.
+ */
+function routes() {
+  return BASES.map((b) => ({
+    id: b.id, chip: b.chip, name: b.name, say: b.say, note: b.note, ticks: b.ticks,
+    price: b.from ? 'from ' + money(b.from) : 'no build',
+    n1: b.from ? money(b.from) : 'No build fee',
+    s1: b.from ? 'to build, once' : 'we take it as it is',
+    n2: money(b.mo),
+    s2: b.from ? 'a month after that' : 'a month',
+  })).concat([{
+    id: UNSURE.id, chip: UNSURE.chip, name: UNSURE.name, say: UNSURE.say,
+    note: UNSURE.note, ticks: UNSURE.ticks,
+    price: 'free',
+    n1: 'Free', s1: 'one conversation',
+    n2: money(PILOT.price),
+    s2: `only if you want a working prototype too, credited in full`,
+  }]);
+}
+
+const API = {
   OVERFLOW_HOURLY, PILOT, PARTNER_AT, PARTNER,
-  BASES, ADDONS, COMPARE, quote,
+  BASES, ADDONS, UNSURE, COMPARE, quote, routes,
 };
+
+/* Dual export. require()d by server/render.js, and served as a plain script to
+   the browser, where script.js reads window.KD_PRICING. Neither side gets its
+   own copy of the numbers. */
+if (typeof module !== 'undefined' && module.exports) module.exports = API;
+if (typeof window !== 'undefined') window.KD_PRICING = API;

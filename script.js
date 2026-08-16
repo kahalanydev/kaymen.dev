@@ -87,179 +87,108 @@
      hand-typed placeholder series, which is the one thing
      HANDOFF-REDESIGN-2026-08-15.md §5 said must not ship. */
 
-  /* ---- routing question --------------------------------------------------- */
-  var ANSWERS = {
-    build: {
-      t: 'A build, then a plan that keeps it alive',
-      b: 'We scope it, build it, and hand it over running, on your infrastructure and in your accounts. Then it moves onto a maintenance plan, priced into the contract from day one. No cliff at launch.',
-      l: ['Three to four complete design directions, never one', 'Working builds as we go, not a reveal at the end', 'Ends with a handover document, not a support ticket'],
-      p: 'from $2,500', per: 'to build · then from $200/mo'
-    },
-    run: {
-      t: 'Adoption of something we did not build',
-      b: 'First a read of what exists. What it runs on, what is going to break, what is undocumented. Then it goes on a plan. Most inherited systems need somewhere between one and eight active days a month.',
-      l: ['Backups verified, not assumed to exist', 'Security patches and dependency updates', 'Someone who answers when it breaks'],
-      p: 'from $450/mo', per: 'we take it as it is · no build fee'
-    },
-    unsure: {
-      t: 'A straight answer about whether this is software at all',
-      b: 'Sometimes it is a process problem wearing a software costume, and the honest answer is not to build anything. That conversation is free and we will tell you if the answer is no.',
-      l: ['No payment, no commitment to a package', 'We will name the cheaper option if there is one', 'If it is worth building, you leave with a shape and a number'],
-      p: 'Free', per: 'one conversation'
-    }
-  };
-  var answer = document.getElementById('answer');
-  if (answer) {
-    document.querySelectorAll('.q').forEach(function (q) {
-      q.addEventListener('click', function () {
-        var key = q.dataset.answer;
-        var open = q.getAttribute('aria-pressed') === 'true';
-        document.querySelectorAll('.q').forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
-        if (open) { answer.classList.remove('on'); return; }
-        q.setAttribute('aria-pressed', 'true');
-        var a = ANSWERS[key];
-        if (!a) return;
-        document.getElementById('aTitle').textContent = a.t;
-        document.getElementById('aBody').textContent = a.b;
-        document.getElementById('aList').innerHTML = a.l.map(function (x) {
-          return '<li>' + x.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</li>';
-        }).join('');
-        document.getElementById('aPrice').textContent = a.p;
-        document.getElementById('aPer').textContent = a.per;
-        answer.classList.add('on');
-      });
-    });
-  }
+  /* ---- the picker ---------------------------------------------------------
+     ONE section answers both "what do you need" and "what does it cost". The
+     page used to ask those separately, in #need and #price, which was the same
+     question twice for 2,046px of homepage.
 
-  /* ---- the estimate builder -----------------------------------------------
-     THE LADDER LIVES HERE. index.html renders an empty shell; every price on the
-     pricing section comes from these two arrays, so there is one place to change
-     them and no chance of the markup and the copy drifting apart.
+     index.html renders an empty shell. Every string below comes from
+     window.KD_PRICING (content/pricing.js) — the same file server/render.js
+     require()s for the case-study cost blocks. One ladder, two readers, and no
+     second copy in this file to keep in step by hand. There used to be one.
 
-     Derived from measured build effort (content/stats.js, generated from git
-     history) at $125/hr. See unified-memory/projects/kaymen-group/
-     retainer-pricing-ladder.md for where the monthlies came from.
-
-     Only "from" prices are published. A ceiling makes a client with a smaller
-     budget assume you are coming for the ceiling, so the total is a consequence
-     of what they tick and nothing else. */
-  var EST_BASES = [
-    { id: 'running', from: 0, mo: 450,
-      name: 'It already exists. It just needs someone to run it.',
-      note: 'Code we did not write takes more looking after, which is why this is not the cheapest line here.',
-      plan: 'Patched, backed up, monitored, and small changes as they come up.' },
-    { id: 'tool', from: 2500, mo: 200,
-      name: 'One job you still do by hand',
-      note: 'A form, a tracker, the report somebody rebuilds every week. One thing, done properly.',
-      plan: 'Patched, backed up, monitored, and we answer.' },
-    { id: 'stack', from: 6500, mo: 450,
-      name: 'Work spread across tools that do not talk to each other',
-      note: 'You have the software. What you do not have is one place where the answer lives, so somebody reconciles it by hand.',
-      plan: 'Kept running, plus the small changes as they come up.' },
-    { id: 'platform', from: 15000, mo: 1200,
-      name: 'Several systems, several teams, and the reporting across all of it',
-      note: 'Questions that can only be answered today by exporting everything and merging it.',
-      plan: '10 hours of development a month, rolling over one month.' }
-  ];
-
-  var EST_ADDONS = [
-    { id: 'mobile', add: 5000, mo: 300, name: 'An app in the App Store and Google Play',
-      note: 'Native, in both stores, updated over the air. Apple and Google force SDK bumps, so an unmaintained app dies in about 18 months.' },
-    { id: 'connect', add: 2500, mo: 0, name: 'Connect to something you already run',
-      note: 'A CRM, an accounting system, a bank feed. Per system connected.' },
-    { id: 'portal', add: 2500, mo: 0, name: 'Logins for your own customers',
-      note: 'They see their own data and nothing else. Their questions stop arriving by email.' },
-    { id: 'tenant', add: 3500, mo: 300, name: 'More than one location, brand or tenant',
-      note: 'Separate data, one platform, and reporting that crosses all of them.' },
-    { id: 'migrate', add: 1500, mo: 0, name: 'Bring your existing data across',
-      note: 'The spreadsheets, the old system, the history. Reconciled, not just imported.' },
-    { id: 'lang', add: 1500, mo: 0, name: 'A second language',
-      note: 'Including right-to-left, which is a layout problem rather than a translation one.' },
-    { id: 'sso', add: 2500, mo: 500, name: 'SSO, audit trail, compliance',
-      note: 'Single sign-on, an immutable log of who did what, and the paperwork that goes with it.' }
-  ];
-
-  var EST_PARTNER_AT = 15000;   // above this a fixed build price stops being honest
-
-  var estBases = document.getElementById('estBases');
-  if (estBases) {
-    var estBase = 'stack';
-    var estPicked = {};
-    var estMoney = function (n) { return '$' + Math.round(n).toLocaleString('en-US'); };
-
-    var estRow = function (o, kind) {
-      var on = kind === 'base' ? estBase === o.id : !!estPicked[o.id];
-      var price = kind === 'base'
-        ? (o.from ? 'from ' + estMoney(o.from) : 'no build')
-        : '+' + estMoney(o.add);
-      return '<label class="opt' + (on ? ' on' : '') + '">' +
-        '<input type="' + (kind === 'base' ? 'radio" name="estbase' : 'checkbox') +
-        '" value="' + o.id + '"' + (on ? ' checked' : '') + '>' +
-        '<span class="t"><b>' + o.name + '</b><span>' + o.note + '</span></span>' +
-        '<span class="p">' + price + '</span></label>';
+     The sentence and the pills are two ways into ONE state. Neither owns it, so
+     they cannot drift apart: whichever the visitor reaches for, `askSel` moves
+     and both re-render. The redundancy is deliberate — if somebody never notices
+     the underlined phrase is a control, the pills still work. */
+  var askChips = document.getElementById('askChips');
+  if (askChips && window.KD_PRICING) {
+    var ASK = window.KD_PRICING.routes();
+    var askSay = document.getElementById('askSay');
+    var askPop = document.getElementById('askPop');
+    var askVeil = document.getElementById('askVeil');
+    var askSel = 'stack';
+    var askEsc = function (s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
     };
 
-    /* Built ONCE, then only the classes and the total change. Re-rendering the
-       list on every tick would throw focus off the control the user just used,
-       which is fine with a mouse and unusable with a keyboard. */
-    estBases.innerHTML = EST_BASES.map(function (b) { return estRow(b, 'base'); }).join('');
-    document.getElementById('estAddons').innerHTML =
-      EST_ADDONS.map(function (a) { return estRow(a, 'add'); }).join('');
-
-    estBases.querySelectorAll('input').forEach(function (i) {
-      i.addEventListener('change', function () { estBase = i.value; estRender(); });
-    });
-    document.getElementById('estAddons').querySelectorAll('input').forEach(function (i) {
-      i.addEventListener('change', function () { estPicked[i.value] = i.checked; estRender(); });
+    /* Built once, then only classes and text change. Re-rendering the row on
+       every pick would throw focus off the control just used, which is merely
+       untidy with a mouse and unusable with a keyboard. */
+    askChips.innerHTML = ASK.map(function (r) {
+      return '<button class="ask-chip' + (r.id === 'unsure' ? ' alt' : '') + '"' +
+        ' data-id="' + r.id + '" role="option" aria-selected="false">' +
+        '<b>' + askEsc(r.chip) + '</b><span>' + askEsc(r.price) + '</span></button>';
+    }).join('');
+    askChips.querySelectorAll('.ask-chip').forEach(function (c) {
+      c.addEventListener('click', function () { askSel = c.dataset.id; askRender(); });
     });
 
-    var estRender = function () {
-      estBases.querySelectorAll('.opt').forEach(function (el) {
-        el.classList.toggle('on', el.querySelector('input').checked);
-      });
-      document.getElementById('estAddons').querySelectorAll('.opt').forEach(function (el) {
-        el.classList.toggle('on', el.querySelector('input').checked);
-      });
+    var askPopClose = function () {
+      askPop.hidden = true;
+      askVeil.hidden = true;
+      askSay.setAttribute('aria-expanded', 'false');
+    };
 
-      var b = EST_BASES.filter(function (x) { return x.id === estBase; })[0];
-      var chosen = EST_ADDONS.filter(function (a) { return estPicked[a.id]; });
-      var build = b.from + chosen.reduce(function (s, a) { return s + a.add; }, 0);
-      var monthly = b.mo + chosen.reduce(function (s, a) { return s + a.mo; }, 0);
-
-      /* nothing to build means nothing to add on to, so the whole second step
-         goes away rather than sitting there offering to price a rebuild */
-      document.getElementById('estAddonStep').hidden = !b.from;
-      if (!b.from) {
-        estPicked = {}; chosen = []; build = 0; monthly = b.mo;
-        document.getElementById('estAddons').querySelectorAll('input').forEach(function (i) {
-          i.checked = false; i.closest('.opt').classList.remove('on');
+    var askPopOpen = function () {
+      askPop.innerHTML = '<div class="hd">Pick the closest</div>' + ASK.map(function (r) {
+        return '<button data-id="' + r.id + '" role="option" aria-selected="' +
+          (r.id === askSel) + '"' + (r.id === askSel ? ' class="on"' : '') + '>' +
+          '<span>' + askEsc(r.name) + '</span>' +
+          '<i>' + askEsc(r.note) + '  ·  ' + askEsc(r.price) + '</i></button>';
+      }).join('');
+      askPop.querySelectorAll('button').forEach(function (b) {
+        b.addEventListener('click', function () {
+          askSel = b.dataset.id; askPopClose(); askRender();
         });
+      });
+      askPop.hidden = false;
+      askVeil.hidden = false;
+      askSay.setAttribute('aria-expanded', 'true');
+
+      /* Anchored under the phrase, flipped above it when it would run off the
+         bottom, clamped to the viewport on both sides. It is position:fixed, so
+         it does not follow the page — hence the scroll listener below. */
+      var box = askSay.getBoundingClientRect();
+      var top = box.bottom + 8;
+      var left = Math.min(Math.max(12, box.left), window.innerWidth - askPop.offsetWidth - 12);
+      if (top + askPop.offsetHeight > window.innerHeight - 12) {
+        top = Math.max(12, box.top - askPop.offsetHeight - 8);
       }
-
-      document.getElementById('estLbl').textContent = b.from ? 'Starting around' : 'Nothing to build';
-      document.getElementById('estTotal').innerHTML = b.from
-        ? estMoney(build) + '<small> to build</small>'
-        : '<small style="font-size:15px">We take it as it is</small>';
-      document.getElementById('estMonthly').innerHTML = estMoney(monthly) + '<span>/month</span>';
-      document.getElementById('estPlan').textContent = b.plan;
-
-      document.getElementById('estPicked').innerHTML = (b.from
-        ? '<div><span>' + b.name + '</span><b>' + estMoney(b.from) + '</b></div>' : '') +
-        chosen.map(function (a) {
-          return '<div><span>' + a.name + '</span><b>+' + estMoney(a.add) + '</b></div>';
-        }).join('');
-
-      var flip = document.getElementById('estFlip');
-      if (build >= EST_PARTNER_AT) {
-        flip.hidden = false;
-        flip.innerHTML = '<b>At this size most people take the partnership instead</b>' +
-          '<p><em>No build fee at all.</em> You commit to twelve months at $3,500/mo and we start next week. ' +
-          'It works out lower than the number above in year one, and you are not writing a large cheque before anything exists.</p>';
-      } else {
-        flip.hidden = true;
-      }
+      askPop.style.top = top + 'px';
+      askPop.style.left = left + 'px';
     };
-    estRender();
+
+    askSay.addEventListener('click', function () {
+      if (askPop.hidden) askPopOpen(); else askPopClose();
+    });
+    askVeil.addEventListener('click', askPopClose);
+    window.addEventListener('scroll', function () {
+      if (!askPop.hidden) askPopClose();
+    }, { passive: true });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !askPop.hidden) askPopClose();
+    });
+
+    var askRender = function () {
+      var r = ASK.filter(function (x) { return x.id === askSel; })[0];
+      if (!r) return;
+      askSay.textContent = r.say;
+      document.getElementById('askNote').textContent = r.note;
+      document.getElementById('askTicks').innerHTML = r.ticks.map(function (t) {
+        return '<li>' + askEsc(t) + '</li>';
+      }).join('');
+      document.getElementById('askBuild').innerHTML =
+        askEsc(r.n1) + '<span>' + askEsc(r.s1) + '</span>';
+      document.getElementById('askMonthly').innerHTML =
+        askEsc(r.n2) + '<span>' + askEsc(r.s2) + '</span>';
+      askChips.querySelectorAll('.ask-chip').forEach(function (c) {
+        var on = c.dataset.id === askSel;
+        c.classList.toggle('on', on);
+        c.setAttribute('aria-selected', on);
+      });
+    };
+    askRender();
   }
 
   /* ---- idea form ----------------------------------------------------------
