@@ -1,10 +1,10 @@
-const CACHE_NAME = 'kd-portal-v2';
+const CACHE_NAME = 'kd-portal-v3';
 const PRECACHE = [
   '/portal/',
   '/portal/styles.css',
   '/portal/app.js',
   '/favicon.svg',
-  '/assets/mark.svg'
+  '/assets/brand/kaymen-lockup.svg'
 ];
 
 self.addEventListener('install', e => {
