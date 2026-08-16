@@ -67,19 +67,33 @@
   </div>
 </nav>
 
+<!-- The brand on mobile. The rail is display:none under 900px and it was the
+     only thing on the page carrying the mark, so below that width the site had
+     no logo anywhere at all. It is a separate element rather than a tabbar item
+     because the bar has five slots and a logo is not a destination.
+     server/render.js emits the same markup for the sub-pages. -->
+<a href="#start" class="brandbar" aria-label="kaymen.dev home">
+  <span class="mark"></span>
+  <span class="bb-wm"><b>kaymen</b><span>.</span>dev</span>
+</a>
+
 <!-- ================================================== MOBILE GLASS TABBAR -->
 <nav class="tabbar" id="tabbar" aria-label="Sections">
   <a href="#start" class="tab on" data-sec="start">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg><em>Start</em>
+  </a>
+  <!-- Same order as the page. #price moved to second when it absorbed #need;
+       leaving it fourth here had the bar walk start → running → work → price
+       while the page ran start → price → running → work. server/render.js
+       carries the same list in TAB_SECS and must be changed with it. -->
+  <a href="#price" class="tab" data-sec="price">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5v19M16.8 6.3H9.9a3.1 3.1 0 0 0 0 6.2h4.2a3.1 3.1 0 0 1 0 6.2H6.7"/></svg><em>Pricing</em>
   </a>
   <a href="#running" class="tab" data-sec="running">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h4l2.5-6 4 13L16 12h5"/></svg><em>Running</em>
   </a>
   <a href="#work" class="tab" data-sec="work">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2.5" y="6.5" width="19" height="13.5" rx="2.2"/><path d="M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/></svg><em>Work</em>
-  </a>
-  <a href="#price" class="tab" data-sec="price">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5v19M16.8 6.3H9.9a3.1 3.1 0 0 0 0 6.2h4.2a3.1 3.1 0 0 1 0 6.2H6.7"/></svg><em>Pricing</em>
   </a>
   <a href="#talk" class="tab" data-sec="talk">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.2 9.2 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.3 8.3 0 0 1 3.6 11.5a8.4 8.4 0 0 1 8.9-8.4 8.4 8.4 0 0 1 8.5 8.4z"/></svg><em>Talk</em>

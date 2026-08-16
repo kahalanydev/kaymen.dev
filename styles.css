@@ -634,6 +634,48 @@ footer{padding:36px 0 46px;border-top:1px solid var(--line);margin-top:80px}
 
 /* ========================================================= MOBILE TABBAR
    Same glass, horizontal. Apple bottom-bar behaviour.                    */
+/* ------------------------------------------------------- the brand on mobile
+   The rail is display:none under 900px and it was the only element on the page
+   carrying the mark, so below that width the site showed no logo anywhere —
+   on the homepage and on every sub-page. This is the rail's brand block on its
+   own, in the tabbar's glass, pinned opposite it at the top of the screen.
+
+   Deliberately not a sixth tab: the bar has five slots, all of them
+   destinations, and a logo is not one. It reuses .mark, so the tile can never
+   drift from the rail's. */
+.brandbar{display:none}
+@media (max-width:900px){
+  .brandbar{
+    display:inline-flex;align-items:center;gap:10px;
+    position:fixed;top:14px;left:12px;z-index:80;
+    height:46px;padding:0 16px 0 8px;border-radius:999px;
+    background:rgba(255,255,255,.55);
+    backdrop-filter:blur(34px) saturate(200%);
+    -webkit-backdrop-filter:blur(34px) saturate(200%);
+    box-shadow:
+      0 16px 34px -14px rgba(22,48,61,.24),
+      0 6px 14px -6px rgba(22,48,61,.10),
+      0 0 0 .5px rgba(255,255,255,.7),
+      0 0 0 1px rgba(226,228,232,.7),
+      inset 0 1px 0 rgba(255,255,255,.9);
+  }
+  .brandbar::before{
+    content:"";position:absolute;inset:0;border-radius:999px;pointer-events:none;mix-blend-mode:screen;
+    background:linear-gradient(180deg,rgba(255,255,255,.6) 0%,rgba(255,255,255,.12) 30%,rgba(255,255,255,0) 58%);
+  }
+  .brandbar .mark{position:relative;z-index:2}
+  .bb-wm{
+    position:relative;z-index:2;
+    font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:-.02em;white-space:nowrap;
+  }
+  .bb-wm span{color:var(--accent)}
+  /* The chip occupies 14–60px, and the hero's mobile padding-top was 78px, so
+     the "N systems running" pill sat 18px under it and read as cramped. The
+     sub-page heroes already open at 86px and are left alone — a padding-top
+     here would be overridden by their shorthand further down the file anyway. */
+  .hero{padding-top:96px}
+}
+
 .tabbar{display:none}
 @media (max-width:900px){
   .rail{display:none}

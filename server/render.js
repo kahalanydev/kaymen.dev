@@ -56,7 +56,14 @@ function prose(s) {
 const RAIL_ITEMS = [
   { sec: 'start', label: 'Start', icon: '<path d="M3 10.5 12 3l9 7.5V21H3z"/>' },
   {
-    sec: 'need',
+    /* #need and #price merged into one section on 2026-08-16, so this is one
+       item pointing at #price. It kept the question-mark icon rather than the
+       dollar sign because the section leads with "what do you need" and only
+       then answers with a number. index.html carries the same single item;
+       these two lists have to be changed together or the sub-pages get a rail
+       the homepage does not have — which is exactly what happened here: this
+       file kept a dead /#need link and a second /#price entry for a day. */
+    sec: 'price',
     label: 'What you need',
     icon: '<path d="M9.1 9a3 3 0 1 1 4.2 2.7c-.8.4-1.3 1.1-1.3 2v.4"/><circle cx="12" cy="17.5" r=".8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="9.2"/>',
   },
@@ -66,7 +73,6 @@ const RAIL_ITEMS = [
     label: 'The work',
     icon: '<rect x="2.5" y="6.5" width="19" height="13.5" rx="2.2"/><path d="M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/>',
   },
-  { sec: 'price', label: 'What it costs', icon: '<path d="M12 2.5v19M16.8 6.3H9.9a3.1 3.1 0 0 0 0 6.2h4.2a3.1 3.1 0 0 1 0 6.2H6.7"/>' },
   {
     sec: 'terms',
     label: 'No hostages',
@@ -79,8 +85,21 @@ const RAIL_ITEMS = [
   },
 ];
 
-const TAB_SECS = ['start', 'running', 'work', 'price', 'talk'];
-const TAB_LABELS = { start: 'Start', running: 'Running', work: 'Work', price: 'Pricing', talk: 'Talk' };
+/* Same order as the page, which is the only order a nav is allowed to be in.
+   #price moved to second when it absorbed #need, and this list was left saying
+   fourth, so the mobile bar walked start → running → work → price while the
+   page ran start → price → running → work. */
+const TAB_SECS = ['start', 'price', 'running', 'work', 'talk'];
+const TAB_LABELS = { start: 'Start', price: 'Pricing', running: 'Running', work: 'Work', talk: 'Talk' };
+
+/* The bar borrows the rail's icon by default, which breaks for #price: the rail
+   says "What you need" and carries a question mark, the bar says "Pricing" and
+   a question mark beside that word reads as a help link. So the bar keeps the
+   dollar sign, which is also what index.html hardcodes — without this override
+   the homepage showed $ and every sub-page showed ?. */
+const TAB_ICONS = {
+  price: '<path d="M12 2.5v19M16.8 6.3H9.9a3.1 3.1 0 0 0 0 6.2h4.2a3.1 3.1 0 0 1 0 6.2H6.7"/>',
+};
 
 const icon = (svg) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">${svg}</svg>`;
 
@@ -115,11 +134,16 @@ function rail(active = 'work') {
   </div>
 </nav>
 
+<a href="/#start" class="brandbar" aria-label="kaymen.dev home">
+  <span class="mark"></span>
+  <span class="bb-wm"><b>kaymen</b><span>.</span>dev</span>
+</a>
+
 <nav class="tabbar" id="tabbar" aria-label="Sections">
   ${TAB_SECS.map((sec) => {
     const item = RAIL_ITEMS.find((i) => i.sec === sec);
     return `<a href="/#${sec}" class="tab${sec === active ? ' on' : ''}" data-sec="${sec}">
-    ${icon(item.icon)}<em>${esc(TAB_LABELS[sec])}</em>
+    ${icon(TAB_ICONS[sec] || item.icon)}<em>${esc(TAB_LABELS[sec])}</em>
   </a>`;
   }).join('\n  ')}
 </nav>`;
