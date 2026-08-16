@@ -47,7 +47,14 @@ async function sendEmail({ to, subject, html }) {
   }
 }
 
-// Shared email wrapper matching site theme: #09090b bg, #3b82f6 accent blue, { kahalany.dev } logo
+// Shared email wrapper.
+//
+// STILL THE OLD THEME — #09090b bg, #3b82f6 accent blue, JetBrains Mono. The
+// wordmark says kaymen but the palette is the one the site dropped in the
+// 2026-08-15 redesign, so every invite, reset and ticket notification a client
+// receives looks like a different company than the site they just visited.
+// Deliberately left for the admin/portal reimagining rather than re-skinned
+// twice — it is the same design problem as those two surfaces.
 function emailWrapper(innerHtml) {
   return `
     <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:500px;margin:0 auto;padding:32px;background:#09090b;color:#e4e4e7;border-radius:12px;border:1px solid #232329">

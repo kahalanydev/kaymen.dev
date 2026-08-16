@@ -1,4 +1,4 @@
-/* Admin Panel SPA — kahalany.dev */
+/* Admin Panel SPA — kaymen.dev */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/admin/sw.js').catch(() => {});
 }
@@ -1304,7 +1304,7 @@ if ('serviceWorker' in navigator) {
               </div>
               <div class="form-group">
                 <label>From Address</label>
-                <input type="text" id="smtpFrom" value="${escapeHtml(smtp.smtp_from)}" placeholder='"Kahalany.Dev" <hello@kahalany.dev>' style="font-family:var(--mono);font-size:12px">
+                <input type="text" id="smtpFrom" value="${escapeHtml(smtp.smtp_from)}" placeholder='"kaymen.dev" <hello@kaymen.dev>' style="font-family:var(--mono);font-size:12px">
               </div>
               <div style="display:flex;gap:8px">
                 <button type="submit" class="btn btn-primary" style="width:auto">Save SMTP</button>

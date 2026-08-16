@@ -1,4 +1,4 @@
-/* Client Portal SPA — kahalany.dev */
+/* Client Portal SPA — kaymen.dev */
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/portal/sw.js').catch(() => {});
 }

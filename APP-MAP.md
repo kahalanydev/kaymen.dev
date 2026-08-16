@@ -73,7 +73,7 @@ Portfolio/showcase website for kaymen.dev (Kaymen Group LLC) — a custom softwa
 
 ## File Structure
 ```
-Kahalany.Dev Site/
+Kaymen.Dev Site/
 ├── index.html              # Homepage TEMPLATE — contains <!--{{WORK}}--> placeholder
 ├── styles.css              # All styles (incl. legacy CSS device mockups, now unused on the homepage)
 ├── script.js               # Main site interactions: nav, theme, counters, animations, contact form
@@ -247,11 +247,11 @@ does the selling. Each page carries prev/next navigation and a closing CTA band.
 ### 6. Contact ("What Do You Want to Build?")
 - "Describe your idea" form: name, email, "What are you building?" (optional), message textarea
 - Honeypot + timing-based spam protection (invisible to users)
-- Submissions stored in DB + email notification sent to hello@kahalany.dev
+- Submissions stored in DB + email notification sent to hello@kaymen.dev
 - Rate limited: 1 submission per minute per IP
 - "Or reach out directly" divider with:
   - WhatsApp link (wa.me/18623005027)
-  - Email link: hello@kahalany.dev (tracked)
+  - Email link: hello@kaymen.dev (tracked)
 
 ### 7. Footer
 - Logo, nav links, copyright
@@ -298,7 +298,7 @@ does the selling. Each page carries prev/next navigation and a closing CTA band.
 - **Nodemailer** with admin-configurable SMTP (settings stored in `config` table)
 - **Welcome emails**: Sent when admin creates new admin/staff/client user — includes invite link
 - **Password reset emails**: Sent when admin resets a user's password
-- **Contact notifications**: New contact form submissions emailed to hello@kahalany.dev
+- **Contact notifications**: New contact form submissions emailed to hello@kaymen.dev
 - **Ticket notifications**: Email all admin/staff when a client creates a ticket
 - **Ticket webhook**: Configurable POST webhook (JSON payload) on ticket creation
 - **Graceful fallback**: If SMTP not configured, logs to console instead of failing

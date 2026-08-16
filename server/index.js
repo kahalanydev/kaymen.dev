@@ -75,7 +75,7 @@ app.post('/api/contact', async (req, res) => {
     const { sendEmail } = require('./utils/email');
     const projectLine = project_name ? `<p><strong>Project:</strong> ${project_name}</p>` : '';
     await sendEmail({
-      to: 'hello@kahalany.dev',
+      to: 'hello@kaymen.dev',
       subject: `New project inquiry from ${name}${project_name ? ` — ${project_name}` : ''}`,
       html: `<div style="font-family:sans-serif;padding:20px;background:#1a1a2e;color:#e0e0e0;border-radius:12px;max-width:500px">
         <h2 style="color:#3b82f6;margin-bottom:16px">New Project Inquiry</h2>

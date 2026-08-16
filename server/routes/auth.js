@@ -271,7 +271,7 @@ router.post('/smtp/test', requireAuth, requireRole('admin'), async (req, res) =>
   const { sendEmail } = require('../utils/email');
   const sent = await sendEmail({
     to: req.user.email,
-    subject: 'Kahalany.Dev — SMTP Test',
+    subject: 'kaymen.dev — SMTP Test',
     html: '<div style="font-family:sans-serif;padding:20px;background:#09090b;color:#e4e4e7;border-radius:12px"><h2 style="color:#3b82f6">SMTP is working!</h2><p>Your email configuration is correct.</p></div>'
   });
   if (sent) res.json({ success: true, data: { message: `Test email sent to ${req.user.email}` } });

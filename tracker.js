@@ -1,4 +1,4 @@
-/* Lightweight analytics tracker — kahalany.dev */
+/* Lightweight analytics tracker — kaymen.dev */
 (function () {
   // Respect Do Not Track
   if (navigator.doNotTrack === '1') return;

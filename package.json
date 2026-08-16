@@ -1,8 +1,8 @@
 {
-  "name": "kahalany-dev-site",
+  "name": "kaymen-dev-site",
   "version": "2.0.0",
   "private": true,
-  "description": "Kahalany.Dev portfolio site with admin analytics panel",
+  "description": "kaymen.dev — marketing site, client portal and admin analytics panel",
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js"
