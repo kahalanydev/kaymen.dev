@@ -1377,3 +1377,195 @@ it — it has no `.alert` component.
 - Ohav's main-site rail tweaks (gutter-centring, upward nudge, collapsed-dot mobile rail) remain
   queued — cause diagnosed, fix not written. See the handoff §6.
 - Not committed, not pushed.
+
+---
+
+## 2026-08-16 — Admin projects page → Dense console
+
+### What shipped
+
+`renderProjects()` and `renderProjectDetail()` in `admin/app.js` collapsed into one two-pane
+screen. `#/projects` and `#/projects/:id` render the same console; picking a project in the left
+list swaps only the right pane. The three stacked grids the project detail used to be —
+Milestones + Claude Code, Plan + Tickets, Members + Activity — are one screen without a chat pane.
+
+The left pane groups projects by status in reading order (moving → waiting → done), each row
+carrying its org, its open-ticket count and its progress bar. The right pane carries the header
+with an inline status `<select>`, a five-figure stat strip, milestones with inline status and
+delete, plan meta, member chips, the ticket table with its inline status dropdown, and the
+activity log. The plan opens full-width beneath both panes — View / Edit / History, one mode at
+a time — because a 340px textarea does not fit a `.82fr` column.
+
+### The mechanism that matters
+
+Selection moves the hash with **`history.replaceState`**, not `location.hash =`. Assigning the
+hash fires `hashchange`, re-enters the router and rebuilds the screen, which is precisely the
+navigation round-trip the direction exists to delete. Verified over CDP that `#mainContent` is the
+same DOM node before and after a selection.
+
+`renderLayout()` clears the `con.mounted` flag, so every other page render invalidates the console
+for free — the console never has to notice it was replaced.
+
+### Deviations from `mockup/back-office.html`, all deliberate
+
+- **⌘K filters the project list rather than searching projects, tickets and orgs.** The palette the
+  mockup's premise describes needs a search endpoint over three tables and an overlay; that is a
+  feature, not a visual-layer replacement. Left as an open decision in the handoff §6.
+- **Milestone rows carry a status select and a hover-revealed delete.** The mockup's row is
+  read-only; the real one has to be editable. They share the third grid column so the row does not
+  grow a fourth, and the delete is always visible under `@media (hover:none)` so the installable
+  PWA does not lose it.
+- **The Claude Code pane is gone** (~400 lines), per Ohav's call that the widget is to be replaced
+  by a ticket-scanning agent. `cc.*` is untouched and still drives the Settings pairing card.
+
+### Beyond the re-skin
+
+- `GET /api/admin/projects` gained **`urgent_tickets`** (open or in-progress, priority urgent or
+  high). The list row's hot count was keyed off `open_tickets`, but the two extra palette tones are
+  restricted to *severity* and four low-priority tickets are not an emergency.
+- The plan meta line reads **`project_plans.approved_at`** instead of inferring approval from
+  project status. A project can be moved to `in_progress` by hand without the client ever pressing
+  Approve, and this line is the only place that difference is visible.
+- Dates format with `timeZone:'UTC'`. The `+'Z'` idiom used elsewhere in `app.js` yields Invalid
+  Date on a bare `2026-08-29`, and local formatting of a UTC-midnight date reads a day early west
+  of Greenwich — a target date silently one day out is worse than no date.
+- `renderLogin`, `renderChangePassword` and `renderInvite` stopped emitting the old
+  `{ kaymen.dev }` brace wordmark; all three now use the rail's K mark. `.login-logo .mark` and
+  `.login-title{padding-left:46px}` were already in the stylesheet waiting for it.
+
+### `scripts/seed-preview.js` — the review recipe, executed
+
+`--screenshot` cannot log in, so reviewing the back office needs a real server holding real rows.
+The previous handoff described that as prose and said not to re-derive it; prose is exactly what
+gets re-derived, so it is a script now. One command boots the server against a gitignored
+`.preview-data/`, seeds five orgs / five projects / milestones / two plan versions / tickets /
+members / four client users / a lead, and writes token-planting `_preview.html` redirects that it
+deletes on Ctrl-C.
+
+Four things it encodes that cost time to find: a new client user gets an **invite token, not a
+temp password** (the whole token is in the creation response's `invite_url`; it is the users list
+that truncates it); **plan approval must come from the client over the portal API**, the only
+thing that writes `approved_at`; `POST /api/contact` is **rate-limited to 1/min per IP** in memory,
+so one lead is all you can seed; and tickets are **org-scoped**, so it needs one client per org.
+
+### Verification
+
+Driven over CDP, not eyeballed: selection reuses `#mainContent`; the filter narrows the list; a
+deep link lands on the right project; the plan editor, its preview tab and its version history all
+open and close; an inline ticket status survives a refetch; a milestone status change moves project
+progress 75% → 80%; leaving for the dashboard and coming back rebuilds cleanly. No console errors,
+no exceptions. Checked at 1600px and at 430px, where the header wraps and the panes stack.
+
+### Files
+
+| File | Change |
+|------|--------|
+| `admin/app.js` | `renderProjects` + `renderProjectDetail` → `renderConsole` and its helpers; CC widget removed; login wordmark |
+| `admin/styles.css` | `.c-k input`, `.c-blk h4 .hact`, `.c-meta`, `.c-inline`, `.c-av`, `.c-m .mrt/.mdel`, `.c-panel`, `.c-vr`, `.c-top{flex-wrap}` |
+| `server/routes/admin.js` | `urgent_tickets` in the projects list query |
+| `scripts/seed-preview.js` | New — boots and seeds a throwaway admin + portal |
+| `.gitignore` | `.preview-data/`, `admin/_preview.html`, `portal/_preview.html` |
+
+### Not done at the time of writing
+
+- The portal (done later the same day — see the next entry).
+- Security, Analytics, Settings, Clients, ticket detail and invite were not swept.
+- Ohav's main-site rail tweaks remain queued — cause diagnosed, fix not written. Handoff §6.
+
+---
+
+## 2026-08-16 — Client portal → "Reassurance"
+
+### The stylesheet
+
+`portal/styles.css` was rewritten from the old dark theme onto the locked design system — the
+Kaymen palette, Sora + Inter, the 224px glass rail, the glass mobile tabbar — with **its own
+legacy token bridge**, exactly as `admin/styles.css` has. The portal's bridge is the more dangerous
+of the two: `progressRing()` emits `stroke="var(--surface-3)"` and `fill="var(--text)"` *inside
+SVG*, where a missing variable renders as nothing at all rather than as an obviously wrong colour.
+
+`portal/index.html` was loading Inter + JetBrains Mono, declared `theme-color: #09090b`, and had no
+ambient washes for the glass to refract. It now loads Sora, is light-first, and carries the three
+washes. The theme toggle is gone and `portal_theme` is actively cleared — a leftover `light` would
+have set `data-theme` on a stylesheet that no longer has any `[data-theme]` rules.
+
+### The overview screen
+
+`renderProject()` is the Reassurance direction: a status sentence at the top, then the evidence.
+
+**The sentence is derived on every render, never written.** That is the whole safeguard, and it is
+the direction's own stated cost — a reassurance has to stay true. `statusSentence()` computes it
+from milestones, dates and tickets, so a project running late says *"Running 4 days behind on one
+stage."* in 38px Sora rather than keeping a cheerful string somebody typed in August. Every branch
+— proposed, planning, live, completed, maintenance, archived — derives the same way, and the lead
+paragraph underneath assembles only facts it can prove: stages done, the current stage and whether
+it is late, the pressing ticket by number, the last stage's date.
+
+**The "yours to do" block renders only when it has contents.** Workspace's own stated cost is that
+an empty to-do column reads as neglect exactly when things are going well — so when there is
+nothing to do the block is *absent*, not empty, and the hero sentence carries the screen alone.
+
+The timeline spine is lit to the real completion figure through a `--lit` custom property. The
+mockup hard-codes 62%; a spine that always reaches the same point is decoration, not status.
+
+Two API calls in parallel: the project response carries only an open-ticket *count*, and both the
+sentence and the to-do block need the tickets themselves — priority, status and number.
+
+### What was deliberately not built
+
+**"We are blocked on you."** It is Workspace's second to-do card, and nothing in the schema records
+that the team is waiting on a client. Inventing the state would put a demand on a client's screen
+that nobody actually made. What *is* derivable is a ticket moved to `review` — we think it is
+fixed, they have to say so — and that is what the block shows alongside a plan awaiting approval.
+Making the real thing work is a small schema decision, noted in the handoff §6.
+
+**The compose box.** Workspace puts a textarea on the landing screen; the overview links to the
+new-ticket page instead. `.compose` CSS was not ported — writing CSS for a thing that does not
+exist is how the admin ended up carrying an unused `.c-k` rule for a day.
+
+### Beyond the re-skin
+
+- `GET /api/portal/projects/:id` gained **`org_name`**, so the rail foot can name the client's own
+  organisation when they arrive on a deep link rather than through the dashboard.
+- **Both PWA manifests still declared `#09090b`** for `theme_color` and `background_color`. An
+  installed admin or portal flashed the old dark theme on every launch, months after the theme was
+  dropped. Both are `#ffffff` now.
+- `renderPlan()` passed `'project'` to `renderLayout`, so the rail lit **Overview** while you were
+  sitting on the plan.
+- Portal dates format in UTC, same fix as the admin: the `+'Z'` idiom yields Invalid Date on a bare
+  `2026-08-29`, and local formatting of a UTC-midnight date reads a day early west of Greenwich.
+- `progressRing()`'s percentage was set in `var(--mono)`; the portal no longer loads a mono face
+  and every other number on the surface is Sora. It is `var(--display)` now.
+- The portal login, change-password and invite screens stopped emitting the old `{ kaymen.dev }`
+  brace wordmark — the same fix the admin's three screens got.
+
+### Verification
+
+Driven over CDP against the seeded server, not eyeballed. The rail names the client's org; the
+sentence derives correctly for a late project (*"Running 4 days behind on one stage"*) and for a
+proposed one (*"The plan is ready for you"*); the to-do block appears with the plan-approval hero
+card on the proposed project and grows from 1 to 2 to 3 as tickets are moved to `review` over the
+admin API; the timeline lights to 60% on 3-of-5 stages; the ring reads the real percentage; plan,
+tickets and activity all still render through the bridge. No console errors, no exceptions.
+Checked at 1500px and at 430px, where the panes stack and the glass tabbar carries all five items.
+
+The seed gained a second PCG project in `proposed`, because the portal is org-scoped: without one
+in the preview client's *own* org, the plan-approval path could not be exercised at all.
+
+### Files
+
+| File | Change |
+|------|--------|
+| `portal/styles.css` | Rewritten onto the design system, with its own token bridge |
+| `portal/app.js` | Reassurance overview + `statusSentence` / `buildTodo`; theme toggle removed; line icons; UTC dates; wordmark |
+| `portal/index.html` | Sora, light-first theme-color, ambient washes |
+| `portal/manifest.json`, `admin/manifest.json` | `#09090b` → `#ffffff` |
+| `server/routes/portal.js` | `org_name` on the project detail response |
+| `scripts/seed-preview.js` | A proposed project in the preview client's own org |
+
+### Not done
+
+- Admin: Security, Analytics, Settings, Clients, ticket detail, invite. Portal: plan, tickets,
+  new-ticket, ticket detail, activity. All render coherently through their bridges; all still
+  carry inline styles. This is the sweep, and it is what is next.
+- Ohav's main-site rail tweaks remain queued — cause diagnosed, fix not written. Handoff §6.

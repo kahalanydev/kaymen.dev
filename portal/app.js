@@ -8,8 +8,12 @@ if ('serviceWorker' in navigator) {
   const $$ = (s, el) => [...(el || document).querySelectorAll(s)];
   const app = document.getElementById('app');
 
-  // Load saved theme
-  if (localStorage.getItem('portal_theme') === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  /* The theme toggle is gone, on the same grounds the site and the admin dropped
+     theirs: the palette is light-first and no dark variant is designed. The old
+     key is actively cleared rather than ignored, because a leftover 'light' would
+     put data-theme on a stylesheet that no longer has any [data-theme] rules. */
+  localStorage.removeItem('portal_theme');
+  document.documentElement.removeAttribute('data-theme');
 
   // ===== STATE =====
   const state = {
@@ -18,6 +22,8 @@ if ('serviceWorker' in navigator) {
     page: 'dashboard',
     projectId: null,
     ticketId: null,
+    orgName: null,
+    navCounts: null,
     sidebarOpen: false
   };
 
@@ -89,9 +95,30 @@ if ('serviceWorker' in navigator) {
   }
 
   function formatDate(dateStr) {
-    if (!dateStr) return '-';
-    return new Date(dateStr + 'Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const d = toDate(dateStr);
+    return d ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' }) : '-';
   }
+
+  /* SQLite hands back both "2026-08-16 10:11:12" and bare "2026-08-16"; the +'Z'
+     idiom above yields Invalid Date on the second, and formatting a UTC-midnight
+     date in local time reads a day early west of Greenwich. A target date that is
+     silently one day out is worse than no date at all. */
+  function toDate(s) {
+    if (!s) return null;
+    const str = String(s);
+    const d = new Date(str.length <= 10 ? str + 'T00:00:00Z' : str.replace(' ', 'T') + 'Z');
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function fmtDay(s) {
+    const d = toDate(s);
+    return d ? d.toLocaleDateString('en-US', { day: 'numeric', month: 'long', timeZone: 'UTC' }) : null;
+  }
+  function fmtShort(s) {
+    const d = toDate(s);
+    return d ? d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', timeZone: 'UTC' }) : null;
+  }
+  function daysTo(s) { const d = toDate(s); return d ? Math.round((d - new Date()) / 86400000) : null; }
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
 
   function escapeHtml(str) {
     if (!str) return '';
@@ -143,7 +170,7 @@ if ('serviceWorker' in navigator) {
         stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${offset}"
         transform="rotate(-90 ${size/2} ${size/2})" style="transition:stroke-dashoffset 0.8s ease"/>
       <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central"
-        style="font-size:${size * 0.24}px;font-weight:700;fill:var(--text);font-family:var(--mono)">${percent}%</text>
+        style="font-size:${size * 0.24}px;font-weight:800;letter-spacing:-.04em;fill:var(--text);font-family:var(--display)">${percent}%</text>
     </svg>`;
   }
 
@@ -257,7 +284,7 @@ if ('serviceWorker' in navigator) {
     app.innerHTML = `
       <div class="login-page">
         <div class="login-card">
-          <div class="login-logo"><span class="accent">{</span> kaymen.dev <span class="accent">}</span></div>
+          <div class="login-logo"><span class="mark">K</span><span>kaymen<span class="accent">.</span>dev</span></div>
           <h2 class="login-title">Client Portal</h2>
           <div id="loginMsg">${oauthError ? `<div class="alert alert-error">${escapeHtml(errorMessages[oauthError] || 'Sign-in failed')}</div>` : ''}</div>
           ${googleEnabled ? `
@@ -298,7 +325,7 @@ if ('serviceWorker' in navigator) {
     app.innerHTML = `
       <div class="login-page">
         <div class="login-card">
-          <div class="login-logo"><span class="accent">{</span> kaymen.dev <span class="accent">}</span></div>
+          <div class="login-logo"><span class="mark">K</span><span>kaymen<span class="accent">.</span>dev</span></div>
           <h2 class="login-title">Change Password</h2>
           <div class="alert alert-warning">You must change your password before continuing.</div>
           <div id="cpError"></div>
@@ -328,48 +355,62 @@ if ('serviceWorker' in navigator) {
   }
 
   // ===== RENDER: LAYOUT =====
+  /* Line icons, not emoji: emoji render differently on every OS and cannot take
+     currentColor, so an active nav item could never tint them. Same reasoning and
+     same set as admin/app.js. */
+  const ICONS = {
+    dashboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6.5" width="19" height="13.5" rx="2.2"/><path d="M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/></svg>',
+    project: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg>',
+    plan: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H7a2 2 0 0 0-2 2v15a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7.5z"/><path d="M14 2.5v5h5"/></svg>',
+    tickets: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.2 9.2 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.3 8.3 0 0 1 3.6 11.5a8.4 8.4 0 0 1 8.9-8.4 8.4 8.4 0 0 1 8.5 8.4z"/></svg>',
+    activity: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.4l3.4 2"/></svg>',
+  };
+  const icon = (n) => ICONS[n] || ICONS.project;
+
   function renderLayout(content, activeNav) {
+    // counts are whatever the last screen fetched; absent on a cold load, which is
+    // why each one is optional rather than rendered as 0
+    const counts = state.navCounts || {};
     const navItems = state.projectId
       ? [
-          { id: 'project', icon: '\u25A3', label: 'Overview', hash: `#/project/${state.projectId}` },
-          { id: 'plan', icon: '\u2630', label: 'Plan', hash: `#/project/${state.projectId}/plan` },
-          { id: 'tickets', icon: '\u2709', label: 'Tickets', hash: `#/project/${state.projectId}/tickets` },
-          { id: 'activity', icon: '\u25CE', label: 'Activity', hash: `#/project/${state.projectId}/activity` },
+          { id: 'project', label: 'Overview', hash: `#/project/${state.projectId}` },
+          { id: 'plan', label: 'The plan', hash: `#/project/${state.projectId}/plan`, count: counts.plan },
+          { id: 'tickets', label: 'Tickets', hash: `#/project/${state.projectId}/tickets`, count: counts.tickets },
+          { id: 'activity', label: 'Activity', hash: `#/project/${state.projectId}/activity` },
         ]
-      : [{ id: 'dashboard', icon: '\u25A3', label: 'Dashboard', hash: '#/dashboard' }];
+      : [];
 
-    // Build bottom nav items (always include dashboard, plus project-specific when in a project)
-    const bottomItems = [{ id: 'dashboard', icon: '\u25A3', label: 'Projects', hash: '#/dashboard' }];
-    if (state.projectId) {
-      bottomItems.push(...navItems);
-    }
+    const bottomItems = [{ id: 'dashboard', label: 'Projects', hash: '#/dashboard' }, ...navItems];
 
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
     app.innerHTML = `
       <div class="mobile-top-bar" id="mobileTopBar">
-        <button class="mtb-btn" id="mtbTheme" title="Toggle theme">${isLight ? '\u2600' : '\u{1F319}'}</button>
-        <button class="mtb-btn" id="mtbLogout" title="Logout">\u{1F6AA}</button>
+        <button class="mtb-btn" id="mtbLogout" title="Log out" aria-label="Log out">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4.5"/><path d="m16 16.5 4.5-4.5L16 7.5"/><path d="M20.5 12H9.5"/></svg>
+        </button>
       </div>
       <div class="layout">
         <aside class="sidebar" id="sidebar">
-          <div class="sidebar-logo"><span class="accent">{</span> kaymen.dev <span class="accent">}</span></div>
-          <div class="sidebar-label">Client Portal</div>
+          <div class="sidebar-logo">
+            <span class="mark">K</span>
+            <span>kaymen<span class="accent">.</span>dev</span>
+          </div>
+          <div class="sidebar-label">Client portal</div>
           <ul class="sidebar-nav">
             <li><a href="#/dashboard" class="${!state.projectId && activeNav === 'dashboard' ? 'active' : ''}" data-nav="dashboard">
-              <span class="icon">\u25A3</span> My Projects
+              <span class="icon">${icon('dashboard')}</span><span>My projects</span>
             </a></li>
-            ${state.projectId ? navItems.map(n => `
+            ${navItems.map(n => `
               <li><a href="${n.hash}" class="${activeNav === n.id ? 'active' : ''}" data-nav="${n.id}">
-                <span class="icon">${n.icon}</span> ${n.label}
+                <span class="icon">${icon(n.id)}</span><span>${n.label}</span>
+                ${n.count ? `<span class="count${n.count.hot ? ' hot' : ''}">${n.count.n}</span>` : ''}
               </a></li>
-            `).join('') : ''}
+            `).join('')}
           </ul>
           <div class="sidebar-bottom">
-            <div class="sidebar-user">${escapeHtml(state.user?.name || state.user?.email)}</div>
-            <div style="display:flex;gap:6px;margin-bottom:8px">
-              <button class="theme-toggle-btn" id="themeTogglePortal" style="flex:1;justify-content:center">${isLight ? '\u2600 Light' : '\u{1F319} Dark'}</button>
-            </div>
-            <button class="btn btn-secondary btn-sm" id="logoutBtn" style="width:100%">Logout</button>
+            ${state.orgName
+              ? `<div class="sidebar-org"><span class="pulse"></span><em>${escapeHtml(state.orgName)}</em></div>` : ''}
+            <div class="sidebar-user">${escapeHtml(state.user?.name || state.user?.email || '')}</div>
+            <button class="btn btn-secondary btn-sm" id="logoutBtn" style="width:100%">Log out</button>
           </div>
         </aside>
         <main class="main" id="mainContent">${content}</main>
@@ -377,14 +418,13 @@ if ('serviceWorker' in navigator) {
       <nav class="bottom-nav" id="bottomNav">
         ${bottomItems.map(n => `
           <a href="${n.hash}" class="bottom-nav-item ${activeNav === n.id ? 'active' : ''}" data-nav-hash="${n.hash}">
-            <span class="bottom-nav-icon">${n.icon}</span>
+            <span class="bottom-nav-icon">${icon(n.id)}</span>
             <span class="bottom-nav-label">${n.label}</span>
           </a>
         `).join('')}
       </nav>
     `;
 
-    $$('.sidebar-nav a').forEach(a => a.addEventListener('click', () => {}));
     $$('.bottom-nav-item').forEach(a => a.addEventListener('click', (e) => {
       e.preventDefault();
       window.location.hash = a.dataset.navHash;
@@ -392,21 +432,8 @@ if ('serviceWorker' in navigator) {
     $('#logoutBtn').addEventListener('click', logout);
     const mtbLogout = $('#mtbLogout');
     if (mtbLogout) mtbLogout.addEventListener('click', logout);
-    function applyTheme(goLight) {
-      if (goLight) { document.documentElement.setAttribute('data-theme', 'light'); localStorage.setItem('portal_theme', 'light'); }
-      else { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('portal_theme', 'dark'); }
-      const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.content = goLight ? '#ffffff' : '#09090b';
-      render();
-    }
-    const mtbTheme = $('#mtbTheme');
-    if (mtbTheme) mtbTheme.addEventListener('click', () => {
-      applyTheme(document.documentElement.getAttribute('data-theme') !== 'light');
-    });
-    const themeBtn = $('#themeTogglePortal');
-    if (themeBtn) themeBtn.addEventListener('click', () => {
-      applyTheme(document.documentElement.getAttribute('data-theme') !== 'light');
-    });
+    // The theme toggle was removed with the re-skin, on the same grounds the site
+    // and the admin dropped theirs. Do not re-add a half-working one.
   }
 
   // ===== COLLAPSE DUPLICATE ACTIVITY =====
@@ -437,6 +464,10 @@ if ('serviceWorker' in navigator) {
       const res = await api('/portal/dashboard');
       const { projects, recentActivity, activeMilestones, recentTickets, ticketStats } = res.data;
 
+      // the rail foot names the client's own organisation
+      state.orgName = (projects[0] && projects[0].org_name) || state.orgName;
+      state.navCounts = null;
+
       const activeCount = projects.filter(p => ['in_progress','review'].includes(p.status)).length;
       const pendingCount = projects.filter(p => p.status === 'proposed').length;
       const summaryParts = [];
@@ -446,7 +477,8 @@ if ('serviceWorker' in navigator) {
       const collapsedActivity = collapseActivity(recentActivity);
       const totalTickets = (ticketStats.open || 0) + (ticketStats.in_progress || 0) + (ticketStats.closed || 0);
 
-      $('#mainContent').innerHTML = `
+      // renderLayout, not #mainContent — the rail's org name arrives with this fetch
+      renderLayout(`
         <div class="page-header">
           <h1>Welcome${state.user?.name ? ', ' + escapeHtml(state.user.name) : ''}</h1>
           <p>${summaryParts.length ? summaryParts.join(', ') : 'Your projects and recent activity'}</p>
@@ -565,7 +597,7 @@ if ('serviceWorker' in navigator) {
           </div>
         </div>
         `}
-      `;
+      `, 'dashboard');
 
       $$('.hero-card').forEach(card => card.addEventListener('click', () => {
         window.location.hash = `#/project/${card.dataset.projectId}`;
@@ -575,115 +607,252 @@ if ('serviceWorker' in navigator) {
     }
   }
 
-  // ===== RENDER: PROJECT =====
+  // ===== RENDER: PROJECT OVERVIEW — "Reassurance" =====
+  /* A client logs in a couple of times a month, almost always for one reason: is
+     my thing on track, and does anyone still care about it. So the screen answers
+     that in a sentence before any evidence, then shows the evidence.
+
+     The sentence is DERIVED on every render, never written. That is the whole
+     safeguard: the direction's own stated cost is that a reassurance has to stay
+     true, so a project that quietly stalls says so in 38px Sora rather than
+     keeping a cheerful string somebody typed in August.
+
+     The "yours to do" block is lifted from the Workspace direction and rendered
+     only when it has contents (handoff §1). Workspace's own stated cost is that
+     an empty to-do column reads as neglect exactly when things are going well —
+     so when there is nothing to do, the block is absent, not empty. */
+
+  function currentStage(milestones) {
+    return milestones.find(m => m.status === 'in_progress')
+        || milestones.find(m => m.status === 'upcoming')
+        || null;
+  }
+
+  function statusSentence(project, milestones, tickets) {
+    const total = milestones.length;
+    const done = milestones.filter(m => m.status === 'completed').length;
+    const stage = currentStage(milestones);
+    const late = stage && stage.target_date ? daysTo(stage.target_date) : null;
+    const behind = late !== null && late < 0 ? Math.abs(late) : 0;
+    const open = tickets.filter(t => ['open', 'in_progress'].includes(t.status));
+    const pressing = open.filter(t => ['urgent', 'high'].includes(t.priority));
+    const last = milestones.length ? milestones[milestones.length - 1] : null;
+
+    let head;
+    const bits = [];
+
+    if (project.status === 'proposed') {
+      head = 'The plan is <span>ready for you</span>.';
+      bits.push('Nothing starts until you have read it and said yes.');
+      if (total) bits.push(`It breaks the work into ${plural(total, 'stage', 'stages')}.`);
+    } else if (project.status === 'planning') {
+      head = 'We are <span>still scoping this</span>.';
+      bits.push('You will get a plan to read and approve before any work starts.');
+    } else if (project.status === 'completed') {
+      head = '<span>Delivered</span>.';
+      if (project.completed_date) bits.push(`Finished ${fmtDay(project.completed_date)}.`);
+      bits.push('Anything that comes up, tell us and we will look at it.');
+    } else if (project.status === 'maintenance') {
+      head = 'Live, and <span>looked after</span>.';
+      bits.push('The build is done. We are here for changes and for anything that breaks.');
+    } else if (project.status === 'archived') {
+      head = 'This project is <span>closed</span>.';
+    } else {
+      // approved / in_progress / review — the live states, where the sentence earns its keep
+      if (behind) {
+        head = `Running <span>${plural(behind, 'day', 'days')} behind</span> on one stage.`;
+      } else if (pressing.length) {
+        head = `On track, with <span>${pressing.length === 1 ? 'one thing' : plural(pressing.length, 'thing', 'things')}</span> being fixed.`;
+      } else {
+        head = '<span>On track</span>.';
+      }
+      if (total) bits.push(`${done} of ${total} stages ${done === 1 ? 'is' : 'are'} done.`);
+      if (stage) {
+        let s = `We are on <b>${escapeHtml(stage.title)}</b>`;
+        if (behind) s += `, which is ${plural(behind, 'day', 'days')} behind`;
+        else if (stage.target_date) s += `, due ${fmtDay(stage.target_date)}`;
+        bits.push(s + '.');
+      }
+      if (pressing.length) {
+        const t = pressing[0];
+        bits.push(`<b>#${t.ticket_number}</b> — ${escapeHtml(t.title)} — is being worked on now.`);
+      }
+      if (last && last.target_date && last !== stage) {
+        bits.push(`<b>${escapeHtml(last.title)}</b> is still set for <b>${fmtDay(last.target_date)}</b>.`);
+      }
+    }
+
+    return { head, lead: bits.join(' ') };
+  }
+
+  /* Two things are genuinely the client's to do, and both are derivable:
+       · a plan sitting in `proposed`, waiting on their approval
+       · a ticket we moved to `review` — we think it is fixed, they have to say so
+     "We are blocked on you" is in the mockup but NOT here: nothing in the schema
+     records that we are waiting on a client, and inventing the state would put a
+     demand on their screen that no one actually made. See the handoff §6. */
+  function buildTodo(project, tickets, projectId) {
+    const items = [];
+
+    if (project.status === 'proposed') {
+      items.push(`
+        <div class="td hero">
+          <div class="td-t"><span class="badge badge-green">Needs your approval</span><h4>The plan is ready to read</h4></div>
+          <p>Read it and approve, or tell us what to change. Nothing starts until you do.</p>
+          <div class="td-a">
+            <a href="#/project/${projectId}/plan" class="btn btn-primary">Read &amp; approve</a>
+            <a href="#/project/${projectId}/plan" class="btn btn-ghost">Request changes</a>
+          </div>
+        </div>`);
+    }
+
+    tickets.filter(t => t.status === 'review').forEach(t => {
+      items.push(`
+        <div class="td">
+          <div class="td-t"><span class="badge badge-yellow">Ready for you to check</span><h4>#${t.ticket_number} — ${escapeHtml(t.title)}</h4></div>
+          <p>We think this one is done. Have a look and tell us if it is, or reopen it if it is not.</p>
+          <div class="td-meta">Opened ${fmtShort(t.created_at) || ''} &middot; last touched ${timeAgo(t.updated_at)}</div>
+          <div class="td-a"><a href="#/project/${projectId}/tickets/${t.id}" class="btn btn-ghost">Open it</a></div>
+        </div>`);
+    });
+
+    return items;
+  }
+
+  function storyDate(created_at) {
+    const d = toDate(created_at);
+    if (!d) return '';
+    const hrs = (new Date() - d) / 3600000;
+    if (hrs < 24) return 'Today';
+    if (hrs < 48) return 'Yesterday';
+    return fmtShort(created_at) || '';
+  }
+
   async function renderProject(projectId) {
     state.projectId = projectId;
-    renderLayout('<div class="loading"><div class="spinner"></div> Loading project...</div>', 'project');
+    renderLayout('<div class="loading"><div class="spinner"></div> Loading&hellip;</div>', 'project');
 
     try {
-      const res = await api(`/portal/projects/${projectId}`);
-      const { project, milestones, open_tickets, recentActivity } = res.data;
+      /* Two calls, in parallel. The project response carries only an open-ticket
+         *count*, and both the status sentence and the to-do block need the actual
+         tickets — their priority, their status and their numbers. */
+      const [projRes, ticketRes] = await Promise.all([
+        api(`/portal/projects/${projectId}`),
+        api(`/portal/projects/${projectId}/tickets`).catch(() => ({ data: { tickets: [] } })),
+      ]);
+      const { project, milestones, recentActivity } = projRes.data;
+      const tickets = ticketRes.data.tickets || [];
+      const openTickets = tickets.filter(t => ['open', 'in_progress'].includes(t.status));
 
-      const showPlanApproval = project.status === 'proposed';
-      const msDone = milestones.filter(m => m.status === 'completed').length;
+      state.orgName = project.org_name || state.orgName;
+      state.navCounts = {
+        tickets: openTickets.length ? { n: openTickets.length } : null,
+        plan: project.status === 'proposed' ? { n: 1, hot: true } : null,
+      };
 
-      const collapsedProjectActivity = collapseActivity(recentActivity);
+      const done = milestones.filter(m => m.status === 'completed').length;
+      const stage = currentStage(milestones);
+      const pct = project.progress_percent || 0;
+      const { head, lead } = statusSentence(project, milestones, tickets);
+      const todo = buildTodo(project, tickets, projectId);
 
-      $('#mainContent').innerHTML = `
-        <div class="page-header">
-          <h1>${escapeHtml(project.name)}</h1>
-          <p>${escapeHtml(project.description || '')}</p>
+      // the lit portion of the timeline spine, rather than the mockup's fixed 62%
+      const lit = milestones.length ? Math.round((done / milestones.length) * 100) : 0;
+      const C = 2 * Math.PI * 58;   // r=58, matching the mockup's ring
+
+      const ringSub = [];
+      if (milestones.length) ringSub.push(`${done} of ${milestones.length} stages done`);
+      const subLine = [];
+      if (project.days_since_start !== null && project.days_since_start !== undefined) {
+        subLine.push(`${plural(project.days_since_start, 'day', 'days')} in`);
+      }
+      if (project.target_date) subLine.push(`target ${fmtDay(project.target_date)}`);
+
+      const story = recentActivity.slice(0, 6);
+
+      /* renderLayout again rather than patching #mainContent: the rail's org name
+         and its counts only exist once this fetch lands, and a rail that is right
+         on the second visit but blank on the first is worse than a beat's delay. */
+      renderLayout(`
+        <div class="p-hero">
+          <p class="eyebrow">${escapeHtml(project.name)}</p>
+          <h1>${head}</h1>
+          ${lead ? `<p class="lead">${lead}</p>` : ''}
+          <div class="p-actions">
+            <a href="#/project/${projectId}/plan" class="btn btn-primary">Read the plan</a>
+            <a href="#/project/${projectId}/tickets/new" class="btn btn-ghost">Tell us something</a>
+          </div>
         </div>
 
-        <!-- Phase indicator -->
-        ${phaseIndicator(project.status)}
-
-        ${showPlanApproval ? `
-          <div class="alert alert-info" style="margin-bottom:24px">
-            A project plan is ready for your review!
-            <a href="#/project/${projectId}/plan" style="color:var(--accent);font-weight:600;margin-left:8px">View & Approve Plan</a>
+        ${todo.length ? `
+          <hr class="rule">
+          <div class="p-todo">
+            <h3>Yours to do <u>${todo.length}</u></h3>
+            <div class="todo">${todo.join('')}</div>
           </div>
         ` : ''}
 
-        <!-- Progress + Stats + Ticket Buttons -->
-        <div class="project-overview-card">
-          <div class="project-overview-ring">
-            ${progressRing(project.progress_percent, 120, 9)}
-          </div>
-          <div class="project-overview-stats">
-            <div class="stat-item">
-              <div class="stat-value accent">${msDone}/${milestones.length}</div>
-              <div class="stat-label">Milestones</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value${open_tickets > 0 ? ' warning' : ''}">${open_tickets}</div>
-              <div class="stat-label">Open Tickets</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">${project.days_since_start !== null ? project.days_since_start : '-'}</div>
-              <div class="stat-label">Days Active</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value${project.days_remaining !== null && project.days_remaining < 0 ? ' danger' : ''}">${project.days_remaining !== null ? (project.days_remaining < 0 ? Math.abs(project.days_remaining) + ' over' : project.days_remaining) : '-'}</div>
-              <div class="stat-label">${project.days_remaining !== null && project.days_remaining < 0 ? 'Days Overdue' : 'Days Left'}</div>
-            </div>
-          </div>
-          <div class="project-overview-actions">
-            <a href="#/project/${projectId}/tickets" class="btn btn-secondary btn-sm">View Tickets</a>
-            <a href="#/project/${projectId}/tickets/new" class="btn btn-primary btn-sm">Create Ticket</a>
-          </div>
-        </div>
+        <hr class="rule">
 
-        <!-- Milestones + Activity Side-by-Side -->
-        <div class="project-content-grid">
-          <div class="project-content-main">
-            <div class="card">
-              <div class="card-header"><span class="card-title">Milestones</span></div>
-              ${milestones.length === 0 ? '<p style="color:var(--text-dim);font-size:14px">No milestones defined yet.</p>' : `
-                <div class="timeline">
-                  ${milestones.map((m, i) => `
-                    <div class="timeline-item">
-                      <div class="timeline-track">
-                        <div class="timeline-node ${m.status}">
-                          ${m.status === 'completed' ? '&#10003;' : m.status === 'in_progress' ? '' : ''}
-                        </div>
-                        ${i < milestones.length - 1 ? `<div class="timeline-connector ${m.status === 'completed' ? 'done' : ''}"></div>` : ''}
-                      </div>
-                      <div class="timeline-content">
-                        <div class="timeline-title">${escapeHtml(m.title)}</div>
-                        ${m.description ? `<div class="timeline-desc">${escapeHtml(m.description)}</div>` : ''}
-                        <div class="timeline-meta">
-                          ${statusBadge(m.status)}
-                          ${m.target_date ? ` <span class="timeline-date">Target: ${formatDate(m.target_date)}</span>` : ''}
-                          ${m.completed_date ? ` <span class="timeline-date">Completed: ${formatDate(m.completed_date)}</span>` : ''}
-                        </div>
-                        ${m.completion_notes ? `<div class="timeline-notes">${escapeHtml(m.completion_notes)}</div>` : ''}
-                      </div>
-                    </div>
-                  `).join('')}
-                </div>
-              `}
-            </div>
-          </div>
-
-          <div class="project-content-side">
-            ${collapsedProjectActivity.length > 0 ? `
-              <div class="card widget-card">
-                <div class="card-header"><span class="card-title">Recent Activity</span></div>
-                <ul class="activity-list compact">
-                  ${collapsedProjectActivity.slice(0, 8).map(a => `
-                    <li class="activity-item">
-                      <div class="activity-icon">${activityIcon(a.action)}</div>
-                      <div class="activity-text">${activityText(a)}${a._count > 1 ? ` <span class="activity-count">&times;${a._count}</span>` : ''}</div>
-                      <div class="activity-time">${timeAgo(a.created_at)}</div>
-                    </li>
-                  `).join('')}
-                </ul>
+        <div class="p-grid">
+          <div>
+            <p class="eyebrow" style="margin-bottom:18px">Where it stands</p>
+            ${milestones.length ? `
+              <div class="tl" style="--lit:${lit}%">
+                ${milestones.map(m => {
+                  const late = m.status === 'in_progress' && m.target_date && daysTo(m.target_date) < 0;
+                  let when = '';
+                  if (m.status === 'completed') when = m.completed_date ? `Completed ${fmtDay(m.completed_date)}` : 'Completed';
+                  else if (m.status === 'in_progress') when = m.target_date ? `In progress &middot; ${late ? 'was due' : 'due'} ${fmtDay(m.target_date)}` : 'In progress';
+                  else if (m.status === 'skipped') when = 'Not needed';
+                  else when = m.target_date ? `Due ${fmtDay(m.target_date)}` : '';
+                  return `
+                    <div class="tl-i ${m.status === 'completed' ? 'done' : m.status === 'in_progress' ? 'now' : ''}">
+                      <h4>${escapeHtml(m.title)}</h4>
+                      ${m.description ? `<p>${escapeHtml(m.description)}</p>` : ''}
+                      ${m.completion_notes ? `<p>${escapeHtml(m.completion_notes)}</p>` : ''}
+                      ${when ? `<div class="when${late ? ' late' : ''}">${when}</div>` : ''}
+                    </div>`;
+                }).join('')}
               </div>
-            ` : ''}
+            ` : '<p style="font-size:13px;color:var(--muted)">The stages will appear here once the plan is agreed.</p>'}
+          </div>
+
+          <div class="ring-wrap">
+            <div class="ring">
+              <svg width="132" height="132" viewBox="0 0 132 132">
+                <defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#2bbcb3"/><stop offset="100%" stop-color="#229e96"/>
+                </linearGradient></defs>
+                <circle class="tr" cx="66" cy="66" r="58" fill="none" stroke-width="9"/>
+                <circle class="fg" cx="66" cy="66" r="58" fill="none" stroke-width="9"
+                        stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - pct / 100)).toFixed(1)}"/>
+              </svg>
+              <div class="lbl"><b>${pct}%</b><span>Complete</span></div>
+            </div>
+            ${ringSub.length || subLine.length ? `
+              <div class="sub">
+                ${ringSub.length ? `<b>${ringSub[0]}</b>` : ''}
+                ${subLine.join(' &middot; ')}
+              </div>` : ''}
+            ${stage ? `<div class="sub">Now: <b style="display:inline;font-size:12px">${escapeHtml(stage.title)}</b></div>` : ''}
           </div>
         </div>
-      `;
+
+        <div class="p-story">
+          <p class="eyebrow">What has happened</p>
+          ${story.length ? `
+            <div class="story">
+              ${collapseActivity(story).map(a => `
+                <div class="story-i">
+                  <span class="d">${storyDate(a.created_at)}</span>
+                  <span class="b">${activityText(a)}${a._count > 1 ? ` <span class="activity-count">&times;${a._count}</span>` : ''}</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : '<p style="font-size:13px;color:var(--muted);margin-top:12px">Nothing yet — this fills in as work happens.</p>'}
+        </div>
+      `, 'project');
     } catch (err) {
       $('#mainContent').innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
     }
@@ -692,7 +861,8 @@ if ('serviceWorker' in navigator) {
   // ===== RENDER: PLAN VIEW =====
   async function renderPlan(projectId) {
     state.projectId = projectId;
-    renderLayout('<div class="loading"><div class="spinner"></div> Loading plan...</div>', 'project');
+    // 'plan', not 'project' — the rail was lighting Overview while you sat on the plan
+    renderLayout('<div class="loading"><div class="spinner"></div> Loading plan&hellip;</div>', 'plan');
 
     try {
       const res = await api(`/portal/projects/${projectId}/plan`);
@@ -1210,7 +1380,7 @@ if ('serviceWorker' in navigator) {
     app.innerHTML = `
       <div class="login-page">
         <div class="login-card">
-          <div class="login-logo"><span class="accent">{</span> kaymen.dev <span class="accent">}</span></div>
+          <div class="login-logo"><span class="mark">K</span><span>kaymen<span class="accent">.</span>dev</span></div>
           <h2 class="login-title">Set Up Your Password</h2>
           <div id="inviteMsg"><div class="loading"><div class="spinner"></div> Validating invite...</div></div>
           <form id="inviteForm" style="display:none">

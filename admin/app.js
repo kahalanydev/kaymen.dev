@@ -419,7 +419,7 @@ if ('serviceWorker' in navigator) {
     app.innerHTML = `
       <div class="login-page">
         <div class="login-card">
-          <div class="login-logo"><span class="accent">{</span> kaymen.dev <span class="accent">}</span></div>
+          <div class="login-logo"><span class="mark">K</span><span>kaymen<span class="accent">.</span>dev</span></div>
           <h2 class="login-title">Admin Login</h2>
           <div id="loginMsg">${oauthError ? `<div class="alert alert-error">${escapeHtml(errorMessages[oauthError] || 'Sign-in failed')}</div>` : ''}</div>
           ${googleEnabled ? `
@@ -496,7 +496,7 @@ if ('serviceWorker' in navigator) {
     app.innerHTML = `
       <div class="login-page">
         <div class="login-card">
-          <div class="login-logo"><span class="accent">{</span> kaymen.dev <span class="accent">}</span></div>
+          <div class="login-logo"><span class="mark">K</span><span>kaymen<span class="accent">.</span>dev</span></div>
           <h2 class="login-title">Change Password</h2>
           <div class="alert alert-warning">You must change your password before continuing.</div>
           <div id="cpError"></div>
@@ -566,6 +566,9 @@ if ('serviceWorker' in navigator) {
     const counts = state.navCounts || {};
     const bottomNavItems = navItems.filter(n => n.id !== 'settings');
     const wide = opts && opts.wide ? ' wide' : '';
+    // this wipes the whole shell, so the projects console can never still be
+    // mounted afterwards — every other page render invalidates it for free
+    con.mounted = false;
 
     app.innerHTML = `
       <div class="mobile-top-bar" id="mobileTopBar">
@@ -1707,949 +1710,704 @@ if ('serviceWorker' in navigator) {
     }
   }
 
-  // ===== RENDER: PROJECTS =====
-  async function renderProjects() {
+  // ===== RENDER: PROJECTS — DENSE CONSOLE =====
+  /* One screen, two panes: the project list left, the selected project entire on
+     the right. Both #/projects and #/projects/:id land here, and picking a project
+     swaps the right pane only — no navigation round-trip, which is the whole point
+     of the direction (handoff §3.1). Selection moves the hash with replaceState so
+     the router is never re-entered; renderLayout() clears `mounted`, so rendering
+     any other page invalidates the console for free.
+
+     The Claude Code pane is deliberately gone (handoff §1). `cc.*` stays whole and
+     functional for the Settings pairing card — it simply has no widget here. */
+  const con = { mounted: false, projects: [], selected: null, detail: null, filter: '', planMode: null };
+
+  const PROJ_STATUS = ['planning', 'proposed', 'approved', 'in_progress', 'review', 'completed', 'maintenance', 'archived'];
+  const PROJ_BADGE = {
+    planning: 'badge-gray', proposed: 'badge-yellow', approved: 'badge-blue', in_progress: 'badge-blue',
+    review: 'badge-yellow', completed: 'badge-green', maintenance: 'badge-green', archived: 'badge-gray',
+  };
+  // the left pane's reading order: what is moving, then what is waiting, then what is done
+  const PROJ_GROUPS = [
+    ['in_progress', 'In progress'], ['review', 'In review'], ['approved', 'Approved'],
+    ['proposed', 'Proposed'], ['planning', 'Planning'], ['maintenance', 'Maintenance'],
+    ['completed', 'Completed'], ['archived', 'Archived'],
+  ];
+  const MS_STATUS = ['upcoming', 'in_progress', 'completed', 'skipped'];
+  const TICKET_STATUS = ['open', 'in_progress', 'review', 'completed', 'closed'];
+
+  /* SQLite hands back both "2026-08-16 10:11:12" and bare "2026-08-16". The +'Z'
+     trick used elsewhere in this file silently yields Invalid Date on the second. */
+  function toDate(s) {
+    if (!s) return null;
+    const str = String(s);
+    const d = new Date(str.length <= 10 ? str + 'T00:00:00Z' : str.replace(' ', 'T') + 'Z');
+    return isNaN(d.getTime()) ? null : d;
+  }
+  /* Formatted in UTC, which is what the column holds. Local formatting turns a
+     bare "2026-08-29" into 28 Aug for anyone west of Greenwich — a target date
+     that silently reads a day early is worse than no date at all. */
+  function fmtDay(s) {
+    const d = toDate(s);
+    return d ? d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', timeZone: 'UTC' }) : null;
+  }
+  function daysTo(s) { const d = toDate(s); return d ? Math.round((d - new Date()) / 86400000) : null; }
+  function daysSince(s) { const d = toDate(s); return d ? Math.round((new Date() - d) / 86400000) : null; }
+  // the activity column is narrow: "2h" fits where "2 hours ago" does not
+  function shortAgo(s) {
+    const d = toDate(s);
+    if (!d) return '';
+    const sec = Math.floor((new Date() - d) / 1000);
+    if (sec < 3600) return Math.max(1, Math.floor(sec / 60)) + 'm';
+    if (sec < 86400) return Math.floor(sec / 3600) + 'h';
+    return Math.floor(sec / 86400) + 'd';
+  }
+  function parseTech(v) {
+    if (!v) return [];
+    try { const a = JSON.parse(v); return Array.isArray(a) ? a : [String(a)]; }
+    catch { return String(v).split(/[,·]/).map(s => s.trim()).filter(Boolean); }
+  }
+  function safeUrl(u) { return /^https?:\/\//i.test(u || '') ? u : null; }
+
+  async function renderProjects() { return renderConsole(null); }
+  async function renderProjectDetail(projectId) { return renderConsole(projectId); }
+
+  async function renderConsole(selectedId) {
+    state.page = 'projects';  // one rail item lights for both routes
+
+    // already on screen: this is a selection or a refresh, not a page load
+    if (con.mounted && $('#cPanes')) return loadConsoleProjects(selectedId || con.selected);
+
+    con.filter = '';
+    con.planMode = null;
     renderLayout(`
-      <div class="page-header" style="display:flex;justify-content:space-between;align-items:start">
-        <div><h1>Projects</h1><p>Manage client projects</p></div>
-        <button class="btn btn-primary" id="newProjectBtn" style="width:auto">New Project</button>
-      </div>
-      <div class="loading"><div class="spinner"></div> Loading...</div>
-    `);
-
-    try {
-      const res = await api('/admin/projects');
-      const projects = res.data.projects;
-
-      const statusColors = { planning: 'badge-gray', proposed: 'badge-yellow', approved: 'badge-blue', in_progress: 'badge-blue', review: 'badge-yellow', completed: 'badge-green', maintenance: 'badge-green', archived: 'badge-gray' };
-
-      $('#mainContent').innerHTML = `
-        <div class="page-header" style="display:flex;justify-content:space-between;align-items:start">
-          <div><h1>Projects</h1><p>Manage client projects</p></div>
-          <button class="btn btn-primary" id="newProjectBtn" style="width:auto">New Project</button>
+      <div class="c-top">
+        <h1>Projects</h1>
+        <span class="badge badge-gray" id="cSummary">&nbsp;</span>
+        <div class="c-k">
+          <input id="cFilter" placeholder="Jump to a project" autocomplete="off" spellcheck="false" aria-label="Filter projects">
+          <kbd>&#8984;</kbd><kbd>K</kbd>
         </div>
+        <button class="btn btn-secondary btn-sm" id="newProjectBtn">New project</button>
+      </div>
+      <div class="c-new" id="newProject" hidden>${newProjectForm()}</div>
+      <div class="c-panes" id="cPanes">
+        <div class="c-list" id="cList"><div class="loading"><div class="spinner"></div></div></div>
+        <div class="c-detail" id="cDetail"></div>
+      </div>
+    `, { wide: true });
+    con.mounted = true;
 
-        <div id="newProjectForm" style="display:none;margin-bottom:24px" class="card">
-          <div class="card-header"><span class="card-title">Create Project</span></div>
-          <div id="newProjectMsg"></div>
-          <form id="createProjectForm">
-            <div style="display:flex;gap:12px;flex-wrap:wrap">
-              <div class="form-group" style="flex:1;min-width:200px">
-                <label>Organization</label>
-                <select id="projOrg" required style="width:100%;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font)">
-                  <option value="">Select org...</option>
-                </select>
-              </div>
-              <div class="form-group" style="flex:2;min-width:200px">
-                <label>Project Name</label>
-                <input type="text" id="projName" required placeholder="e.g. PCG Website Redesign" style="width:100%;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font)">
-              </div>
+    wireConsoleShell();
+    await loadConsoleProjects(selectedId);
+  }
+
+  function newProjectForm() {
+    return `
+      <div class="card">
+        <div class="card-header"><span class="card-title">Create project</span></div>
+        <div id="newProjectMsg"></div>
+        <form id="createProjectForm">
+          <div class="grid-2">
+            <div class="form-group">
+              <label>Organization</label>
+              <select id="projOrg" required><option value="">Select org&hellip;</option></select>
             </div>
             <div class="form-group">
-              <label>Description</label>
-              <input type="text" id="projDesc" placeholder="Brief description" style="width:100%;padding:10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font)">
+              <label>Project name</label>
+              <input type="text" id="projName" required placeholder="e.g. PCG Website Redesign">
             </div>
-            <button type="submit" class="btn btn-primary" style="width:auto">Create</button>
-          </form>
-        </div>
-
-        <div class="card" style="padding:0">
-          <div class="table-wrap">
-            <table class="mobile-cards">
-              <thead><tr><th>Project</th><th>Client</th><th>Status</th><th>Progress</th><th>Tickets</th><th>Last Activity</th></tr></thead>
-              <tbody>
-                ${projects.length === 0 ? '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:32px">No projects yet</td></tr>' :
-                  projects.map(p => `<tr data-project-id="${p.id}" style="cursor:pointer">
-                    <td data-label="Project" style="color:var(--text);font-weight:500">${escapeHtml(p.name)}</td>
-                    <td data-label="Client">${escapeHtml(p.org_name)}</td>
-                    <td data-label="Status"><span class="badge ${statusColors[p.status] || 'badge-gray'}">${p.status.replace(/_/g, ' ')}</span></td>
-                    <td data-label="Progress"><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--surface-3);border-radius:3px;min-width:60px"><div style="height:100%;background:var(--accent);border-radius:3px;width:${p.progress_percent}%"></div></div><span style="font-size:11px">${p.progress_percent}%</span></div></td>
-                    <td data-label="Tickets">${p.open_tickets > 0 ? `<span class="badge badge-yellow">${p.open_tickets} open</span>` : '<span style="color:var(--text-dim)">0</span>'}</td>
-                    <td data-label="Activity">${p.last_activity ? timeAgo(p.last_activity) : '-'}</td>
-                  </tr>`).join('')}
-              </tbody>
-            </table>
           </div>
-        </div>
-      `;
+          <div class="form-group">
+            <label>Description</label>
+            <input type="text" id="projDesc" placeholder="What the project is actually doing">
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">Create</button>
+        </form>
+      </div>`;
+  }
 
-      // New project toggle
-      $('#newProjectBtn').addEventListener('click', async () => {
-        const form = $('#newProjectForm');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        if (form.style.display === 'block') {
-          // Load orgs into select
-          const orgsRes = await api('/admin/clients');
-          const select = $('#projOrg');
-          select.innerHTML = '<option value="">Select org...</option>' +
-            orgsRes.data.organizations.map(o => `<option value="${o.id}">${escapeHtml(o.name)}</option>`).join('');
-        }
-      });
-
-      // Create project handler
-      $('#createProjectForm').addEventListener('submit', async (e) => {
+  function wireConsoleShell() {
+    const filter = $('#cFilter');
+    filter.addEventListener('input', () => { con.filter = filter.value.trim(); renderConsoleList(); });
+    filter.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { filter.value = ''; con.filter = ''; renderConsoleList(); filter.blur(); }
+      if (e.key === 'Enter') {
+        const first = $('#cList .c-li');
+        if (first) { selectConsoleProject(first.dataset.projectId); filter.blur(); }
+      }
+    });
+    // ⌘K / Ctrl-K jumps to the filter from anywhere on the console
+    if (!con.keyHandler) {
+      con.keyHandler = (e) => {
+        if (e.key !== 'k' || !(e.metaKey || e.ctrlKey)) return;
+        const box = $('#cFilter');
+        if (!box) return;
         e.preventDefault();
-        try {
-          await api('/admin/projects', {
-            method: 'POST',
-            body: JSON.stringify({ org_id: $('#projOrg').value, name: $('#projName').value, description: $('#projDesc').value })
-          });
-          renderProjects();
-        } catch (err) {
-          $('#newProjectMsg').innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
-        }
-      });
+        box.focus();
+        box.select();
+      };
+      window.addEventListener('keydown', con.keyHandler);
+    }
 
-      // Click to view project
-      $$('tr[data-project-id]').forEach(row => row.addEventListener('click', () => {
-        state.page = 'projectDetail';
-        state.projectDetailId = row.dataset.projectId;
-        window.location.hash = `#/projects/${row.dataset.projectId}`;
-        render();
-      }));
+    $('#newProjectBtn').addEventListener('click', async () => {
+      const wrap = $('#newProject');
+      wrap.hidden = !wrap.hidden;
+      if (wrap.hidden) return;
+      $('#projName').focus();
+      try {
+        const orgs = await api('/admin/clients');
+        $('#projOrg').innerHTML = '<option value="">Select org&hellip;</option>' +
+          orgs.data.organizations.map(o => `<option value="${o.id}">${escapeHtml(o.name)}</option>`).join('');
+      } catch (err) {
+        $('#newProjectMsg').innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
+      }
+    });
+
+    $('#createProjectForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const res = await api('/admin/projects', {
+          method: 'POST',
+          body: JSON.stringify({ org_id: $('#projOrg').value, name: $('#projName').value, description: $('#projDesc').value }),
+        });
+        $('#newProject').hidden = true;
+        e.target.reset();
+        await loadConsoleProjects(res.data.project.id);
+      } catch (err) {
+        $('#newProjectMsg').innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
+      }
+    });
+  }
+
+  async function loadConsoleProjects(selectedId) {
+    try {
+      const res = await api('/admin/projects');
+      con.projects = res.data.projects || [];
     } catch (err) {
-      $('#mainContent').innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
+      const el = $('#cList');
+      if (el) el.innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
+      return;
+    }
+
+    const ids = con.projects.map(p => p.id);
+    // an unknown id (deleted, or a stale link) falls back to the top of the list
+    // rather than leaving the right pane dead
+    let sel = selectedId && ids.includes(selectedId) ? selectedId : null;
+    if (!sel) sel = con.projects.length ? con.projects[0].id : null;
+    con.selected = sel;
+
+    if (sel) {
+      state.projectDetailId = sel;
+      if (window.location.hash !== `#/projects/${sel}`) history.replaceState(null, '', `#/projects/${sel}`);
+    }
+
+    renderConsoleList();
+    if (sel) await loadConsoleDetail(sel);
+    else $('#cDetail').innerHTML = '<div class="empty-state"><p>No projects yet. Create one to get started.</p></div>';
+  }
+
+  function renderConsoleList() {
+    const el = $('#cList');
+    if (!el) return;
+    const keepScroll = el.scrollTop;
+    const q = con.filter.toLowerCase();
+    const shown = q
+      ? con.projects.filter(p => `${p.name} ${p.org_name || ''}`.toLowerCase().includes(q))
+      : con.projects;
+
+    let html = '';
+    for (const [status, label] of PROJ_GROUPS) {
+      const rows = shown.filter(p => p.status === status);
+      if (rows.length) html += `<div class="c-lh">${label}</div>` + rows.map(consoleRow).join('');
+    }
+    // a status the group list has never heard of still has to reach the screen
+    const known = PROJ_GROUPS.map(g => g[0]);
+    const rest = shown.filter(p => !known.includes(p.status));
+    if (rest.length) html += '<div class="c-lh">Other</div>' + rest.map(consoleRow).join('');
+
+    el.innerHTML = html || `<div class="c-lh">${con.projects.length ? 'No match' : 'No projects yet'}</div>`;
+    el.scrollTop = keepScroll;
+
+    $$('#cList .c-li').forEach(r => r.addEventListener('click', () => selectConsoleProject(r.dataset.projectId)));
+
+    const active = con.projects.filter(p => ['in_progress', 'review', 'approved'].includes(p.status)).length;
+    const sum = $('#cSummary');
+    if (sum) sum.textContent = `${active} active`;
+  }
+
+  function consoleRow(p) {
+    const open = p.open_tickets || 0;
+    // hot means severity, never volume — the two extra tones are restricted to it
+    const hot = (p.urgent_tickets || 0) > 0 ? ' hot' : '';
+    return `
+      <div class="c-li${p.id === con.selected ? ' on' : ''}" data-project-id="${p.id}">
+        <div>
+          <div class="n">${escapeHtml(p.name)}</div>
+          <div class="o">${escapeHtml(p.org_name || '')}</div>
+        </div>
+        <span class="c${hot}">${open || '&mdash;'}</span>
+        <span class="bar"><i style="width:${p.progress_percent || 0}%"></i></span>
+      </div>`;
+  }
+
+  async function selectConsoleProject(projectId) {
+    if (!projectId || projectId === con.selected) return;
+    con.selected = projectId;
+    con.planMode = null;
+    state.projectDetailId = projectId;
+    // replaceState, not location.hash: assigning the hash would re-enter the
+    // router and rebuild the whole screen, which is the round-trip we removed
+    history.replaceState(null, '', `#/projects/${projectId}`);
+    $$('#cList .c-li').forEach(r => r.classList.toggle('on', r.dataset.projectId === projectId));
+    await loadConsoleDetail(projectId);
+  }
+
+  async function loadConsoleDetail(projectId) {
+    const el = $('#cDetail');
+    if (!el) return;
+    el.innerHTML = '<div class="loading"><div class="spinner"></div> Loading&hellip;</div>';
+    try {
+      const res = await api(`/admin/projects/${projectId}`);
+      if (con.selected !== projectId) return;  // a faster click already won
+      con.detail = res.data;
+      renderConsoleDetail(projectId, res.data);
+    } catch (err) {
+      el.innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
     }
   }
 
-  // ===== RENDER: PROJECT DETAIL (admin) =====
-  async function renderProjectDetail(projectId) {
-    renderLayout(`
-      <div class="page-header"><h1>Project</h1></div>
-      <div class="loading"><div class="spinner"></div> Loading...</div>
-    `);
+  /* Refresh after a mutation. Almost everything here moves a number the left pane
+     shows too — progress, status group, open-ticket count — so the list is
+     re-fetched by default rather than drifting out of agreement with the detail. */
+  async function refreshConsole(projectId, opts) {
+    if (!opts || opts.list !== false) {
+      try {
+        const res = await api('/admin/projects');
+        con.projects = res.data.projects || [];
+        renderConsoleList();
+      } catch { /* the detail reload below will surface anything real */ }
+    }
+    await loadConsoleDetail(projectId);
+  }
 
-    try {
-      const res = await api(`/admin/projects/${projectId}`);
-      const { project, milestones, plan, members, recentActivity } = res.data;
+  function renderConsoleDetail(projectId, data) {
+    const { project, milestones, plan, members, recentActivity } = data;
+    const el = $('#cDetail');
+    const doneCount = milestones.filter(m => m.status === 'completed').length;
+    const started = project.start_date || project.created_at;
+    const active = daysSince(started);
+    const left = project.target_date ? daysTo(project.target_date) : null;
+    const live = safeUrl(project.live_url);
+    const repo = safeUrl(project.repo_url);
 
-      const statusOptions = ['planning', 'proposed', 'approved', 'in_progress', 'review', 'completed', 'maintenance', 'archived'];
-      const statusColors = { planning: 'badge-gray', proposed: 'badge-yellow', approved: 'badge-blue', in_progress: 'badge-blue', review: 'badge-yellow', completed: 'badge-green', maintenance: 'badge-green', archived: 'badge-gray' };
-      const msStatusColors = { upcoming: 'badge-gray', in_progress: 'badge-blue', completed: 'badge-green', skipped: 'badge-gray' };
+    const sub = [];
+    if (project.org_name) sub.push(escapeHtml(project.org_name));
+    if (fmtDay(started)) sub.push(`started ${fmtDay(started)}`);
+    if (fmtDay(project.target_date)) sub.push(`target ${fmtDay(project.target_date)}`);
+    if (project.scaffolded_at && fmtDay(project.scaffolded_at)) sub.push(`scaffolded ${fmtDay(project.scaffolded_at)}`);
+    if (repo) sub.push(`<a href="${escapeHtml(repo)}" target="_blank" rel="noopener">repo &#8599;</a>`);
+    if (live) sub.push(`<a href="${escapeHtml(live)}" target="_blank" rel="noopener">${escapeHtml(live.replace(/^https?:\/\//i, ''))} &#8599;</a>`);
+    if (project.description) sub.push(escapeHtml(project.description));
 
-      $('#mainContent').innerHTML = `
-        <div style="margin-bottom:16px">
-          <a href="#/projects" style="color:var(--text-secondary);text-decoration:none;font-size:13px">\u2190 All Projects</a>
+    const leftClass = left === null ? '' : left < 0 ? ' class="hot"' : left <= 7 ? ' class="warn"' : '';
+    const leftText = left === null ? '&mdash;' : left < 0 ? `−${Math.abs(left)}` : String(left);
+
+    el.innerHTML = `
+      <div class="c-dh">
+        <h2>${escapeHtml(project.name)}</h2>
+        <span class="badge ${PROJ_BADGE[project.status] || 'badge-gray'}">${escapeHtml(project.status.replace(/_/g, ' '))}</span>
+        <div class="sp">
+          ${parseTech(project.tech_stack).map(t => `<span class="badge badge-gray">${escapeHtml(t)}</span>`).join('')}
+          <select class="c-sel" id="statusSelect" aria-label="Project status">
+            ${PROJ_STATUS.map(s => `<option value="${s}"${s === project.status ? ' selected' : ''}>${s.replace(/_/g, ' ')}</option>`).join('')}
+          </select>
         </div>
-        <div class="page-header" style="display:flex;justify-content:space-between;align-items:start">
-          <div>
-            <h1>${escapeHtml(project.name)}</h1>
-            <p>${escapeHtml(project.org_name)} \u2022 ${escapeHtml(project.description || '')}</p>
-          </div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <select id="statusSelect" style="padding:8px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:13px">
-              ${statusOptions.map(s => `<option value="${s}" ${s === project.status ? 'selected' : ''}>${s.replace(/_/g, ' ')}</option>`).join('')}
-            </select>
-          </div>
-        </div>
+      </div>
+      ${sub.length ? `<p class="c-sub">${sub.join(' &middot; ')}</p>` : ''}
+      <div id="cMsg"></div>
 
-        <div id="statusMsg"></div>
+      <div class="c-stats">
+        <div class="c-stat"><b>${project.progress_percent || 0}%</b><span>Progress</span></div>
+        <div class="c-stat"><b>${doneCount} / ${milestones.length}</b><span>Milestones</span></div>
+        <div class="c-stat"><b id="cStatOpen">&mdash;</b><span>Open tickets</span></div>
+        <div class="c-stat"><b>${active === null ? '&mdash;' : active}</b><span>Days active</span></div>
+        <div class="c-stat"><b${leftClass}>${leftText}</b><span>Days remaining</span></div>
+      </div>
 
-        <div style="display:flex;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;margin-bottom:24px">
-          <div style="flex:1;text-align:center">
-            <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px">Progress</div>
-            <div style="font-size:24px;font-weight:700;font-family:var(--mono);color:var(--accent)">${project.progress_percent}%</div>
-          </div>
-          <div style="flex:1;text-align:center">
-            <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px">Milestones</div>
-            <div style="font-size:24px;font-weight:700;font-family:var(--mono)">${milestones.filter(m=>m.status==='completed').length}/${milestones.length}</div>
-          </div>
-          <div style="flex:1;text-align:center">
-            <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px">Target</div>
-            <div style="font-size:14px;font-weight:500">${project.target_date ? new Date(project.target_date+'Z').toLocaleDateString() : '-'}</div>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <!-- Milestones -->
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">Milestones</span>
-              <button class="btn btn-secondary btn-sm" id="addMsBtn">+ Add</button>
+      <div class="c-cols">
+        <div class="c-blk">
+          <h4>Milestones<button class="hact" id="addMsBtn">Add</button></h4>
+          <div id="addMsForm" hidden>
+            <div class="c-inline">
+              <input type="text" id="msTitle" placeholder="Milestone title">
+              <input type="date" id="msDate" aria-label="Target date">
+              <button class="btn btn-primary btn-sm" id="saveMsBtn">Save</button>
             </div>
-            <div id="addMsForm" style="display:none;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
-              <div style="display:flex;gap:8px">
-                <input type="text" id="msTitle" placeholder="Milestone title" style="flex:1;padding:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:13px">
-                <button class="btn btn-primary btn-sm" id="saveMsBtn">Save</button>
-              </div>
-            </div>
-            ${milestones.length === 0 ? '<p style="color:var(--text-dim);font-size:13px">No milestones yet.</p>' :
-              milestones.map(m => `
-                <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--surface-3)" data-ms-id="${m.id}">
-                  <select class="ms-status-select" data-ms-id="${m.id}" style="padding:4px 8px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;min-width:90px">
-                    ${['upcoming','in_progress','completed','skipped'].map(s => `<option value="${s}" ${s===m.status?'selected':''}>${s.replace(/_/g,' ')}</option>`).join('')}
-                  </select>
-                  <span style="flex:1;font-size:14px">${escapeHtml(m.title)}</span>
-                  <button class="btn btn-danger btn-sm ms-delete" data-ms-id="${m.id}" style="padding:2px 8px;font-size:10px">\u2715</button>
-                </div>
-              `).join('')}
+          </div>
+          ${milestones.length
+            ? `<div class="c-ms">${milestones.map(milestoneRow).join('')}</div>`
+            : '<p class="c-none">No milestones yet.</p>'}
+
+          <div class="sub-blk">
+            <h4>Plan${plan ? '<button class="hact" data-plan="view">View</button>' : ''}<button class="hact" data-plan="edit">${plan ? 'Edit' : 'Create'}</button>${plan ? '<button class="hact" data-plan="history">History</button>' : ''}</h4>
+            <div class="c-meta">${planMeta(plan, project)}</div>
           </div>
 
-          <!-- Claude Code (primary position) -->
-          <div class="card cc-card" style="display:flex;flex-direction:column">
-            <div class="card-header">
-              <span class="card-title" style="display:flex;align-items:center;gap:8px">
-                <span style="font-family:var(--mono);font-size:14px;color:var(--accent)">&gt;_</span> Claude Code
-              </span>
-              <div style="display:flex;align-items:center;gap:8px" id="ccHeaderActions"></div>
+          <div class="sub-blk">
+            <h4>Members<button class="hact" id="addMemberBtn">Add</button></h4>
+            <div id="addMemberForm" hidden>
+              <div class="c-inline"><input type="text" id="memberSearch" placeholder="Search by name or email&hellip;"></div>
+              <div id="memberSearchResults"></div>
             </div>
-            <div id="ccWidgetBody" style="flex:1;display:flex;flex-direction:column">
-              ${!cc.isConnected() ? `
-                <div style="text-align:center;padding:32px 16px;color:var(--text-dim);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center">
-                  <div style="font-size:32px;margin-bottom:12px;opacity:0.3">&#9889;</div>
-                  <p style="margin-bottom:12px;font-size:13px">Connect your Claude Code server<br>to use AI on this project.</p>
-                  <a href="#/settings" class="btn btn-secondary btn-sm" style="text-decoration:none">Configure in Settings</a>
-                </div>
-              ` : `
-                <div id="ccChatArea" style="flex:1;display:flex;flex-direction:column">
-                  <div id="ccMessages" class="cc-messages"></div>
-                  <div id="ccActivityBar" class="cc-activity-bar cc-activity-hidden">
-                    <div class="cc-activity-pulse"></div>
-                    <span class="cc-activity-text" id="ccActivityText">Thinking...</span>
-                  </div>
-                  <div style="display:flex;gap:8px;padding:12px 0 0">
-                    <input type="text" id="ccMsgInput" placeholder="Ask Claude about this project..." style="flex:1;padding:10px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:13px">
-                    <button class="btn btn-primary btn-sm" id="ccSendBtn" style="width:auto;padding:10px 20px">Send</button>
-                    <button class="btn btn-danger btn-sm" id="ccStopBtn" style="width:auto;padding:10px 14px;display:none">Stop</button>
-                  </div>
-                </div>
-              `}
-            </div>
+            ${members.length
+              ? `<div class="c-av">${members.map(m => `
+                  <span class="avatar" data-user-id="${m.user_id}" data-name="${escapeHtml(m.name || m.email)}"
+                        title="${escapeHtml(m.name || '')} (${escapeHtml(m.email)}) &mdash; click to remove">${initials(m.name || m.email)}</span>`).join('')}</div>`
+              : '<p class="c-none">No members assigned.</p>'}
           </div>
         </div>
 
-        <div class="grid-2">
-          <!-- Plan -->
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">Project Plan</span>
-              <div style="display:flex;align-items:center;gap:8px">
-                ${plan ? `<span style="font-size:11px;color:var(--text-dim)">v${plan.version}</span>` : ''}
-                ${plan ? `<button class="btn btn-secondary btn-sm" id="planHistoryBtn">History</button>` : ''}
-                <button class="btn btn-secondary btn-sm" id="editPlanBtn">${plan ? 'Edit' : 'Create'} Plan</button>
-              </div>
-            </div>
-            <div id="planEditor" style="display:none;margin-bottom:16px">
-              <div style="display:flex;gap:4px;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:8px">
-                <button class="btn btn-sm planTabBtn active" data-tab="write" style="font-size:12px">Write</button>
-                <button class="btn btn-sm planTabBtn" data-tab="preview" style="font-size:12px">Preview</button>
-              </div>
-              <div id="planWriteTab">
-                <textarea id="planContent" style="width:100%;min-height:300px;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--mono);font-size:13px;resize:vertical;line-height:1.6">${plan ? escapeHtml(plan.content) : ''}</textarea>
-              </div>
-              <div id="planPreviewTab" style="display:none;min-height:300px;padding:16px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);overflow-y:auto;max-height:600px" class="md-rendered"></div>
-              <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
-                <button class="btn btn-primary btn-sm" id="savePlanBtn">Save Plan</button>
-                ${['planning', 'proposed'].includes(project.status) && plan ? `<button class="btn btn-secondary btn-sm" id="proposePlanBtn" style="background:var(--success);border-color:var(--success);color:#fff">${project.status === 'proposed' ? 'Re-send to Client' : 'Send to Client'}</button>` : ''}
-                <span id="planMsg" style="font-size:12px"></span>
-              </div>
-            </div>
-            <div id="planVersionsPanel" style="display:none;margin-bottom:16px"></div>
-            ${plan ? `<div id="planDisplay" class="md-rendered" style="max-height:300px;overflow-y:auto;font-size:13px;line-height:1.6">${renderMarkdown(escapeHtml(plan.content))}</div>` :
-              '<p style="color:var(--text-dim);font-size:13px">No plan created yet.</p>'}
-          </div>
+        <div class="c-blk">
+          <h4>Tickets</h4>
+          <div id="ticketsSection"><div class="loading"><div class="spinner"></div></div></div>
 
-          <!-- Tickets -->
-          <div class="card">
-            <div class="card-header"><span class="card-title">Tickets</span></div>
-            <div id="ticketsSection"><div class="loading"><div class="spinner"></div> Loading tickets...</div></div>
+          <div class="c-log">
+            <h4>Activity</h4>
+            ${recentActivity.length
+              ? recentActivity.slice(0, 8).map(activityRow).join('') +
+                // say what was dropped rather than letting eight rows read as all of it
+                (recentActivity.length > 8
+                  ? `<div class="c-lr"><span class="c-none">+${recentActivity.length - 8} older</span><span class="t"></span></div>`
+                  : '')
+              : '<p class="c-none">No activity yet.</p>'}
           </div>
         </div>
+      </div>
 
-        <div class="grid-2">
-          <!-- Members -->
-          <div class="card">
-            <div class="card-header">
-              <span class="card-title">Project Members</span>
-              <button class="btn btn-secondary btn-sm" id="addMemberBtn">+ Add Member</button>
-            </div>
-            <div id="addMemberForm" style="display:none;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">
-              <div style="display:flex;gap:8px;align-items:center">
-                <input type="text" id="memberSearch" placeholder="Search by name or email..." style="flex:1;padding:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-family:var(--font);font-size:13px">
-              </div>
-              <div id="memberSearchResults" style="margin-top:8px"></div>
-            </div>
-            ${members.length === 0 ? '<p style="color:var(--text-dim);font-size:13px;padding:4px 0">No members assigned. Members from other organizations can be added here for cross-org access.</p>' :
-              members.map(m => `
-                <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--surface-3)">
-                  <div style="width:32px;height:32px;border-radius:50%;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--text-dim)">${escapeHtml((m.name || '?')[0].toUpperCase())}</div>
-                  <div style="flex:1">
-                    <div style="font-size:14px;font-weight:500">${escapeHtml(m.name)}</div>
-                    <div style="font-size:12px;color:var(--text-dim)">${escapeHtml(m.email)} <span class="badge badge-gray" style="font-size:10px">${m.user_role}</span> <span class="badge badge-blue" style="font-size:10px">${m.role}</span></div>
-                  </div>
-                  <button class="btn btn-danger btn-sm member-remove" data-user-id="${m.user_id}" data-name="${escapeHtml(m.name).replace(/"/g, '&quot;')}" style="padding:2px 8px;font-size:10px">\u2715</button>
-                </div>
-              `).join('')}
-          </div>
+      <div class="c-panel" id="planPanel" hidden></div>
+    `;
 
-          <!-- Activity -->
-          <div class="card">
-            <div class="card-header"><span class="card-title">Recent Activity</span></div>
-            ${recentActivity.length === 0 ? '<p style="color:var(--text-dim);font-size:13px">No activity yet.</p>' : `
-              <div style="max-height:300px;overflow-y:auto">
-                ${recentActivity.map(a => {
-                  const d = a.details ? JSON.parse(a.details) : {};
-                  return `<div style="padding:8px 0;border-bottom:1px solid var(--surface-3);font-size:13px;color:var(--text-secondary)">
-                    <strong>${escapeHtml(a.user_name || a.user_email || 'System')}</strong> — ${a.action.replace(/_/g, ' ')}
-                    <span style="float:right;color:var(--text-dim);font-size:11px">${timeAgo(a.created_at)}</span>
-                  </div>`;
-                }).join('')}
-              </div>
-            `}
-          </div>
-        </div>
+    wireConsoleDetail(projectId, data);
+    loadConsoleTickets(projectId);
+  }
 
-      `;
+  function milestoneRow(m) {
+    const done = m.status === 'completed';
+    const now = m.status === 'in_progress';
+    const late = now && m.target_date && daysTo(m.target_date) < 0;
+    const day = fmtDay(m.target_date);
+    return `
+      <div class="c-m${done ? ' is-done' : ''}" data-ms-id="${m.id}">
+        <span class="mk${done ? ' done' : now ? ' now' : ''}"></span>
+        <span class="mn">${escapeHtml(m.title)}</span>
+        <span class="mrt">
+          ${day ? `<span class="md${late ? ' late' : ''}">${day}${late ? ` &middot; −${Math.abs(daysTo(m.target_date))}` : ''}</span>` : ''}
+          <select class="c-sel ms-status-select" data-ms-id="${m.id}" aria-label="Milestone status">
+            ${MS_STATUS.map(s => `<option value="${s}"${s === m.status ? ' selected' : ''}>${s.replace(/_/g, ' ')}</option>`).join('')}
+          </select>
+          <button class="mdel ms-delete" data-ms-id="${m.id}" title="Delete milestone" aria-label="Delete milestone">&#10005;</button>
+        </span>
+      </div>`;
+  }
 
-      // Status change handler
-      $('#statusSelect').addEventListener('change', async (e) => {
+  /* approved_at, not an inference from project.status — a project can be moved to
+     in_progress by hand without the client ever having pressed Approve, and this
+     line is the only place that difference is visible. */
+  function planMeta(plan, project) {
+    if (!plan) return 'No plan yet.';
+    const bits = [`<b>v${plan.version}</b>`];
+    if (plan.approved_at) bits.push(`approved ${fmtDay(plan.approved_at) || ''}`);
+    else if (project.status === 'proposed') bits.push('awaiting client approval');
+    else bits.push('not approved');
+    if (plan.updated_at) bits.push(`last edited ${fmtDay(plan.updated_at) || ''}`);
+    return bits.join(' &middot; ');
+  }
+
+  function activityRow(a) {
+    let d = {};
+    try { d = a.details ? JSON.parse(a.details) : {}; } catch { d = {}; }
+    const what = d.title || d.name || d.new_status || d.version || '';
+    return `
+      <div class="c-lr">
+        <span><b>${escapeHtml(a.user_name || a.user_email || 'System')}</b> ${escapeHtml(a.action.replace(/_/g, ' '))}${what ? ` &mdash; ${escapeHtml(String(what))}` : ''}${d.is_internal ? ' <em>internal</em>' : ''}</span>
+        <span class="t">${shortAgo(a.created_at)}</span>
+      </div>`;
+  }
+
+  function wireConsoleDetail(projectId, data) {
+    const { members } = data;
+
+    const note = (html) => {
+      const el = $('#cMsg');
+      if (!el) return;
+      el.innerHTML = html;
+      setTimeout(() => { const n = $('#cMsg'); if (n) n.innerHTML = ''; }, 2500);
+    };
+
+    // ----- project status
+    $('#statusSelect').addEventListener('change', async (e) => {
+      try {
+        await api(`/admin/projects/${projectId}`, { method: 'PATCH', body: JSON.stringify({ status: e.target.value }) });
+        await refreshConsole(projectId);
+      } catch (err) {
+        note(`<div class="alert alert-error">${escapeHtml(err.message)}</div>`);
+      }
+    });
+
+    // ----- milestones
+    $('#addMsBtn').addEventListener('click', () => {
+      const form = $('#addMsForm');
+      form.hidden = !form.hidden;
+      if (!form.hidden) $('#msTitle').focus();
+    });
+    const saveMilestone = async () => {
+      const title = $('#msTitle').value.trim();
+      if (!title) return;
+      try {
+        await api(`/admin/projects/${projectId}/milestones`, {
+          method: 'POST',
+          body: JSON.stringify({ title, target_date: $('#msDate').value || null }),
+        });
+        await refreshConsole(projectId);
+      } catch (err) { note(`<div class="alert alert-error">${escapeHtml(err.message)}</div>`); }
+    };
+    $('#saveMsBtn').addEventListener('click', saveMilestone);
+    $('#msTitle').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); saveMilestone(); } });
+
+    $$('.ms-status-select').forEach(sel => sel.addEventListener('change', async (e) => {
+      try {
+        await api(`/admin/milestones/${e.target.dataset.msId}`, { method: 'PATCH', body: JSON.stringify({ status: e.target.value }) });
+        await refreshConsole(projectId);
+      } catch (err) { note(`<div class="alert alert-error">${escapeHtml(err.message)}</div>`); }
+    }));
+
+    $$('.ms-delete').forEach(btn => btn.addEventListener('click', async () => {
+      if (!confirm('Delete this milestone?')) return;
+      try {
+        await api(`/admin/milestones/${btn.dataset.msId}`, { method: 'DELETE' });
+        await refreshConsole(projectId);
+      } catch (err) { note(`<div class="alert alert-error">${escapeHtml(err.message)}</div>`); }
+    }));
+
+    // ----- members
+    $('#addMemberBtn').addEventListener('click', () => {
+      const form = $('#addMemberForm');
+      form.hidden = !form.hidden;
+      if (!form.hidden) $('#memberSearch').focus();
+    });
+
+    let searchTimer;
+    $('#memberSearch').addEventListener('input', (e) => {
+      clearTimeout(searchTimer);
+      const q = e.target.value.trim();
+      const out = $('#memberSearchResults');
+      if (q.length < 2) { out.innerHTML = ''; return; }
+      searchTimer = setTimeout(async () => {
         try {
-          await api(`/admin/projects/${projectId}`, { method: 'PATCH', body: JSON.stringify({ status: e.target.value }) });
-          $('#statusMsg').innerHTML = `<div class="alert alert-success" style="margin-bottom:16px">Status updated to ${e.target.value}</div>`;
-          setTimeout(() => { const el = $('#statusMsg'); if(el) el.innerHTML=''; }, 2000);
-        } catch (err) { $('#statusMsg').innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`; }
-      });
+          const res = await api(`/admin/users/search?q=${encodeURIComponent(q)}`);
+          const taken = members.map(m => m.user_id);
+          const available = res.data.users.filter(u => !taken.includes(u.id));
+          if (!available.length) { out.innerHTML = '<p class="c-none">No matching users.</p>'; return; }
+          out.innerHTML = available.map(u => `
+            <div class="c-vr member-search-row" data-user-id="${u.id}">
+              <span class="avatar">${initials(u.name || u.email)}</span>
+              <span>${escapeHtml(u.name || '')} <span style="color:var(--muted)">${escapeHtml(u.email)}</span></span>
+              <span class="sp"><button class="btn btn-secondary btn-sm">Add</button></span>
+            </div>`).join('');
+          $$('.member-search-row').forEach(row => row.addEventListener('click', async () => {
+            try {
+              await api(`/admin/projects/${projectId}/members`, { method: 'POST', body: JSON.stringify({ user_id: row.dataset.userId }) });
+              await refreshConsole(projectId, { list: false });
+            } catch (err) { out.innerHTML = `<p class="c-none">${escapeHtml(err.message)}</p>`; }
+          }));
+        } catch (err) { out.innerHTML = `<p class="c-none">${escapeHtml(err.message)}</p>`; }
+      }, 300);
+    });
 
-      // Add milestone
-      $('#addMsBtn').addEventListener('click', () => {
-        const form = $('#addMsForm');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-      });
-      $('#saveMsBtn').addEventListener('click', async () => {
-        const title = $('#msTitle').value.trim();
-        if (!title) return;
-        try {
-          await api(`/admin/projects/${projectId}/milestones`, { method: 'POST', body: JSON.stringify({ title }) });
-          renderProjectDetail(projectId);
-        } catch (err) { alert(err.message); }
-      });
+    $$('.c-av .avatar').forEach(chip => chip.addEventListener('click', async () => {
+      if (!confirm(`Remove ${chip.dataset.name} from this project?`)) return;
+      try {
+        await api(`/admin/projects/${projectId}/members/${chip.dataset.userId}`, { method: 'DELETE' });
+        await refreshConsole(projectId, { list: false });
+      } catch (err) { note(`<div class="alert alert-error">${escapeHtml(err.message)}</div>`); }
+    }));
 
-      // Milestone status changes
-      $$('.ms-status-select').forEach(sel => sel.addEventListener('change', async (e) => {
-        try {
-          await api(`/admin/milestones/${e.target.dataset.msId}`, { method: 'PATCH', body: JSON.stringify({ status: e.target.value }) });
-          renderProjectDetail(projectId);
-        } catch (err) { alert(err.message); }
-      }));
+    // ----- plan: too wide for a .82fr column, so it opens under both panes
+    $$('[data-plan]').forEach(btn => btn.addEventListener('click', () => openPlanPanel(projectId, btn.dataset.plan)));
+    if (con.planMode) openPlanPanel(projectId, con.planMode, true);
+  }
 
-      // Milestone delete
-      $$('.ms-delete').forEach(btn => btn.addEventListener('click', async () => {
-        if (!confirm('Delete this milestone?')) return;
-        try {
-          await api(`/admin/milestones/${btn.dataset.msId}`, { method: 'DELETE' });
-          renderProjectDetail(projectId);
-        } catch (err) { alert(err.message); }
-      }));
+  function openPlanPanel(projectId, mode, force) {
+    const el = $('#planPanel');
+    if (!el) return;
+    if (!force && con.planMode === mode) mode = null;   // clicking the lit action closes it
+    con.planMode = mode;
+    $$('[data-plan]').forEach(b => b.classList.toggle('off', !!mode && b.dataset.plan !== mode));
 
-      // Members
-      $('#addMemberBtn').addEventListener('click', () => {
-        const form = $('#addMemberForm');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        if (form.style.display === 'block') $('#memberSearch').focus();
-      });
+    if (!mode) { el.hidden = true; el.innerHTML = ''; return; }
+    el.hidden = false;
 
-      let memberSearchTimeout;
-      $('#memberSearch').addEventListener('input', (e) => {
-        clearTimeout(memberSearchTimeout);
-        const q = e.target.value.trim();
-        if (q.length < 2) { $('#memberSearchResults').innerHTML = ''; return; }
-        memberSearchTimeout = setTimeout(async () => {
-          try {
-            const res = await api(`/admin/users/search?q=${encodeURIComponent(q)}`);
-            const existingIds = members.map(m => m.user_id);
-            const available = res.data.users.filter(u => !existingIds.includes(u.id));
-            if (available.length === 0) {
-              $('#memberSearchResults').innerHTML = '<p style="color:var(--text-dim);font-size:12px">No matching users found.</p>';
-              return;
-            }
-            $('#memberSearchResults').innerHTML = available.map(u => `
-              <div style="display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:4px;cursor:pointer;background:var(--surface)" class="member-search-row" data-user-id="${u.id}">
-                <div style="width:28px;height:28px;border-radius:50%;background:var(--surface-3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text-dim)">${escapeHtml((u.name || '?')[0].toUpperCase())}</div>
-                <div style="flex:1">
-                  <div style="font-size:13px;font-weight:500">${escapeHtml(u.name)}</div>
-                  <div style="font-size:11px;color:var(--text-dim)">${escapeHtml(u.email)} <span class="badge badge-gray" style="font-size:10px">${u.role}</span></div>
-                </div>
-                <button class="btn btn-primary btn-sm" style="font-size:11px">Add</button>
-              </div>
-            `).join('');
-            $$('.member-search-row').forEach(row => row.addEventListener('click', async () => {
-              try {
-                await api(`/admin/projects/${projectId}/members`, { method: 'POST', body: JSON.stringify({ user_id: row.dataset.userId }) });
-                renderProjectDetail(projectId);
-              } catch (err) { alert(err.message); }
-            }));
-          } catch (err) { $('#memberSearchResults').innerHTML = `<p style="color:var(--error);font-size:12px">${escapeHtml(err.message)}</p>`; }
-        }, 300);
-      });
+    const { project, plan } = con.detail;
+    if (mode === 'view') {
+      el.innerHTML = `
+        <div class="ph"><h4>Plan &middot; v${plan.version}</h4><div class="sp"><button class="btn btn-secondary btn-sm" data-plan-close>Close</button></div></div>
+        <div class="pv md-rendered">${renderMarkdown(escapeHtml(plan.content))}</div>`;
+    } else if (mode === 'edit') {
+      const canPropose = ['planning', 'proposed'].includes(project.status) && plan;
+      el.innerHTML = `
+        <div class="ph">
+          <h4>${plan ? `Edit plan &middot; v${plan.version}` : 'Create plan'}</h4>
+          <div class="sp">
+            <button class="filter-tab planTabBtn active" data-tab="write">Write</button>
+            <button class="filter-tab planTabBtn" data-tab="preview">Preview</button>
+            <button class="btn btn-primary btn-sm" id="savePlanBtn">Save</button>
+            ${canPropose ? `<button class="btn btn-secondary btn-sm" id="proposePlanBtn">${project.status === 'proposed' ? 'Re-send to client' : 'Send to client'}</button>` : ''}
+            <span id="planMsg"></span>
+            <button class="btn btn-secondary btn-sm" data-plan-close>Close</button>
+          </div>
+        </div>
+        <textarea id="planContent" spellcheck="false">${plan ? escapeHtml(plan.content) : ''}</textarea>
+        <div class="pv md-rendered" id="planPreview" hidden></div>`;
 
-      $$('.member-remove').forEach(btn => btn.addEventListener('click', async () => {
-        if (!confirm(`Remove ${btn.dataset.name} from this project?`)) return;
-        try {
-          await api(`/admin/projects/${projectId}/members/${btn.dataset.userId}`, { method: 'DELETE' });
-          renderProjectDetail(projectId);
-        } catch (err) { alert(err.message); }
-      }));
-
-      // Plan editor
-      $('#editPlanBtn').addEventListener('click', () => {
-        const editor = $('#planEditor');
-        const display = $('#planDisplay');
-        editor.style.display = editor.style.display === 'none' ? 'block' : 'none';
-        if (display) display.style.display = editor.style.display === 'none' ? 'block' : 'none';
-      });
-
-      // Write/Preview tabs
       $$('.planTabBtn').forEach(btn => btn.addEventListener('click', () => {
         $$('.planTabBtn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const tab = btn.dataset.tab;
-        const writeTab = $('#planWriteTab');
-        const previewTab = $('#planPreviewTab');
-        if (tab === 'write') { writeTab.style.display = 'block'; previewTab.style.display = 'none'; }
-        else { writeTab.style.display = 'none'; previewTab.style.display = 'block'; previewTab.innerHTML = renderMarkdown(escapeHtml($('#planContent').value)); }
+        const preview = btn.dataset.tab === 'preview';
+        $('#planContent').hidden = preview;
+        $('#planPreview').hidden = !preview;
+        if (preview) $('#planPreview').innerHTML = renderMarkdown(escapeHtml($('#planContent').value));
       }));
 
       $('#savePlanBtn').addEventListener('click', async () => {
         const msg = $('#planMsg');
         try {
-          const result = await api(`/admin/projects/${projectId}/plan`, { method: 'POST', body: JSON.stringify({ content: $('#planContent').value }) });
-          if (msg) msg.innerHTML = `<span class="badge badge-green">Saved (v${result.data.version})</span>`;
-          setTimeout(() => { if (msg) msg.innerHTML = ''; }, 3000);
-          // Update preview display if visible
-          const display = $('#planDisplay');
-          if (display) display.innerHTML = renderMarkdown(escapeHtml($('#planContent').value));
+          const res = await api(`/admin/projects/${projectId}/plan`, { method: 'POST', body: JSON.stringify({ content: $('#planContent').value }) });
+          if (msg) msg.innerHTML = `<span class="badge badge-green">Saved v${res.data.version}</span>`;
+          // the meta line and the version number both moved; keep the panel open
+          const text = $('#planContent').value;
+          await loadConsoleDetail(projectId);
+          con.planMode = 'edit';
+          openPlanPanel(projectId, 'edit', true);
+          $('#planContent').value = text;
         } catch (err) {
           if (msg) msg.innerHTML = `<span class="badge badge-red">${escapeHtml(err.message)}</span>`;
         }
       });
 
-      const proposeBtn = $('#proposePlanBtn');
-      if (proposeBtn) {
-        proposeBtn.addEventListener('click', async () => {
-          if (!confirm('This will send the plan to the client for approval. Continue?')) return;
-          try {
-            await api(`/admin/projects/${projectId}/plan`, { method: 'POST', body: JSON.stringify({ content: $('#planContent').value }) });
-            await api(`/admin/projects/${projectId}/propose`, { method: 'POST' });
-            renderProjectDetail(projectId);
-          } catch (err) { alert(err.message); }
-        });
-      }
-
-      // Version history
-      const histBtn = $('#planHistoryBtn');
-      if (histBtn) {
-        histBtn.addEventListener('click', async () => {
-          const panel = $('#planVersionsPanel');
-          if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
-          panel.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-          panel.style.display = 'block';
-          try {
-            const res = await api(`/admin/projects/${projectId}/plan/versions`);
-            const versions = res.data.versions;
-            if (versions.length === 0) {
-              panel.innerHTML = '<p style="color:var(--text-dim);font-size:13px;padding:8px">No previous versions.</p>';
-              return;
-            }
-            panel.innerHTML = `
-              <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
-                <div style="padding:8px 12px;background:var(--surface-3);font-size:12px;font-weight:600;color:var(--text-dim)">Version History</div>
-                ${versions.map(v => `
-                  <div style="padding:8px 12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:13px">
-                    <div>
-                      <strong>v${v.version}</strong>
-                      <span style="color:var(--text-dim);margin-left:8px">${v.saved_by_name || 'Unknown'}</span>
-                      <span style="color:var(--text-dim);margin-left:8px">${timeAgo(v.created_at)}</span>
-                    </div>
-                    <div style="display:flex;gap:4px">
-                      <button class="btn btn-secondary btn-sm" data-view-version="${v.id}" style="font-size:11px">View</button>
-                      <button class="btn btn-secondary btn-sm" data-restore-version="${v.id}" data-ver="${v.version}" style="font-size:11px">Restore</button>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-              <div id="versionPreview" style="display:none;margin-top:8px;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);max-height:300px;overflow-y:auto" class="md-rendered"></div>
-            `;
-            $$('[data-view-version]').forEach(btn => btn.addEventListener('click', async () => {
-              try {
-                const vRes = await api(`/admin/projects/${projectId}/plan/versions/${btn.dataset.viewVersion}`);
-                const preview = $('#versionPreview');
-                preview.style.display = 'block';
-                preview.innerHTML = renderMarkdown(escapeHtml(vRes.data.version.content));
-              } catch (err) { alert(err.message); }
-            }));
-            $$('[data-restore-version]').forEach(btn => btn.addEventListener('click', async () => {
-              if (!confirm(`Restore to v${btn.dataset.ver}? Current plan will be saved as a new version.`)) return;
-              try {
-                await api(`/admin/projects/${projectId}/plan/restore/${btn.dataset.restoreVersion}`, { method: 'POST' });
-                renderProjectDetail(projectId);
-              } catch (err) { alert(err.message); }
-            }));
-          } catch (err) {
-            panel.innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
-          }
-        });
-      }
-
-      // Render tickets with inline status change
-      const loadProjectTickets = async () => {
+      const propose = $('#proposePlanBtn');
+      if (propose) propose.addEventListener('click', async () => {
+        if (!confirm('This sends the plan to the client for approval. Continue?')) return;
         try {
-          const ticketsRes = await api(`/admin/projects/${projectId}/tickets`);
-          const tickets = ticketsRes.data.tickets;
-          const tsEl = $('#ticketsSection');
-          if (!tsEl) return;
-          const statusClass = (s) => s==='open'?'badge-blue':s==='in_progress'?'badge-yellow':(s==='completed'||s==='closed')?'badge-green':'badge-gray';
-          tsEl.innerHTML = tickets.length === 0 ? '<p style="color:var(--text-dim);font-size:13px">No tickets yet.</p>' : `
-            <div class="table-wrap"><table class="mobile-cards">
-              <thead><tr><th>#</th><th>Title</th><th>Type</th><th>Priority</th><th>Status</th><th>Assigned</th><th>Updated</th></tr></thead>
-              <tbody>${tickets.map(t => `<tr data-ticket-href="#/tickets/${t.id}" style="cursor:pointer">
-                <td data-label="#" style="font-family:var(--mono);font-size:12px">${t.ticket_number}</td>
-                <td data-label="Title" style="color:var(--text)">${escapeHtml(t.title)}</td>
-                <td data-label="Type"><span class="badge badge-gray">${t.type.replace(/_/g,' ')}</span></td>
-                <td data-label="Priority"><span class="badge ${t.priority==='high'||t.priority==='urgent'?'badge-red':t.priority==='medium'?'badge-yellow':'badge-gray'}">${t.priority}</span></td>
-                <td data-label="Status">
-                  <select class="inline-ticket-status" data-ticket-id="${t.id}" style="padding:3px 6px;font-size:11px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer">
-                    ${['open','in_progress','review','completed','closed'].map(s => `<option value="${s}" ${s===t.status?'selected':''}>${s.replace(/_/g,' ')}</option>`).join('')}
-                  </select>
-                </td>
-                <td data-label="Assigned">${escapeHtml(t.assigned_to_name || '-')}</td>
-                <td data-label="Updated">${timeAgo(t.updated_at)}</td>
-              </tr>`).join('')}</tbody>
-            </table></div>
-          `;
-          // Click to navigate to ticket detail (but not on the status dropdown)
-          $$('[data-ticket-href]').forEach(r => r.addEventListener('click', (e) => {
-            if (e.target.closest('.inline-ticket-status')) return;
-            window.location.hash = r.dataset.ticketHref;
-          }));
-          // Inline status change
-          $$('.inline-ticket-status').forEach(sel => sel.addEventListener('change', async (e) => {
-            e.stopPropagation();
-            const tid = sel.dataset.ticketId;
-            const newStatus = sel.value;
+          await api(`/admin/projects/${projectId}/plan`, { method: 'POST', body: JSON.stringify({ content: $('#planContent').value }) });
+          await api(`/admin/projects/${projectId}/propose`, { method: 'POST' });
+          con.planMode = null;
+          await refreshConsole(projectId);
+        } catch (err) { alert(err.message); }
+      });
+    } else if (mode === 'history') {
+      el.innerHTML = `
+        <div class="ph"><h4>Plan history</h4><div class="sp"><button class="btn btn-secondary btn-sm" data-plan-close>Close</button></div></div>
+        <div class="loading"><div class="spinner"></div></div>`;
+      (async () => {
+        try {
+          const res = await api(`/admin/projects/${projectId}/plan/versions`);
+          const versions = res.data.versions;
+          const body = versions.length
+            ? versions.map(v => `
+                <div class="c-vr">
+                  <b>v${v.version}</b>
+                  <span style="color:var(--muted)">${escapeHtml(v.saved_by_name || 'Unknown')} &middot; ${timeAgo(v.created_at)}</span>
+                  <span class="sp">
+                    <button class="btn btn-secondary btn-sm" data-view-version="${v.id}">View</button>
+                    <button class="btn btn-secondary btn-sm" data-restore-version="${v.id}" data-ver="${v.version}">Restore</button>
+                  </span>
+                </div>`).join('')
+            : '<p class="c-none">No previous versions.</p>';
+          el.innerHTML = `
+            <div class="ph"><h4>Plan history</h4><div class="sp"><button class="btn btn-secondary btn-sm" data-plan-close>Close</button></div></div>
+            ${body}
+            <div class="pv md-rendered" id="versionPreview" hidden></div>`;
+          wirePlanClose(projectId);
+          $$('[data-view-version]').forEach(btn => btn.addEventListener('click', async () => {
             try {
-              await api(`/admin/tickets/${tid}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) });
-              loadProjectTickets(); // Reload to confirm
-            } catch (err) { alert('Status update failed: ' + err.message); sel.value = sel.dataset.prev || 'open'; }
+              const v = await api(`/admin/projects/${projectId}/plan/versions/${btn.dataset.viewVersion}`);
+              const pv = $('#versionPreview');
+              pv.hidden = false;
+              pv.innerHTML = renderMarkdown(escapeHtml(v.data.version.content));
+            } catch (err) { alert(err.message); }
           }));
-          // Store current value for rollback on error
-          $$('.inline-ticket-status').forEach(sel => { sel.dataset.prev = sel.value; });
-        } catch (e) {
-          const tsEl = $('#ticketsSection');
-          if (tsEl) tsEl.innerHTML = `<div class="alert alert-error">${escapeHtml(e.message)}</div>`;
-        }
-      };
-      loadProjectTickets();
-
-      // ===== CLAUDE CODE CHAT WIDGET =====
-      if (cc.isConnected()) {
-        const projectMap = cc.getProjectMap();
-        const mappedPath = projectMap[projectId];
-        const ccKey = cc.keyFor(projectId); // Derives from folder name (matches Desktop/PWA)
-
-        // Init streaming state
-        if (!cc.chats[projectId]) cc.chats[projectId] = [];
-        if (!cc.streaming[projectId]) cc.streaming[projectId] = { text: '', tools: [], active: false };
-
-        // Load shared history from CC server (synced with Desktop/PWA)
-        if (mappedPath) {
-          await cc.loadHistory(projectId);
-        }
-
-        // Render header actions (folder selector)
-        const headerActions = $('#ccHeaderActions');
-        if (headerActions) {
-          if (mappedPath) {
-            headerActions.innerHTML = `
-              <code style="font-size:11px;color:var(--text-dim);font-family:var(--mono);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(mappedPath)}">${escapeHtml(mappedPath.split('\\').pop() || mappedPath.split('/').pop())}</code>
-              <button class="btn btn-secondary btn-sm" id="ccRemapBtn" style="font-size:10px;padding:4px 8px">Change</button>
-              <button class="btn btn-secondary btn-sm" id="ccResetBtn" style="font-size:10px;padding:4px 8px" title="New conversation">Reset</button>
-            `;
-          } else {
-            headerActions.innerHTML = '<span class="badge badge-yellow" style="font-size:10px">No folder mapped</span>';
-          }
-        }
-
-        // --- Incremental chat renderer (avoids full innerHTML rebuild during streaming) ---
-        let _ccRenderedCount = 0; // tracks how many committed messages are in the DOM
-        let _ccStreamEl = null;   // reference to the live streaming bubble wrapper
-
-        // Full rebuild — used for initial render, history load, and done events
-        function renderCcChatFull() {
-          const el = $('#ccMessages');
-          if (!el) return;
-          const messages = cc.chats[projectId] || [];
-          const streaming = cc.streaming[projectId];
-          let html = '';
-          if (messages.length === 0 && !streaming.active) {
-            html = `<div class="cc-empty-state" style="text-align:center;padding:40px 20px;color:var(--text-dim);font-size:13px">
-              ${mappedPath ? 'Ask Claude anything about this project.' : 'Select a project folder above to get started.'}
-            </div>`;
-          }
-          messages.forEach(m => {
-            if (m.role === 'user') {
-              html += `<div class="cc-msg cc-msg-user"><div class="cc-msg-bubble cc-msg-user-bubble">${escapeHtml(m.content)}</div></div>`;
-            } else {
-              html += `<div class="cc-msg cc-msg-assistant"><div class="cc-msg-bubble cc-msg-assistant-bubble">${renderMarkdown(escapeHtml(m.content))}</div>`;
-              if (m.tools && m.tools.length) {
-                html += `<div class="cc-tools">${m.tools.map(t => `<span class="cc-tool-badge">${escapeHtml(t)}</span>`).join('')}</div>`;
-              }
-              html += `</div>`;
-            }
-          });
-          el.innerHTML = html;
-          _ccRenderedCount = messages.length;
-          _ccStreamEl = null;
-          // Append streaming bubble if active
-          if (streaming.active || streaming.text) {
-            _ccEnsureStreamBubble(el, streaming);
-          }
-          el.scrollTop = el.scrollHeight;
-        }
-
-        // Ensure the streaming bubble exists, create if missing
-        function _ccEnsureStreamBubble(container, streaming) {
-          if (!_ccStreamEl) {
-            // Remove empty state if present
-            const empty = container.querySelector('.cc-empty-state');
-            if (empty) empty.remove();
-            _ccStreamEl = document.createElement('div');
-            _ccStreamEl.className = 'cc-msg cc-msg-assistant';
-            _ccStreamEl.innerHTML = `<div class="cc-msg-bubble cc-msg-assistant-bubble cc-stream-bubble"></div><div class="cc-tools cc-stream-tools"></div>`;
-            container.appendChild(_ccStreamEl);
-          }
-          _ccUpdateStreamContent(streaming);
-        }
-
-        // Update just the streaming bubble content (no DOM rebuild)
-        function _ccUpdateStreamContent(streaming) {
-          if (!_ccStreamEl) return;
-          const bubble = _ccStreamEl.querySelector('.cc-stream-bubble');
-          if (!bubble) return;
-          if (streaming.text) {
-            const rendered = renderMarkdown(escapeHtml(streaming.text));
-            if (bubble.innerHTML !== rendered) {
-              bubble.innerHTML = `<div class="cc-stream-content">${rendered}</div>`;
-            }
-          } else {
-            bubble.innerHTML = '<span class="cc-thinking">Thinking<span class="cc-thinking-dots"><span></span><span></span><span></span></span></span>';
-          }
-          // Update tool badges incrementally
-          const toolsEl = _ccStreamEl.querySelector('.cc-stream-tools');
-          if (toolsEl && streaming.tools.length) {
-            const existing = toolsEl.querySelectorAll('.cc-tool-badge').length;
-            if (existing < streaming.tools.length) {
-              // Only append new badges
-              for (let i = existing; i < streaming.tools.length; i++) {
-                const badge = document.createElement('span');
-                badge.className = 'cc-tool-badge';
-                badge.textContent = streaming.tools[i];
-                toolsEl.appendChild(badge);
-              }
-            }
-          }
-        }
-
-        // Incremental update — only touches the streaming bubble
-        function renderCcChatStream() {
-          const el = $('#ccMessages');
-          if (!el) return;
-          const streaming = cc.streaming[projectId];
-          // Check if committed messages changed (shouldn't during streaming, but safety)
-          const messages = cc.chats[projectId] || [];
-          if (messages.length !== _ccRenderedCount) {
-            return renderCcChatFull(); // fallback to full rebuild
-          }
-          if (streaming.active || streaming.text) {
-            _ccEnsureStreamBubble(el, streaming);
-          }
-          el.scrollTop = el.scrollHeight;
-        }
-
-        // Commit streaming bubble to final message (no full rebuild needed)
-        function renderCcChatDone() {
-          const el = $('#ccMessages');
-          if (!el) return;
-          // Remove the streaming bubble
-          if (_ccStreamEl) {
-            _ccStreamEl.remove();
-            _ccStreamEl = null;
-          }
-          // Append the newly committed message(s)
-          const messages = cc.chats[projectId] || [];
-          for (let i = _ccRenderedCount; i < messages.length; i++) {
-            const m = messages[i];
-            const div = document.createElement('div');
-            if (m.role === 'user') {
-              div.className = 'cc-msg cc-msg-user';
-              div.innerHTML = `<div class="cc-msg-bubble cc-msg-user-bubble">${escapeHtml(m.content)}</div>`;
-            } else {
-              div.className = 'cc-msg cc-msg-assistant';
-              div.innerHTML = `<div class="cc-msg-bubble cc-msg-assistant-bubble">${renderMarkdown(escapeHtml(m.content))}</div>`;
-              if (m.tools && m.tools.length) {
-                const toolsDiv = document.createElement('div');
-                toolsDiv.className = 'cc-tools';
-                toolsDiv.innerHTML = m.tools.map(t => `<span class="cc-tool-badge">${escapeHtml(t)}</span>`).join('');
-                div.appendChild(toolsDiv);
-              }
-            }
-            el.appendChild(div);
-          }
-          _ccRenderedCount = messages.length;
-          el.scrollTop = el.scrollHeight;
-        }
-
-        // Alias for backward compat (used by history:updated, reset, etc.)
-        function renderCcChat() { renderCcChatFull(); }
-
-        // --- Activity bar helpers ---
-        function ccShowActivity(text) {
-          const bar = $('#ccActivityBar');
-          const txt = $('#ccActivityText');
-          if (bar) bar.classList.remove('cc-activity-hidden');
-          if (txt) txt.textContent = text || 'Thinking...';
-        }
-        function ccHideActivity() {
-          const bar = $('#ccActivityBar');
-          if (bar) bar.classList.add('cc-activity-hidden');
-        }
-        function ccShowStop() {
-          const sendBtn = $('#ccSendBtn');
-          const stopBtn = $('#ccStopBtn');
-          if (sendBtn) sendBtn.style.display = 'none';
-          if (stopBtn) stopBtn.style.display = '';
-        }
-        function ccShowSend() {
-          const sendBtn = $('#ccSendBtn');
-          const stopBtn = $('#ccStopBtn');
-          if (sendBtn) sendBtn.style.display = '';
-          if (stopBtn) stopBtn.style.display = 'none';
-        }
-
-        // Folder picker
-        if (!mappedPath) {
-          // Load available folders from CC server
-          (async () => {
+          $$('[data-restore-version]').forEach(btn => btn.addEventListener('click', async () => {
+            if (!confirm(`Restore to v${btn.dataset.ver}? The current plan is saved as a new version first.`)) return;
             try {
-              const projects = await cc.listProjects();
-              const el = $('#ccHeaderActions');
-              if (!el) return;
-              el.innerHTML = `
-                <select id="ccFolderSelect" style="padding:4px 8px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:11px;font-family:var(--mono);max-width:200px">
-                  <option value="">Select folder...</option>
-                  ${(projects || []).map(p => `<option value="${escapeHtml(p.path)}">${escapeHtml(p.name)}</option>`).join('')}
-                </select>
-              `;
-              const sel = $('#ccFolderSelect');
-              if (sel) {
-                // Auto-match folder to current project name
-                const pName = (project.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-                if (pName && projects && projects.length) {
-                  const match = projects.find(p => {
-                    const fName = (p.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-                    return fName === pName || fName.includes(pName) || pName.includes(fName);
-                  });
-                  if (match) {
-                    sel.value = match.path;
-                    const map = cc.getProjectMap();
-                    map[projectId] = match.path;
-                    cc.setProjectMap(map);
-                    renderProjectDetail(projectId);
-                    return;
-                  }
-                }
-                sel.addEventListener('change', () => {
-                  if (!sel.value) return;
-                  const map = cc.getProjectMap();
-                  map[projectId] = sel.value;
-                  cc.setProjectMap(map);
-                  renderProjectDetail(projectId);
-                });
-              }
-            } catch (err) {
-              const el = $('#ccHeaderActions');
-              if (el) el.innerHTML = `<span style="color:var(--danger);font-size:11px">${escapeHtml(err.message)}</span>`;
-            }
-          })();
+              await api(`/admin/projects/${projectId}/plan/restore/${btn.dataset.restoreVersion}`, { method: 'POST' });
+              con.planMode = null;
+              await refreshConsole(projectId);
+            } catch (err) { alert(err.message); }
+          }));
+        } catch (err) {
+          el.innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
         }
+      })();
+    }
+    wirePlanClose(projectId);
+  }
 
-        renderCcChat();
+  function wirePlanClose(projectId) {
+    $$('[data-plan-close]').forEach(b => b.addEventListener('click', () => openPlanPanel(projectId, null, true)));
+  }
 
-        // Connect WS
-        cc.disconnectWs();
-        cc.connectWs();
-
-        // WS event handlers — shared with Desktop/PWA (same key)
-        cc.on('claude:process-started', (msg) => {
-          if (msg.key !== ccKey) return;
-          if (!cc.streaming[projectId].active) {
-            cc.streaming[projectId] = { text: '', tools: [], active: true };
-            renderCcChatStream();
-            ccShowActivity('Thinking...');
-            ccShowStop();
-          }
-        });
-
-        cc.on('claude:stream', (msg) => {
-          if (msg.key !== ccKey) return;
-          cc.streaming[projectId].text = msg.text || '';
-          cc.streaming[projectId].active = true;
-          renderCcChatStream();
-          ccShowActivity('Generating response...');
-          ccShowStop();
-        });
-
-        cc.on('claude:tool-use', (msg) => {
-          if (msg.key !== ccKey) return;
-          const toolName = msg.tool || 'tool';
-          if (!cc.streaming[projectId].tools.includes(toolName)) {
-            cc.streaming[projectId].tools.push(toolName);
-          }
-          renderCcChatStream();
-          ccShowActivity(`Using ${toolName}...`);
-          ccShowStop();
-        });
-
-        cc.on('claude:tool-result', (msg) => {
-          if (msg.key !== ccKey) return;
-          ccShowActivity('Processing...');
-        });
-
-        cc.on('claude:done', (msg) => {
-          if (msg.key !== ccKey) return;
-          const streaming = cc.streaming[projectId];
-          if (!streaming.active && !streaming.text) return;
-          const content = streaming.text || msg.output || '';
-          const tools = [...streaming.tools];
-          cc.streaming[projectId] = { text: '', tools: [], active: false };
-          if (content) {
-            cc.chats[projectId].push({ role: 'assistant', content, tools });
-            cc.saveMessage(projectId, { role: 'assistant', content, timestamp: Date.now() });
-          } else if (msg.error) {
-            cc.chats[projectId].push({ role: 'assistant', content: `Error: ${msg.error}`, tools: [] });
-          }
-          renderCcChatDone();
-          ccHideActivity();
-          ccShowSend();
-
-          // Auto-refresh project data after Claude Code finishes (tickets/milestones may have changed)
-          setTimeout(() => {
-            if ($('#ticketsSection')) loadProjectTickets();
-          }, 2000);
-        });
-
-        // Sync: reload history when Desktop/PWA saves a message
-        if (ccKey) {
-          cc.on('history:updated', async (msg) => {
-            if (msg.key !== ccKey) return;
-            if (Date.now() - cc._lastHistorySave < 2000) return;
-            await cc.loadHistory(projectId);
-            renderCcChatFull();
-          });
-        }
-
-        // Reconnect resilience: reload history when WS reconnects
-        cc.on('__ws_reconnected', async () => {
-          await cc.loadHistory(projectId);
-          renderCcChatFull();
-        });
-
-        // Build portal context for first message injection
-        function buildPortalContext() {
-          let ctx = `[Portal Context — ${project.name}]\n`;
-          ctx += `Status: ${project.status} | Progress: ${project.progress_percent}%\n`;
-          if (project.org_name) ctx += `Client: ${project.org_name}\n`;
-          ctx += `\nMilestones:\n`;
-          milestones.forEach((m, i) => {
-            const icon = m.status === 'completed' ? '✅' : m.status === 'in_progress' ? '🔄' : '⬚';
-            ctx += `${i + 1}. ${icon} ${m.title} (${m.status})\n`;
-          });
-          // Include only recent open tickets (max 5)
-          try {
-            const ticketsEl = $('#ticketsSection');
-            if (ticketsEl) {
-              const rows = [...ticketsEl.querySelectorAll('tr[data-ticket-href]')].slice(0, 5);
-              if (rows.length > 0) {
-                ctx += `\nRecent Tickets:\n`;
-                rows.forEach(r => {
-                  const cells = r.querySelectorAll('td');
-                  if (cells.length >= 5) {
-                    ctx += `- #${cells[0].textContent} ${cells[1].textContent} (${cells[2].textContent.trim()}, ${cells[3].textContent.trim()}, ${cells[4].textContent.trim()})\n`;
-                  }
-                });
-              }
-            }
-          } catch {}
-          ctx += `[End Portal Context]\n\n`;
-          return ctx;
-        }
-
-        // Send message
-        async function ccSendMessage() {
-          const input = $('#ccMsgInput');
-          if (!input) return;
-          const msg = input.value.trim();
-          if (!msg || !mappedPath) return;
-          input.value = '';
-
-          // Show user message in chat
-          cc.chats[projectId].push({ role: 'user', content: msg });
-          cc.saveMessage(projectId, { role: 'user', content: msg, timestamp: Date.now() });
-          cc.streaming[projectId] = { text: '', tools: [], active: true };
-          renderCcChatFull(); // full rebuild to show new user message + streaming bubble
-          ccShowActivity('Thinking...');
-          ccShowStop();
-
-          try {
-            let sendMsg = msg;
-            if (cc.chats[projectId].filter(m => m.role === 'user').length === 1) {
-              sendMsg = buildPortalContext() + msg;
-            }
-            await cc.send(projectId, sendMsg, mappedPath);
-          } catch (err) {
-            cc.streaming[projectId] = { text: '', tools: [], active: false };
-            cc.chats[projectId].push({ role: 'assistant', content: `Connection error: ${err.message}`, tools: [] });
-            renderCcChatFull();
-            ccHideActivity();
-            ccShowSend();
-          }
-        }
-
-        const ccSendBtn = $('#ccSendBtn');
-        if (ccSendBtn) ccSendBtn.addEventListener('click', ccSendMessage);
-        const ccInput = $('#ccMsgInput');
-        if (ccInput) ccInput.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ccSendMessage(); }
-        });
-        const ccStopBtn = $('#ccStopBtn');
-        if (ccStopBtn) ccStopBtn.addEventListener('click', async () => {
-          try { await cc.stop(projectId); } catch {}
-        });
-        const ccRemapBtn = $('#ccRemapBtn');
-        if (ccRemapBtn) ccRemapBtn.addEventListener('click', () => {
-          const map = cc.getProjectMap();
-          delete map[projectId];
-          cc.setProjectMap(map);
-          renderProjectDetail(projectId);
-        });
-        const ccResetBtn = $('#ccResetBtn');
-        if (ccResetBtn) ccResetBtn.addEventListener('click', async () => {
-          cc.chats[projectId] = [];
-          cc.streaming[projectId] = { text: '', tools: [], active: false };
-          _ccRenderedCount = 0;
-          _ccStreamEl = null;
-          try {
-            await cc.reset(projectId);
-            const key = cc.keyFor(projectId);
-            if (key) await cc.api(`/api/history/${encodeURIComponent(key)}`, { method: 'DELETE' });
-          } catch {}
-          renderCcChatFull();
-          ccHideActivity();
-          ccShowSend();
-        });
+  /* Tickets load separately from the project detail, so the open-ticket stat is
+     filled in when they land rather than guessed from the list row. */
+  async function loadConsoleTickets(projectId) {
+    const el = $('#ticketsSection');
+    if (!el) return;
+    try {
+      const res = await api(`/admin/projects/${projectId}/tickets`);
+      if (con.selected !== projectId) return;
+      const tickets = res.data.tickets;
+      const openCount = tickets.filter(t => ['open', 'in_progress'].includes(t.status)).length;
+      const stat = $('#cStatOpen');
+      if (stat) {
+        stat.textContent = openCount || '—';
+        stat.className = tickets.some(t => ['open', 'in_progress'].includes(t.status) && ['urgent', 'high'].includes(t.priority)) ? 'hot' : '';
       }
 
+      el.innerHTML = tickets.length ? `
+        <table class="c-tb">
+          <thead><tr><th style="width:26px">#</th><th>Title</th><th style="width:64px">Type</th><th style="width:56px">Pri</th><th style="width:104px">Status</th></tr></thead>
+          <tbody>${tickets.map(t => `
+            <tr data-ticket-id="${t.id}">
+              <td class="num">${t.ticket_number}</td>
+              <td class="ti">${escapeHtml(t.title)}</td>
+              <td class="num">${escapeHtml(t.type.replace(/_/g, ' '))}</td>
+              <td><span class="badge ${t.priority === 'urgent' ? 'badge-red' : t.priority === 'high' ? 'badge-yellow' : 'badge-gray'}">${escapeHtml(t.priority)}</span></td>
+              <td>
+                <select class="c-sel inline-ticket-status" data-ticket-id="${t.id}" data-prev="${t.status}" aria-label="Ticket status">
+                  ${TICKET_STATUS.map(s => `<option value="${s}"${s === t.status ? ' selected' : ''}>${s.replace(/_/g, ' ')}</option>`).join('')}
+                </select>
+              </td>
+            </tr>`).join('')}</tbody>
+        </table>` : '<p class="c-none">No tickets yet.</p>';
+
+      $$('#ticketsSection tr[data-ticket-id]').forEach(row => row.addEventListener('click', (e) => {
+        if (e.target.closest('.inline-ticket-status')) return;
+        window.location.hash = `#/tickets/${row.dataset.ticketId}`;
+      }));
+
+      // the inline dropdown is how tickets move now — it is not a shortcut
+      $$('.inline-ticket-status').forEach(sel => sel.addEventListener('change', async () => {
+        const prev = sel.dataset.prev;
+        try {
+          await api(`/admin/tickets/${sel.dataset.ticketId}`, { method: 'PATCH', body: JSON.stringify({ status: sel.value }) });
+          await refreshConsole(projectId);
+        } catch (err) {
+          sel.value = prev;
+          alert('Status update failed: ' + err.message);
+        }
+      }));
     } catch (err) {
-      $('#mainContent').innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
+      el.innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
     }
   }
 
@@ -3033,7 +2791,7 @@ if ('serviceWorker' in navigator) {
     app.innerHTML = `
       <div class="login-page">
         <div class="login-card">
-          <div class="login-logo"><span class="accent">{</span> kaymen.dev <span class="accent">}</span></div>
+          <div class="login-logo"><span class="mark">K</span><span>kaymen<span class="accent">.</span>dev</span></div>
           <h2 class="login-title">Set Up Your Password</h2>
           <div id="inviteMsg"><div class="loading"><div class="spinner"></div> Validating invite...</div></div>
           <form id="inviteForm" style="display:none">

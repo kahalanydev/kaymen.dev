@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>kaymen.dev — logo directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* locked palette — HANDOFF-REDESIGN-2026-08-15 §1 */
+  --accent:#2bbcb3;  --accent-dark:#229e96;  --accent-soft:rgba(43,188,179,.08);
+  --ink:#1a1b1e;     --muted:#5f6368;
+  --bg:#ffffff;      --bg-alt:#f4f5f7;       --line:#e2e4e8;
+  --deep:#16303d;
+  --display:'Sora',system-ui,sans-serif;
+  --body:'Inter',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:var(--body);color:var(--ink);background:var(--bg-alt);
+  -webkit-font-smoothing:antialiased;line-height:1.55;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:0 28px 90px}
+
+/* ---------- page head ---------- */
+header.top{
+  background:var(--bg);border-bottom:1px solid var(--line);
+  padding:46px 0 34px;margin-bottom:36px;
+}
+header.top .wrap{padding-bottom:0}
+.eyebrow{
+  font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--accent);margin:0 0 10px;
+}
+h1{font-family:var(--display);font-size:34px;font-weight:800;letter-spacing:-.03em;margin:0 0 12px}
+.lede{max-width:760px;font-size:16px;color:var(--muted);margin:0}
+.lede b{color:var(--ink);font-weight:600}
+
+h2{
+  font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 16px;
+}
+
+/* ---------- the "three marks today" notice ---------- */
+.notice{
+  background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:14px;padding:20px 24px;margin:28px 0 0;
+}
+.notice h3{font-family:var(--display);font-size:15px;font-weight:700;margin:0 0 8px;letter-spacing:-.01em}
+.notice p{margin:0 0 14px;font-size:14px;color:var(--muted);max-width:760px}
+.today{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-end}
+.today figure{margin:0;text-align:center}
+.today figcaption{font-size:11px;color:var(--muted);margin-top:9px;line-height:1.4}
+.today code{font-family:ui-monospace,monospace;font-size:10.5px;color:var(--ink);opacity:.75}
+
+/* ---------- lineup ---------- */
+section{margin-top:52px}
+.strip{
+  border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--bg);
+}
+.strip .row{display:grid;grid-template-columns:110px repeat(5,1fr);align-items:center}
+.strip .row + .row{border-top:1px solid var(--line)}
+.strip .rowlabel{
+  font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);padding:0 18px;
+}
+.strip .cell{display:flex;align-items:center;justify-content:center;padding:26px 10px;min-height:96px}
+.strip .row.alt .cell{background:var(--bg-alt)}
+.strip .row.deep{background:var(--deep)}
+.strip .row.deep .rowlabel{color:rgba(255,255,255,.5)}
+.strip .row.tiny .cell{padding:18px 10px;min-height:62px}
+.strip .head{display:grid;grid-template-columns:110px repeat(5,1fr);border-bottom:1px solid var(--line);background:var(--bg-alt)}
+.strip .head div{
+  font-family:var(--display);font-size:11.5px;font-weight:700;letter-spacing:.02em;
+  padding:12px 10px;text-align:center;color:var(--ink);
+}
+.strip .head div:first-child{text-align:left;padding-left:18px}
+.strip .head span{display:block;font-weight:500;font-size:10.5px;color:var(--muted);letter-spacing:0}
+
+/* ---------- switcher ---------- */
+.switch{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 22px}
+.switch button{
+  font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:-.01em;
+  padding:9px 16px;border-radius:11px;border:1px solid var(--line);background:var(--bg);
+  color:var(--muted);cursor:pointer;transition:all .18s ease;display:flex;align-items:center;gap:9px;
+}
+.switch button:hover{color:var(--ink);border-color:#cfd3d9}
+.switch button[aria-selected="true"]{
+  background:var(--accent-soft);border-color:rgba(43,188,179,.42);color:var(--ink);
+}
+.switch button .key{
+  font-size:10px;font-weight:800;width:17px;height:17px;border-radius:5px;
+  display:grid;place-items:center;background:var(--bg-alt);color:var(--muted);
+}
+.switch button[aria-selected="true"] .key{background:var(--accent);color:#fff}
+
+/* ---------- panel ---------- */
+.panel{display:none}
+.panel.on{display:block}
+.phead{
+  background:var(--bg);border:1px solid var(--line);border-radius:16px;
+  padding:26px 28px;margin-bottom:22px;
+}
+.phead .t{display:flex;align-items:center;gap:18px;margin-bottom:16px}
+.phead h3{font-family:var(--display);font-size:23px;font-weight:800;letter-spacing:-.025em;margin:0}
+.claim{font-size:15px;margin:0 0 10px;max-width:780px}
+.risk{font-size:14px;color:var(--muted);margin:0;max-width:780px}
+.risk b, .claim b{font-weight:600;color:var(--ink)}
+.tag{
+  font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent-dark);
+}
+.tag.warn{background:rgba(168,118,28,.1);color:#a8761c}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:18px}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:22px 24px}
+.card h4{
+  font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--muted);margin:0 0 16px;
+}
+.card .note{font-size:12.5px;color:var(--muted);margin:14px 0 0}
+
+/* size ramp */
+.ramp{display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.ramp figure{margin:0;text-align:center}
+.ramp figcaption{font-size:10.5px;color:var(--muted);margin-top:8px}
+
+/* rail lockup */
+.rail{
+  width:224px;border-radius:20px;padding:16px 14px;
+  background:rgba(255,255,255,.72);backdrop-filter:blur(18px) saturate(1.6);
+  box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 0 0 1px rgba(0,0,0,.055),0 18px 40px -18px rgba(22,48,61,.28);
+}
+.rail .lock{display:flex;align-items:center;gap:11px;padding:0 4px 14px;border-bottom:1px solid rgba(0,0,0,.055)}
+.rail .nav{padding-top:12px;display:flex;flex-direction:column;gap:2px}
+.rail .nav a{
+  display:flex;align-items:center;gap:12px;height:36px;padding:0 9px;border-radius:12px;
+  font-size:13px;color:var(--muted);text-decoration:none;font-weight:500;
+}
+.rail .nav a.on{background:var(--accent-soft);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1px rgba(43,188,179,.22)}
+.rail .nav i{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.4;flex:none}
+.railbed{background:linear-gradient(150deg,#eef0f3,#fafbfc);border-radius:16px;padding:26px;display:flex;justify-content:center}
+
+/* wordmark */
+.wm{font-family:var(--display);font-weight:700;letter-spacing:-.02em;white-space:nowrap;display:flex;align-items:baseline}
+.wm .dot{color:var(--accent)}
+.wm.s{font-size:14px}
+.wm.m{font-size:19px}
+.wm.l{font-size:27px}
+.lock{display:flex;align-items:center;gap:11px}
+.lock.stack{flex-direction:column;gap:14px}
+
+/* browser tab */
+.tabbar{background:#dfe3e8;border-radius:12px 12px 0 0;padding:9px 9px 0;display:flex;gap:6px;align-items:flex-end}
+.tab{
+  background:var(--bg);border-radius:9px 9px 0 0;padding:9px 14px;display:flex;align-items:center;gap:9px;
+  font-size:12px;color:var(--ink);min-width:172px;
+}
+.tab.off{background:rgba(255,255,255,.45);color:var(--muted);min-width:132px}
+.tabbody{background:var(--bg);height:16px;border-radius:0 0 12px 12px}
+
+/* email header */
+.mail{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--bg)}
+.mail .mh{background:var(--deep);padding:26px 24px;display:flex;align-items:center;gap:12px}
+.mail .mh .wm{color:#fff}
+.mail .mb{padding:20px 24px}
+.mail .mb b{font-family:var(--display);font-size:15px;display:block;margin-bottom:6px;letter-spacing:-.01em}
+.mail .mb p{font-size:13px;color:var(--muted);margin:0}
+
+/* login */
+.login{
+  background:linear-gradient(160deg,#fbfcfd,#f1f3f6);border:1px solid var(--line);
+  border-radius:16px;padding:34px 26px;display:flex;flex-direction:column;align-items:center;gap:22px;
+}
+.login .field{width:100%;max-width:260px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--bg)}
+.login .btn{width:100%;max-width:260px;height:38px;border-radius:10px;background:var(--accent);color:#fff;
+  display:grid;place-items:center;font-family:var(--display);font-weight:600;font-size:13px}
+
+/* avatar row */
+.avis{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.chipline{display:flex;align-items:center;gap:9px;background:var(--bg-alt);border-radius:999px;padding:5px 14px 5px 5px;font-size:12.5px;font-weight:500}
+
+/* deep band */
+.band{background:var(--deep);border-radius:16px;padding:34px 28px;display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+.band .wm{color:#fff}
+.band .cap{font-size:12.5px;color:rgba(255,255,255,.5)}
+
+/* verdict */
+.verdict{background:var(--deep);color:#fff;border-radius:18px;padding:32px 34px;margin-top:56px}
+.verdict h2{color:rgba(255,255,255,.5);margin-bottom:14px}
+.verdict p{max-width:780px;font-size:15px;color:rgba(255,255,255,.82);margin:0 0 14px}
+.verdict p:last-child{margin-bottom:0}
+.verdict b{color:#fff;font-weight:600}
+.verdict .pick{color:var(--accent);font-weight:600}
+
+@media(max-width:860px){
+  .strip .row,.strip .head{grid-template-columns:76px repeat(5,1fr)}
+  .strip .rowlabel{font-size:9.5px;padding:0 9px}
+  .strip .head div{font-size:10px;padding:9px 4px}
+  h1{font-size:26px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">Brainstorm · 2026-08-16</p>
+    <h1>Five logo directions for kaymen.dev</h1>
+    <p class="lede">Same palette, same typeface, same lock-up rules — the locked ones. What differs between these
+      five is <b>the idea</b>, not the accent colour. Each is shown at the sizes and in the places it actually has to
+      survive: the 224px rail, a 16px favicon, the dark email header, and the login screen.</p>
+
+    <div class="notice">
+      <h3>First, the thing worth knowing: there are three marks in the tree today</h3>
+      <p>They disagree with each other. The rail one is on-palette and fine. The braces are the pre-rebrand wordmark
+        still sitting on the login screens. The favicon is the theme the site <em>dropped</em> on 15 August — it is
+        linked from <code>index.html:25</code>, so it is on every browser tab right now.</p>
+      <div class="today">
+        <figure>
+          <div id="today-a"></div>
+          <figcaption><b>Rail / sidebar</b><br><code>index.html:36</code> · <code>admin/app.js:579</code></figcaption>
+        </figure>
+        <figure>
+          <div class="wm m" style="padding:6px 0"><span style="color:var(--accent)">{</span>&nbsp;kaymen.dev&nbsp;<span style="color:var(--accent)">}</span></div>
+          <figcaption><b>Login screens</b><br><code>admin/app.js:422, 499, 3036</code></figcaption>
+        </figure>
+        <figure>
+          <div id="today-c"></div>
+          <figcaption><b>Favicon — stale</b><br><code>favicon.svg</code> · old blue/purple</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ THE LINEUP ============ -->
+  <section style="margin-top:0">
+    <h2>The lineup — all five, three backgrounds, and the 16px test</h2>
+    <div class="strip">
+      <div class="head" id="lineup-head"></div>
+      <div class="row" id="lineup-white"></div>
+      <div class="row alt" id="lineup-alt"></div>
+      <div class="row deep" id="lineup-deep"></div>
+      <div class="row tiny" id="lineup-16"></div>
+    </div>
+  </section>
+
+  <!-- ============ DETAIL ============ -->
+  <section>
+    <h2>In use — pick a direction</h2>
+    <div class="switch" id="switch"></div>
+    <div id="panels"></div>
+  </section>
+
+  <!-- ============ VERDICT ============ -->
+  <div class="verdict">
+    <h2>If you made me choose</h2>
+    <p><b class="pick">B — Branch &amp; merge.</b> It is the only one of the five that says what the business
+      actually sells. Kaymen.dev's offer is <b>build and run</b>: the site's whole spine is the running board,
+      the fleet sparklines and the live-systems count. A K that is literally a trunk with a branch leaving and
+      a line merging back is that promise, drawn. It is also the only one that reads as a mark rather than as a
+      letter in a box.</p>
+    <p><b>Its honest cost:</b> it is a git graph, and git graphs are not rare in developer tooling. It is
+      distinctive against <em>agencies</em>, not against <em>dev tools</em>. And it is the most fragile of the
+      five at 16px — the two nodes want to close up. That is a solvable drawing problem, not a concept problem,
+      but it is real work, and D is already live and costs nothing.</p>
+    <p><b>The contrarian pick is A — Keystone.</b> If you want a mark nobody else in this market has, it is that
+      one: a keystone is the stone that holds the arch up, and pulling it collapses the span. That is the retainer
+      argument in one shape. It needs the sentence to land, though — and a logo that needs a sentence is a bet on
+      you being around to say it.</p>
+  </div>
+
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   Marks. Each is a function (px, ctx) -> svg string.
+   ctx: 'light' | 'alt' | 'deep'  — background it will sit on.
+   Geometry is drawn on a 32x32 viewBox so every size is one number.
+-------------------------------------------------------------------*/
+const ACC='#2bbcb3', ACCD='#229e96', DEEP='#16303d', WHITE='#ffffff';
+let uid=0;
+
+/* a bold geometric K, cap height 18 on a 32 grid */
+const KPATH='M8.6 7 H12.2 V14.6 L19.4 7 H24.2 L16.1 15.6 L24.6 25 H19.7 L12.2 16.7 V25 H8.6 Z';
+
+function svg(px,inner){
+  return `<svg width="${px}" height="${px}" viewBox="0 0 32 32" fill="none"
+    xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none">${inner}</svg>`;
+}
+
+/* ---- A · Keystone ------------------------------------------------ */
+/* the voussoir that holds the arch: wider at the top, tapering down.  */
+function markA(px,ctx){
+  const stone = ctx==='deep' ? WHITE : DEEP;
+  const k     = ctx==='deep' ? DEEP  : ACC;
+  /* the K rides inside the taper at 0.78 so the stone always has shoulder */
+  return svg(px,`
+    <path d="M4.8 3.3 H27.2 L23.9 28.7 H8.1 Z" fill="${stone}"
+          stroke="${stone}" stroke-width="1.5" stroke-linejoin="round"/>
+    <g transform="translate(3.05,3.32) scale(0.78)"><path d="${KPATH}" fill="${k}"/></g>
+  `);
+}
+/* large-only: the stone seated at the apex of its arch */
+function markAarch(px){
+  return `<svg width="${px*4}" height="${px*2.1}" viewBox="0 0 160 84" fill="none" style="display:block">
+    <path d="M24 78 A56 56 0 0 1 136 78 L120 78 A40 40 0 0 0 40 78 Z"
+          fill="${DEEP}" opacity=".16"/>
+    <path d="M69 20 H91 L88.3 40 H71.7 Z" fill="#fff"/>
+    <path d="M70 21 H90 L87.5 39 H72.5 Z" fill="${DEEP}"
+          stroke="${DEEP}" stroke-width="1.2" stroke-linejoin="round"/>
+    <g transform="translate(68.55,18.96) scale(0.69)"><path d="${KPATH}" fill="${ACC}"/></g>
+  </svg>`;
+}
+
+/* ---- B · Branch & merge ------------------------------------------ */
+function markB(px,ctx){
+  /* one letterform in a single colour; only the two graph nodes take the accent */
+  const c = ctx==='deep' ? WHITE : DEEP;
+  const small = px<=20;
+  return svg(px,`
+    <g stroke="${c}" stroke-width="${small?4:3.6}" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 5.2 V26.8"/>
+      <path d="M10 16 L19.6 7.2"/>
+      <path d="M10 16 L19.6 24.8"/>
+    </g>
+    <circle cx="21.5" cy="5.6" r="${small?3.6:3.3}" fill="${ACC}"/>
+    <circle cx="21.5" cy="26.4" r="${small?3.6:3.3}" fill="${ACC}"/>
+  `);
+}
+
+/* ---- C · Live pip ------------------------------------------------ */
+function markC(px,ctx){
+  const base = ctx==='deep' ? '#ffffff' : ACC;
+  const small = px<=20;
+  return svg(px,`
+    <circle cx="16" cy="16" r="${small?6:4.8}" fill="${ctx==='deep'?ACC:ACC}"/>
+    ${small?'':`<circle cx="16" cy="16" r="9.6" stroke="${base}" stroke-width="2.1" opacity=".42"/>`}
+    <circle cx="16" cy="16" r="${small?11:14}" stroke="${base}" stroke-width="${small?2:1.6}" opacity="${small?'.35':'.19'}"/>
+  `);
+}
+
+/* ---- D · Continuity tile (flat) ---------------------------------- */
+function markD(px,ctx){
+  const id='kd'+(uid++);
+  const tile = ctx==='deep' ? ACC : DEEP;
+  const letter = ctx==='deep' ? DEEP : ACC;
+  return svg(px,`
+    <mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
+      <rect width="32" height="32" rx="9" fill="#fff"/><path d="${KPATH}" fill="#000"/>
+    </mask>
+    <rect width="32" height="32" rx="9" fill="${tile}" mask="url(#${id})"/>
+    <path d="${KPATH}" fill="${letter}"/>
+  `);
+}
+/* what is live today, for comparison */
+function markLive(px){
+  const id='kl'+(uid++);
+  return svg(px,`
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${ACC}"/><stop offset="1" stop-color="${ACCD}"/>
+    </linearGradient></defs>
+    <rect width="32" height="32" rx="9" fill="url(#${id})"/>
+    <path d="${KPATH}" fill="#fff"/>
+  `);
+}
+/* the stale favicon, for comparison */
+function markStale(px){
+  const id='ks'+(uid++);
+  return svg(px,`
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient></defs>
+    <rect width="32" height="32" rx="8" fill="#09090b"/>
+    <text x="4" y="23" font-family="monospace" font-weight="700" font-size="18" fill="url(#${id})">K</text>
+    <circle cx="24" cy="10" r="3" fill="url(#${id})" opacity=".6"/>
+  `);
+}
+
+/* ---- E · Cut K --------------------------------------------------- */
+function markE(px,ctx){
+  const id='ke'+(uid++);
+  const solid = ctx==='deep' ? ACC : DEEP;
+  return svg(px,`
+    <mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
+      <rect width="32" height="32" rx="9" fill="#fff"/>
+      <path d="${KPATH}" fill="#000"/>
+    </mask>
+    <rect width="32" height="32" rx="9" fill="${solid}" mask="url(#${id})"/>
+  `);
+}
+
+/* ------------------------------------------------------------------ */
+const DIRS=[
+  {
+    id:'A', key:'A', name:'Keystone', mark:markA, tag:'Concept-led',
+    claim:`The mark is a <b>keystone</b> — the wedge at the top of an arch that holds the whole span up.
+           Pull it and the arch falls. That is the retainer argument as a shape: you own the building,
+           we are the stone that keeps it standing.`,
+    risk:`<b>Risk:</b> it needs the sentence. Without the story it is a trapezoid with a K in it, and the
+          taper costs legibility at 16px where the bottom corners crowd the letter.`
+  },
+  {
+    id:'B', key:'B', name:'Branch & merge', mark:markB, tag:'Recommended',
+    claim:`The K drawn as a <b>git graph</b>: the stem is the trunk that never stops, one arm branches off,
+           the other merges back, with a node on each. Build and run, in three strokes. It comes from the
+           same vocabulary as the site's running board and fleet sparklines.`,
+    risk:`<b>Risk:</b> git graphs are common in developer tooling. This is distinctive against agencies,
+          not against dev tools. It is also the hardest of the five to hold together at 16px — the nodes
+          want to close up and it turns into a blob.`
+  },
+  {
+    id:'C', key:'C', name:'Live pip', mark:markC, tag:'No letterform',
+    claim:`Drop the letter entirely. The mark is the accent dot already sitting in
+           <b>kaymen<span style="color:var(--accent)">.</span>dev</b>, promoted to a <b>live status pip</b> —
+           the thing that means a system is up. The wordmark does the naming; the mark does the promise.`,
+    risk:`<b>Risk:</b> a dot is not ownable on its own. It only works locked to the wordmark, so it cannot
+          be an app icon or an avatar without a K creeping back in. Concentric rings also read "broadcast"
+          to some eyes, not "uptime".`
+  },
+  {
+    id:'D', key:'D', name:'Continuity, flattened', mark:markD, tag:'Cheapest',
+    claim:`Keep what is already live and fix what is weak in it: <b>drop the gradient and the glow</b>,
+           go flat <code>--deep</code> with an accent K. One accent, one dark band — the same restraint that
+           got the redesign accepted. Zero migration, and it settles the login and favicon inconsistencies today.`,
+    risk:`<b>Risk:</b> it is the default. A rounded square with a letter in it is what every SaaS product
+          ships, which is exactly the "we're copying everyone else" note that killed earlier rounds.`
+  },
+  {
+    id:'E', key:'E', name:'Cut', mark:markE, tag:'Most restrained',
+    claim:`One solid block with the K <b>cut clean out of it</b>, so the page shows through the letter.
+           No gradient, no glow, no second colour — the mark inverts itself for free on the dark band.
+           The most confident of the five and the most reliable at 16px.`,
+    risk:`<b>Risk:</b> confidence is all it says. It carries no idea about what the company does, so it
+          leans entirely on the wordmark and the work to mean anything.`
+  }
+];
+
+/* ---------- render lineup ---------- */
+function wordmark(cls,ctx){
+  const c = ctx==='deep' ? '#fff':'inherit';
+  return `<span class="wm ${cls}" style="color:${c}"><b style="font-weight:700">kaymen</b><span class="dot">.</span>dev</span>`;
+}
+
+document.getElementById('lineup-head').innerHTML =
+  `<div>Background</div>` + DIRS.map(d=>`<div>${d.id} · ${d.name}<span>${d.tag}</span></div>`).join('');
+
+function fillRow(el,label,ctx,px,cls){
+  el.innerHTML = `<div class="rowlabel">${label}</div>` +
+    DIRS.map(d=>`<div class="cell">${d.mark(px,ctx)}</div>`).join('');
+}
+fillRow(document.getElementById('lineup-white'),'On white','light',54);
+fillRow(document.getElementById('lineup-alt'),'On #f4f5f7','alt',54);
+fillRow(document.getElementById('lineup-deep'),'On --deep','deep',54);
+fillRow(document.getElementById('lineup-16'),'At 16px','light',16);
+
+/* ---------- today's three ---------- */
+document.getElementById('today-a').innerHTML =
+  `<div class="lock">${markLive(30)}${wordmark('s','light')}</div>`;
+document.getElementById('today-c').innerHTML =
+  `<div style="display:flex;align-items:center;gap:10px;justify-content:center">${markStale(30)}${markStale(16)}</div>`;
+
+/* ---------- panels ---------- */
+const panels=document.getElementById('panels');
+const sw=document.getElementById('switch');
+
+panels.innerHTML = DIRS.map(d=>`
+  <div class="panel" data-p="${d.id}">
+    <div class="phead">
+      <div class="t">
+        ${d.mark(52,'light')}
+        <div>
+          <h3>${d.id} · ${d.name}</h3>
+          <span class="tag ${d.id==='D'||d.id==='C'?'warn':''}">${d.tag}</span>
+        </div>
+      </div>
+      <p class="claim">${d.claim}</p>
+      <p class="risk">${d.risk}</p>
+    </div>
+
+    <div class="grid">
+
+      <div class="card" style="grid-column:1/-1">
+        <h4>Size ramp — the only test that matters</h4>
+        <div class="ramp">
+          ${[96,64,48,32,24,16].map(px=>`
+            <figure>${d.mark(px,'light')}<figcaption>${px}px</figcaption></figure>`).join('')}
+          <figure style="margin-left:18px;padding:14px 20px;background:var(--deep);border-radius:12px">
+            ${d.mark(48,'deep')}<figcaption style="color:rgba(255,255,255,.5)">on --deep</figcaption>
+          </figure>
+        </div>
+        ${d.id==='A'?`<p class="note">The arch is context, not part of the mark — it only ever appears large,
+          on the about page or a slide:</p><div style="margin-top:14px">${markAarch(46)}</div>`:''}
+        ${d.id==='C'?`<p class="note">In the product the pip can breathe — a slow pulse on the outer ring
+          when the fleet is green. Static everywhere else.</p>`:''}
+      </div>
+
+      <div class="card">
+        <h4>The 224px rail — as built</h4>
+        <div class="railbed">
+          <div class="rail">
+            <div class="lock">${d.mark(30,'light')}${wordmark('s','light')}</div>
+            <div class="nav">
+              <a class="on"><i></i>Work</a>
+              <a><i></i>Fleet</a>
+              <a><i></i>Pricing</a>
+              <a><i></i>Contact</a>
+            </div>
+          </div>
+        </div>
+        <p class="note">Locked component — always 224px, always labelled. The mark has to sit at 30px
+          beside a 14px wordmark without out-shouting it.</p>
+      </div>
+
+      <div class="card">
+        <h4>Browser tab — 16px, the brutal one</h4>
+        <div class="tabbar">
+          <div class="tab">${d.mark(16,'light')}<span>kaymen.dev — build &amp; run</span></div>
+          <div class="tab off">${d.mark(16,'light')}<span>Admin</span></div>
+        </div>
+        <div class="tabbody"></div>
+        <p class="note">Replaces <code style="font-family:ui-monospace,monospace;font-size:11px">favicon.svg</code>,
+          which is still on the pre-redesign blue/purple theme.</p>
+      </div>
+
+      <div class="card">
+        <h4>Email header — on --deep</h4>
+        <div class="mail">
+          <div class="mh">${d.mark(34,'deep')}${wordmark('m','deep')}</div>
+          <div class="mb">
+            <b>You've been invited to kaymen.dev</b>
+            <p>The first thing a new client ever sees from us. Eight outbound emails, all on this header.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4>Login — replaces the <code style="font-family:ui-monospace,monospace;font-size:11px">{ }</code> braces</h4>
+        <div class="login">
+          <div class="lock stack">${d.mark(46,'light')}${wordmark('m','light')}</div>
+          <div class="field"></div><div class="field"></div>
+          <div class="btn">Sign in</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h4>App icon, avatar, chip</h4>
+        <div class="avis">
+          ${d.mark(64,'light')}
+          <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--bg-alt)">${d.mark(30,'light')}</div>
+          <div class="chipline">${d.mark(26,'light')}<span>kaymen.dev</span></div>
+        </div>
+        <div class="band" style="margin-top:20px">
+          ${d.mark(40,'deep')}
+          ${wordmark('l','deep')}
+          <span class="cap">the one dark band</span>
+        </div>
+      </div>
+
+    </div>
+  </div>`).join('');
+
+sw.innerHTML = DIRS.map((d,i)=>`
+  <button data-b="${d.id}" aria-selected="${i===0}">
+    <span class="key">${d.key}</span>${d.name}
+  </button>`).join('');
+
+function show(id){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.dataset.p===id));
+  document.querySelectorAll('#switch button').forEach(b=>b.setAttribute('aria-selected',b.dataset.b===id));
+}
+sw.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(b) show(b.dataset.b);
+});
+document.addEventListener('keydown',e=>{
+  const k=e.key.toUpperCase();
+  if(DIRS.some(d=>d.key===k)) show(k);
+});
+show('A');
+</script>
+</body>
+</html>

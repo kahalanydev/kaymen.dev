@@ -106,16 +106,26 @@ Kaymen.Dev Site/
 │                           # HTML; three of them did and drifted a whole palette behind.
 ├── admin/
 │   ├── index.html          # Admin panel shell (PWA-enabled, loads Chart.js + app.js)
-│   ├── styles.css          # Admin dark/light theme styles + mobile card tables + bottom nav
-│   ├── app.js              # Admin SPA (dashboard, security, analytics, settings, projects, clients, tickets, Claude Code chat)
-│   ├── manifest.json       # PWA manifest (standalone, dark theme)
+│   ├── styles.css          # Admin — locked design system + its own legacy token bridge
+│   ├── app.js              # Admin SPA (dashboard, security, analytics, settings, projects console, clients, tickets)
+│   ├── manifest.json       # PWA manifest (standalone, light-first)
 │   └── sw.js               # Service worker (cache strategies, OAuth passthrough)
 ├── portal/
 │   ├── index.html          # Client portal shell (PWA-enabled)
-│   ├── styles.css          # Portal dark/light theme styles + mobile card tables + bottom nav
-│   ├── app.js              # Portal SPA (login, dashboard, projects, tickets, plans, activity)
-│   ├── manifest.json       # PWA manifest (standalone, dark theme)
+│   ├── styles.css          # Portal — locked design system + its own legacy token bridge
+│   ├── app.js              # Portal SPA (login, dashboard, Reassurance overview, tickets, plans, activity)
+│   ├── manifest.json       # PWA manifest (standalone, light-first)
 │   └── sw.js               # Service worker (cache strategies)
+├── scripts/
+│   ├── refresh-stats.js    # Writes content/stats.js from git history + the Coolify API.
+│   │                       # Every homepage number comes from here — never hand-edit them.
+│   ├── seed-preview.js     # Boots server/index.js on a throwaway .preview-data/ and seeds
+│   │                       # orgs/projects/milestones/plans/tickets/clients, then writes
+│   │                       # token-planting _preview.html files. The only way to review
+│   │                       # /admin and /portal — --screenshot cannot log in.
+│   ├── preview-emails.js   # Renders all 8 outbound emails without sending
+│   ├── build-mockup.js     # Builds mockup/back-office.html
+│   └── build-directions.js
 ├── data/
 │   └── analytics.db        # SQLite database (gitignored, persisted via Docker volume)
 ├── package.json            # Node.js deps: express, sql.js, bcryptjs, jsonwebtoken, helmet, etc.
@@ -322,13 +332,27 @@ does the selling. Each page carries prev/next navigation and a closing CTA band.
   - **Left column**: Milestone Spotlight (active/upcoming milestones with status indicators) + Ticket Summary (open/in-progress/closed counts, recent tickets list) + Quick Actions (create ticket per project)
   - **Right column**: Compact Activity Feed (8 items, collapsed duplicates with multiplier badges)
 
-### Project View
-- **Phase indicator bar**: 6-step horizontal bar (Planning → Proposed → Approved → In Progress → Review → Completed) with checkmarks for passed phases, glowing blue for current
-- **SVG progress ring** (120px) with 4 stat cards: milestones done, open tickets, days active, days remaining
-- **Ticket action buttons** (View Tickets / Create Ticket) in top-right of stats overview card
-- **Side-by-side grid** (1.4fr 1fr):
-  - **Left**: Visual milestone timeline with vertical connected nodes (green checkmark = completed, pulsing blue = in progress, hollow gray = upcoming, green connector line up to current)
-  - **Right**: Compact activity feed with collapsed duplicates
+### Project Overview — "Reassurance" (`renderProject`)
+Rebuilt 2026-08-16. A client logs in a couple of times a month for one reason: is my thing on
+track, and does anyone still care about it. The screen answers that in a sentence, then shows the
+evidence.
+
+- **Status sentence** in 38px Sora, DERIVED on every render by `statusSentence()` from milestones,
+  dates and tickets — never a stored string. A late project says so. The lead paragraph underneath
+  assembles only facts it can prove: stages done, current stage and whether it is late, the
+  pressing ticket by number, the last stage's date.
+- **"Yours to do"** (`buildTodo`) — rendered **only when it has contents**, because an empty
+  to-do column reads as neglect exactly when things are going well. Two derivable items: a plan in
+  `proposed` awaiting approval (hero card), and tickets in `review` that need the client to confirm
+  the fix. "We are blocked on you" is *not* built — no schema field records it (handoff §6).
+- **Timeline** (`.tl`), spine lit to the real completion figure via a `--lit` custom property.
+- **Ring** (132px) with stages done, days in and target date.
+- **"What has happened"** — the activity feed as dated prose rather than icon rows.
+- Two API calls in parallel: the project response carries only an open-ticket *count*, and both the
+  sentence and the to-do block need the tickets themselves.
+
+The phase indicator bar, the 4-stat overview card and the older node timeline still exist in
+`portal/app.js` and `portal/styles.css`; the overview no longer uses them.
 
 ### Plan View
 - Project plan content display
@@ -348,10 +372,21 @@ does the selling. Each page carries prev/next navigation and a closing CTA band.
 
 ## Admin Panel Extensions (Client Portal)
 
-### Projects Page
-- Project list with progress bars, status badges, org assignment
-- Create project form with org selection
-- Project detail in 3 grid rows: Milestones + Claude Code | Plan + Tickets | Members + Activity
+### Projects Console (`renderConsole`)
+One two-pane screen, not a list page plus a detail page. `#/projects` and `#/projects/:id` both
+render it; picking a project swaps only the right pane.
+- **Left pane**: projects grouped by status (in progress → review → approved → proposed → planning
+  → maintenance → completed → archived), each row carrying org, open-ticket count and progress bar.
+  The count turns alert-toned only when `urgent_tickets > 0` — severity, not volume.
+- **Right pane**: header with inline status `<select>`, five-figure stat strip (progress,
+  milestones, open tickets, days active, days remaining), milestones with inline status + delete,
+  plan meta, member chips, ticket table with inline status, activity log.
+- **Plan panel** opens full-width beneath both panes: View / Edit / History, one mode at a time.
+- **⌘K / Ctrl-K** focuses a filter over the project list (not a global palette — see handoff §6).
+- Selection uses `history.replaceState`, so the router is never re-entered. `renderLayout()` clears
+  the console's `mounted` flag, so any other page render invalidates it.
+- Create project form with org selection, above the panes.
+- The Claude Code chat pane is **not** part of this screen (removed 2026-08-16).
 
 ### Clients Page
 - Organization list with user counts
@@ -369,15 +404,19 @@ does the selling. Each page carries prev/next navigation and a closing CTA band.
 - Auto-notifications on creation (email + webhook)
 - **Dev API resolve** accepts both UUID and ticket number (with `project_id` fallback)
 
-### Claude Code Integration (Project Detail)
-- Chat widget in grid-2 right column (next to Milestones) on every project detail page
-- Connects to Claude Code Desktop server (`code.kahalany.dev`) via CORS + JWT auth
-- Pairing flow: 6-digit code from Claude Code Desktop startup
-- Folder mapping: select local project folder from CC server's folder list
-- Real-time streaming: WebSocket connection for `claude:stream`, `claude:tool-use`, `claude:done` events
-- Chat features: markdown rendering, tool use badges, send/stop/reset, in-memory history
-- **Auto-refresh**: Tickets table refreshes automatically after Claude Code completes a response
-- Architecture: Browser ↔ Cloudflare Tunnel ↔ localhost:3141 (Claude Code server) ↔ Claude CLI
+### Claude Code Integration — widget removed 2026-08-16
+The chat widget that used to sit in the project-detail grid is **gone**: Ohav's call is that the
+widget is to be replaced by an agent that scans incoming tickets, so it was dropped rather than
+re-skinned when the projects page became the Dense console.
+
+What remains and still works:
+- The `cc` client module in `admin/app.js` — token management, pairing, folder map, WebSocket.
+- The **Settings → Claude Code card**: server URL, 6-digit pairing code, connection status,
+  disconnect. Pairing against the Claude Code Desktop server still works from there.
+- Architecture, unchanged: Browser ↔ Cloudflare Tunnel ↔ localhost:3141 ↔ Claude CLI.
+
+The ticket-resolution pipeline never went through this widget — it runs over the HMAC dev API and
+the Desktop portal-sync service, both untouched.
 
 ### Portal Sync Service (Claude Code Desktop)
 - Polls every 5 min + startup sync for ticket/milestone changes
@@ -421,11 +460,17 @@ does the selling. Each page carries prev/next navigation and a closing CTA band.
 |---|---|
 | Main site | Light only. Toggle removed in the 2026-08-15 redesign. |
 | Admin | Light only. Toggle removed 2026-08-16; a stale `admin_theme` key is actively cleared on boot. |
-| Portal | **Still the old dark theme** — not yet re-skinned. `portal/app.js` still has its toggle. |
+| Portal | Light only. Toggle removed 2026-08-16; a stale `portal_theme` key is actively cleared on boot. |
+
+Both PWA manifests declare `#ffffff` for `theme_color` and `background_color`. They carried the old
+`#09090b` until 2026-08-16, which made an installed admin or portal flash dark on every launch.
 
 Admin and portal stylesheets carry a **legacy token bridge**: the old dark theme's variable names
 (`--surface-3`, `--text-dim`, `--danger` …) are kept and pointed at the new palette, because the
 SPAs carry several hundred inline styles written against them. Grep `app.js` before deleting one.
+The portal's bridge is the more dangerous: `progressRing()` emits `stroke="var(--surface-3)"` and
+`fill="var(--text)"` *inside SVG*, where a missing variable renders as nothing rather than as an
+obviously wrong colour.
 
 ## Deployment
 - **Docker**: `node:20-alpine` runs Express on port 8080

@@ -509,6 +509,8 @@ router.get('/projects', (req, res) => {
   const projects = db.prepare(`
     SELECT p.*, o.name as org_name,
            (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.id AND t.status IN ('open','in_progress')) as open_tickets,
+           (SELECT COUNT(*) FROM tickets t WHERE t.project_id = p.id AND t.status IN ('open','in_progress')
+                                             AND t.priority IN ('urgent','high')) as urgent_tickets,
            (SELECT MAX(created_at) FROM activity_log a WHERE a.project_id = p.id) as last_activity
     FROM projects p
     JOIN organizations o ON o.id = p.org_id

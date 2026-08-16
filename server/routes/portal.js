@@ -127,6 +127,10 @@ router.get('/projects/:projectId', enforceOrgScope, (req, res) => {
   if (project.start_date) daysSinceStart = Math.max(0, Math.ceil((new Date() - new Date(project.start_date)) / 86400000));
   if (project.target_date) daysRemaining = Math.ceil((new Date(project.target_date) - new Date()) / 86400000);
 
+  // the rail foot names the client's own organisation, so a deep link into a
+  // project has to carry it — the dashboard is not always the way in
+  const org = db.prepare('SELECT name FROM organizations WHERE id = ?').get(project.org_id);
+
   res.json({
     success: true,
     data: {
@@ -135,7 +139,7 @@ router.get('/projects/:projectId', enforceOrgScope, (req, res) => {
         status: project.status, progress_percent: project.progress_percent,
         tech_stack: project.tech_stack, live_url: project.live_url,
         start_date: project.start_date, target_date: project.target_date,
-        completed_date: project.completed_date,
+        completed_date: project.completed_date, org_name: org ? org.name : null,
         days_since_start: daysSinceStart, days_remaining: daysRemaining
       },
       milestones,

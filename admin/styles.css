@@ -424,7 +424,9 @@ select{font-family:var(--body);color:var(--ink)}
 /* ================================================ 5. PROJECTS — DENSE CONSOLE
    Two panes, no navigation round-trip, tabular numerals. Density is bought
    from the content; the rail stays 224px and labelled.                       */
-.c-top{display:flex;align-items:center;gap:14px;padding:2px 0 12px;border-bottom:1px solid var(--line)}
+/* wraps because at 430px the jump field and New project do not fit on one line;
+   at any desktop width there is room and nothing wraps */
+.c-top{display:flex;align-items:center;gap:14px;padding:2px 0 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .c-top h1{font-size:17px;letter-spacing:-.03em}
 .c-k{
   margin-left:auto;display:flex;align-items:center;gap:8px;height:30px;padding:0 11px;
@@ -432,10 +434,19 @@ select{font-family:var(--body);color:var(--ink)}
   font-size:11.5px;color:var(--muted);transition:all .22s var(--ease);
 }
 .c-k:hover{border-color:var(--accent);color:var(--accent-dark)}
+.c-k:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
 .c-k kbd{
   font-family:var(--body);font-size:10px;font-weight:700;background:#fff;
   border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:var(--ink);
 }
+/* the pill IS the field — the mockup's ⌘K, narrowed to the one index this screen
+   actually holds. It filters the left pane; it does not search tickets or orgs. */
+.c-k input{
+  width:120px;border:0;background:none;padding:0;color:var(--ink);
+  font-family:var(--body);font-size:11.5px;
+}
+.c-k input:focus{outline:none}
+.c-k input::placeholder{color:var(--muted)}
 .c-panes{display:grid;grid-template-columns:264px minmax(0,1fr);gap:0;align-items:start}
 .c-list{
   border-right:1px solid var(--line);padding:8px 14px 8px 0;
@@ -475,9 +486,35 @@ select{font-family:var(--body);color:var(--ink)}
 .c-blk h4{
   font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
   color:var(--muted);font-family:var(--body);margin-bottom:9px;
+  display:flex;align-items:center;gap:12px;
 }
 .c-blk + .c-blk,.c-blk h4 + *{margin-top:0}
 .c-blk .sub-blk{margin-top:20px}
+/* block-heading actions. Named .hact, not .act — a bare `.act` is the dashboard's
+   activity list, and that collision is exactly the trap in the handoff §4. */
+.c-blk h4 .hact{
+  font-family:var(--body);font-size:9.5px;font-weight:700;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--accent-dark);background:none;border:0;padding:0;
+  cursor:pointer;transition:color .2s var(--ease);
+}
+.c-blk h4 .hact:first-of-type{margin-left:auto}
+.c-blk h4 .hact:hover{color:var(--ink)}
+.c-blk h4 .hact.off{color:var(--muted)}
+.c-meta{font-size:11.5px;color:var(--muted);line-height:1.65}
+.c-meta b{color:var(--ink);font-weight:600}
+.c-new{padding-top:16px}
+.c-inline{display:flex;gap:7px;align-items:center;margin-bottom:10px}
+.c-inline input{
+  flex:1;min-width:0;border:1px solid var(--line);border-radius:8px;padding:5px 9px;
+  background:#fff;color:var(--ink);font-family:var(--body);font-size:12px;
+}
+.c-inline input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.c-inline input[type=date]{flex:none;width:132px}
+/* member chips — click to remove, which the hover tone announces before the confirm */
+.c-av{display:flex;gap:6px;flex-wrap:wrap}
+.c-av .avatar{cursor:pointer;transition:all .2s var(--ease)}
+.c-av .avatar:hover{background:var(--alert-soft);border-color:rgba(184,68,60,.3);color:var(--alert)}
+.c-none{font-size:11.5px;color:var(--muted);padding:2px 0}
 
 /* milestone rows at roughly a third the height of the site's board rows */
 .c-ms{display:grid;gap:1px}
@@ -490,6 +527,16 @@ select{font-family:var(--body);color:var(--ink)}
 .c-m.is-done .mn{color:var(--muted)}
 .c-m .md{font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .c-m .md.late{color:var(--alert);font-weight:600}
+/* the mockup's milestone row is read-only; the real one has to be editable, so the
+   date and its controls share the third column rather than the row growing a fourth */
+.c-m .mrt{display:flex;align-items:center;gap:8px}
+.c-m .mdel{
+  background:none;border:0;padding:0 1px;line-height:1;cursor:pointer;
+  color:var(--muted);font-size:11px;opacity:0;transition:all .2s var(--ease);
+}
+.c-m .mdel:hover{color:var(--alert)}
+.c-m:hover .mdel,.c-m .mdel:focus{opacity:1}
+@media (hover:none){.c-m .mdel{opacity:1}}
 
 .c-tb{width:100%;border-collapse:collapse;font-size:12px}
 .c-tb th{
@@ -508,10 +555,39 @@ select{font-family:var(--body);color:var(--ink)}
 .c-sel:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
 
 .c-log{display:grid;gap:0;margin-top:18px;padding-top:12px;border-top:1px solid var(--line)}
+.c-log h4{margin-bottom:7px}
 .c-lr{display:grid;grid-template-columns:1fr auto;gap:12px;padding:4px 0;font-size:11.5px;color:var(--muted)}
 .c-lr b{color:var(--ink);font-weight:600}
 .c-lr .t{font-variant-numeric:tabular-nums;font-size:10.5px;white-space:nowrap}
 .c-lr em{font-style:normal;color:var(--warn);font-weight:600}
+
+/* the plan does not fit a .82fr column, so it opens full-width under both panes */
+.c-panel{
+  margin-top:26px;padding-top:16px;border-top:1px solid var(--line);
+}
+.c-panel .ph{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.c-panel .ph h4{
+  font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);font-family:var(--body);
+}
+.c-panel .ph .sp{margin-left:auto;display:flex;gap:8px;align-items:center}
+.c-panel textarea{
+  width:100%;min-height:340px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;
+  background:#fff;color:var(--ink);font-family:var(--mono);font-size:12.5px;line-height:1.65;resize:vertical;
+}
+.c-panel textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.c-panel .pv{
+  border:1px solid var(--line);border-radius:12px;padding:16px 18px;
+  max-height:520px;overflow-y:auto;font-size:13px;
+}
+.c-vr{
+  display:flex;align-items:center;gap:10px;padding:8px 0;
+  border-bottom:1px solid var(--line);font-size:12px;
+}
+.c-vr:last-child{border-bottom:0}
+.c-vr .sp{margin-left:auto;display:flex;gap:6px}
+
+[hidden]{display:none!important}
 
 /* ============================================ 6. LOGIN, INVITE, MARKDOWN */
 .login-page{
