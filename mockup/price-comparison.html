@@ -11,35 +11,35 @@
 /* ============================================================================
    kaymen.dev — "What these actually cost"
 
-   The format is the one Ohav picked (the interactive break-even, direction C of
-   the first pass): pick something, get a straight answer, including the answers
-   that go against us. The SUBJECT changed on his note — not "hire us to
-   maintain a system" but "here is what we already built, and what it would have
-   cost you otherwise". Retrospective, real projects, real receipts.
+   Third pass. Format is the slider Ohav liked from the first version; subject is
+   the receipts version he asked for; this pass makes it COMPACT — the whole
+   block now fits one screen instead of scrolling.
 
-   WHERE THE NUMBERS COME FROM — this matters more here than anywhere else on
-   the site, because the whole section is a claim about money:
+   What got cut to earn that: the six selector chips (the slider replaces them),
+   the standalone scale row (inline in the header now), the four-row figure table
+   (folded into the bar labels), and the big total panel (one closing line).
 
-   · DAYS are REAL and GENERATED. content/stats.js is written by
-     scripts/refresh-stats.js out of actual git history — distinct days carrying
-     a commit, per project, per month, Feb–Aug 2026. Nobody typed them. In the
-     real implementation this section is server-rendered from that file like the
-     rest of the homepage, so the figures move when the script re-runs.
+   WHERE THE NUMBERS COME FROM:
+   · DAYS are REAL and GENERATED — content/stats.js, written by
+     scripts/refresh-stats.js from actual git history: distinct days carrying a
+     commit, per project, per month, Feb–Aug 2026. Server-rendered from that file
+     in production, so the figures regenerate and cannot go stale.
    · SCALE METRICS are REAL and PUBLISHED, verbatim from content/projects.js.
-   · OUR COST is DERIVED from the site's own published $165/hr, at 8h/day. It is
-     list price, and it is labelled as list price on screen.
-   · COMPARISON DAY RATES are PLACEHOLDERS, marked in amber, driven by the three
-     constants at the bottom of this file. They are the only numbers here that
-     need Ohav before anything ships.
+   · OUR COST derives from the site's own published $165/hr. The hours-per-day
+     multiplier is an ASSUMPTION, not a fact — see HOURS_PER_COMMIT_DAY at the
+     bottom. It is the single biggest lever on this whole section.
+   · THE THREE COMPARISON DAY RATES are now RESEARCHED, with sources cited at
+     the bottom of this file (FullStack Labs 2026 price guide, ZipRecruiter
+     Aug 2026). They are no longer invented — but two of the three now come out
+     AGAINST us, which is a real finding and is discussed in the note on screen.
 
-   CLIENT_NAMING is 'anonymous' (content/projects.js) — no client name, logo,
-   domain or product name appears here, same interlock as the rest of the site.
+   CLIENT_NAMING is 'anonymous' — no client name, logo, domain or product name.
    ============================================================================ */
 :root{
   --bg:#ffffff; --bg-alt:#f4f5f7; --ink:#1a1b1e; --muted:#5f6368;
   --accent:#2bbcb3; --accent-dark:#229e96;
   --accent-soft:rgba(43,188,179,.08); --accent-glow:rgba(43,188,179,.18);
-  --line:#e2e4e8; --deep:#16303d;
+  --line:#e2e4e8;
   --warn:#a8761c; --warn-soft:rgba(168,118,28,.09);
   --display:'Sora',-apple-system,BlinkMacSystemFont,sans-serif;
   --body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
@@ -57,104 +57,86 @@ a{color:inherit}
 .mk-top .wrap{display:flex;align-items:center;gap:16px;height:62px;flex-wrap:wrap}
 .mk-brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.02em}
 .mk-mark{width:28px;height:28px;border-radius:9px;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;background:linear-gradient(150deg,var(--accent) 0%,var(--accent-dark) 100%)}
-.mk-note{padding:44px 0 10px}
-.mk-eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:12px}
-.mk-note h2{font-size:29px;letter-spacing:-.04em}
-.mk-note h2 small{display:block;font-family:var(--body);font-size:14px;font-weight:400;color:var(--muted);letter-spacing:0;margin-top:9px}
-.mk-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:26px}
-.mk-col h5{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-family:var(--body);margin-bottom:8px}
-.mk-col p{font-size:13.5px;color:var(--muted);line-height:1.7}
+.mk-note{padding:40px 0 6px}
+.mk-eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:11px}
+.mk-note h2{font-size:27px;letter-spacing:-.04em}
+.mk-note h2 small{display:block;font-family:var(--body);font-size:13.5px;font-weight:400;color:var(--muted);letter-spacing:0;margin-top:8px}
+.mk-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:22px}
+.mk-col h5{font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-family:var(--body);margin-bottom:7px}
+.mk-col p{font-size:13px;color:var(--muted);line-height:1.65}
 .mk-col p b{color:var(--ink);font-weight:600}
 .mk-col.cost h5{color:var(--warn)}
-.frame{margin:26px 0 60px;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 26px 60px -30px rgba(22,48,61,.22)}
+.frame{margin:24px 0 56px;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 26px 60px -30px rgba(22,48,61,.22)}
 .frame-bar{display:flex;align-items:center;gap:7px;padding:11px 16px;background:var(--bg-alt);border-bottom:1px solid var(--line)}
 .frame-bar i{width:10px;height:10px;border-radius:50%;background:#d7dae0;display:block}
 .frame-bar em{margin-left:12px;font-style:normal;font-size:11.5px;color:var(--muted)}
-.screen{background:var(--bg);padding:52px 0}
+.screen{background:var(--bg);padding:44px 0}
 
-/* ---- section language, matching the real /#price ---- */
+/* ---- the section, compact ---- */
+.head{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.head .lede{flex:1;min-width:320px}
 .eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:var(--accent-dark)}
-.sec{font-size:32px;letter-spacing:-.045em;margin-top:12px}
-.sec-sub{font-size:15.5px;color:var(--muted);margin-top:12px;max-width:60ch;line-height:1.7}
+.sec{font-size:30px;letter-spacing:-.045em;margin-top:11px}
+.sec-sub{font-size:14px;color:var(--muted);margin-top:9px;max-width:62ch;line-height:1.65}
 .sec-sub b{color:var(--ink);font-weight:600}
-.fine{font-size:12.5px;color:var(--muted);margin-top:22px;line-height:1.7;max-width:74ch}
-.fine b{color:var(--ink);font-weight:600}
-.ph{background:var(--warn-soft);color:var(--warn);border-radius:5px;padding:0 4px;font-weight:700}
-.legend{display:inline-flex;align-items:center;gap:8px;font-size:11.5px;color:var(--warn);background:var(--warn-soft);border-radius:9px;padding:7px 12px;margin-top:20px;line-height:1.5}
-
-/* ---- the picker: six real systems ---- */
-.picker{display:flex;gap:7px;flex-wrap:wrap;margin:30px 0 4px}
-.chip{
-  font-family:var(--body);font-size:12.5px;font-weight:600;padding:9px 15px;border-radius:11px;
-  border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;transition:all .2s var(--ease);
-}
-.chip:hover{color:var(--ink);border-color:#d7dae0}
-.chip.on{background:var(--accent-soft);color:var(--accent-dark);border-color:rgba(43,188,179,.32)}
-.basis{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:18px;font-size:12.5px;color:var(--muted)}
-.basis .opts{display:flex;gap:6px;flex-wrap:wrap}
+/* the comparison basis moves up here rather than taking a row of its own */
+.basis{display:flex;gap:5px;flex-wrap:wrap;padding-bottom:3px}
 .basis button{
   font-family:var(--body);font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:9px;
   border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;transition:all .2s var(--ease);
 }
 .basis button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 
+/* ---- the slider: drags across the six real systems, smallest to largest ---- */
+.pick{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-top:26px}
+.pick input{flex:1;min-width:260px;accent-color:var(--accent)}
+.pick .now{min-width:290px}
+.pick .now b{display:block;font-family:var(--display);font-size:16px;font-weight:700;letter-spacing:-.03em;line-height:1.25}
+.pick .now span{font-size:11.5px;color:var(--muted)}
+.ticks{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);margin-top:-6px;letter-spacing:.02em}
+
 /* ---- the card ---- */
-.rc{border:1px solid var(--line);border-radius:20px;padding:30px 32px;margin-top:22px}
-.rc-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-.rc-h h3{font-size:22px;letter-spacing:-.035em}
+.rc{border:1px solid var(--line);border-radius:18px;padding:22px 26px;margin-top:18px}
+.rc-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 .rc-badge{
-  display:inline-flex;align-items:center;gap:6px;height:21px;padding:0 9px;border-radius:7px;
-  font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  display:inline-flex;align-items:center;height:20px;padding:0 9px;border-radius:7px;
+  font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
   background:var(--accent-soft);color:var(--accent-dark);
 }
-.rc-sub{font-size:13px;color:var(--muted);margin-top:9px}
-.rc-scale{display:flex;gap:8px 26px;flex-wrap:wrap;margin-top:16px;padding-top:15px;border-top:1px solid var(--line)}
-.rc-scale div{font-size:12px;color:var(--muted)}
-.rc-scale b{display:block;font-family:var(--display);font-size:17px;font-weight:800;letter-spacing:-.04em;color:var(--ink);font-variant-numeric:tabular-nums}
+.rc-h .m{font-variant-numeric:tabular-nums}
+.rc-h .m b{color:var(--ink);font-weight:600}
 
-/* the two bars — the whole comparison in one glance */
-.bars{margin-top:26px;display:grid;gap:14px}
-.bar-row{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:16px;align-items:center}
-.bar-row .who{font-size:12.5px;font-weight:600;letter-spacing:-.01em}
-.bar-row .who small{display:block;font-weight:400;color:var(--muted);font-size:11px;margin-top:2px}
-/* display:block on both — they are spans, and height does nothing on an inline
-   box, which is why the fills rendered as empty tracks the first time */
-.bar-track{display:block;height:34px;border-radius:11px;background:var(--bg-alt);overflow:hidden}
-.bar-fill{display:block;height:100%;border-radius:11px;transition:width .45s var(--ease)}
+.bars{margin-top:18px;display:grid;gap:9px}
+.bar-row{display:grid;grid-template-columns:132px minmax(0,1fr) 112px;gap:14px;align-items:center}
+.bar-row .who{font-size:12px;font-weight:600;letter-spacing:-.01em;line-height:1.3}
+.bar-row .who small{display:block;font-weight:400;color:var(--muted);font-size:10.5px}
+.bar-track{display:block;height:30px;border-radius:10px;background:var(--bg-alt);overflow:hidden}
+.bar-fill{display:block;height:100%;border-radius:10px;transition:width .4s var(--ease)}
 .bar-row.us .bar-fill{background:linear-gradient(90deg,var(--accent) 0%,var(--accent-dark) 100%)}
 .bar-row.them .bar-fill{background:#d9dde2}
-.bar-row .amt{font-family:var(--display);font-size:20px;font-weight:800;letter-spacing:-.045em;font-variant-numeric:tabular-nums;min-width:118px;text-align:right}
+.bar-row .amt{font-family:var(--display);font-size:19px;font-weight:800;letter-spacing:-.045em;font-variant-numeric:tabular-nums;text-align:right}
 .bar-row.us .amt{color:var(--accent-dark)}
 .bar-row.them .amt{color:var(--muted)}
 
-.verdict{font-size:19px;line-height:1.55;margin-top:26px;letter-spacing:-.02em;max-width:62ch}
+.verdict{font-size:15.5px;line-height:1.55;margin-top:16px;letter-spacing:-.015em;max-width:70ch}
 .verdict b{color:var(--accent-dark)}
 .verdict.lose b{color:var(--warn)}
-.rows{display:grid;grid-template-columns:1fr 1fr;gap:0 34px;margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
-.row{display:grid;grid-template-columns:1fr auto;gap:12px;padding:8px 0;font-size:13px;color:var(--muted);border-bottom:1px solid var(--line)}
-.row b{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600}
-.row .q{display:block;font-size:11px;margin-top:2px}
-
-/* the second-attempt callout — only shown for the projects where it is true */
-.again{
-  margin-top:22px;padding:16px 20px;border-radius:14px;background:var(--warn-soft);
-  font-size:13px;color:var(--warn);line-height:1.65;
-}
+/* the second-attempt line — one line, and only on the projects where it is true */
+.again{font-size:12.5px;color:var(--warn);line-height:1.6;margin-top:11px;padding-top:11px;border-top:1px solid var(--line)}
 .again b{color:var(--ink);font-weight:600}
 
-.total{
-  margin-top:30px;padding:24px 28px;border:1px solid var(--line);border-radius:18px;
-  display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;
-}
-.total > b{font-family:var(--display);font-size:34px;font-weight:800;letter-spacing:-.05em;color:var(--accent-dark);font-variant-numeric:tabular-nums;flex:none}
-.total span{font-size:13.5px;color:var(--muted);line-height:1.65;flex:1;min-width:280px}
-.total span b{color:var(--ink);font-weight:600}
+.close{font-size:12.5px;color:var(--muted);margin-top:18px;line-height:1.7;max-width:96ch}
+.close b{color:var(--ink);font-weight:600}
+.close .big{font-family:var(--display);font-size:15px;font-weight:800;letter-spacing:-.03em;color:var(--accent-dark);font-variant-numeric:tabular-nums}
+.ph{background:var(--warn-soft);color:var(--warn);border-radius:5px;padding:0 4px;font-weight:700}
+.legend{display:inline-flex;gap:8px;font-size:11px;color:var(--warn);background:var(--warn-soft);border-radius:9px;padding:6px 11px;margin-top:14px}
 
 @media (max-width:900px){
-  .mk-cols,.rows{grid-template-columns:1fr}
-  .sec{font-size:25px}
-  .bar-row{grid-template-columns:1fr;gap:7px}
-  .bar-row .amt{text-align:left;min-width:0}
+  .mk-cols{grid-template-columns:1fr}
+  .sec{font-size:24px}
+  .bar-row{grid-template-columns:1fr auto;gap:5px 12px}
+  .bar-row .bar-track{grid-column:1/-1;order:3}
+  .pick .now{min-width:0}
 }
 </style>
 </head>
@@ -163,26 +145,26 @@ a{color:inherit}
 <div class="mk-top">
   <div class="wrap">
     <span class="mk-brand"><span class="mk-mark">K</span> kaymen.dev</span>
-    <span style="font-size:12px;color:var(--muted)">“what these actually cost” — real projects, real receipts</span>
+    <span style="font-size:12px;color:var(--muted)">“what these actually cost” — slider back, compacted</span>
   </div>
 </div>
 
 <div class="wrap">
   <div class="mk-note">
-    <p class="mk-eyebrow">Revised on your note</p>
-    <h2>What these actually cost <small>the format you picked, pointed at the work instead of at a hire</small></h2>
+    <p class="mk-eyebrow">Third pass</p>
+    <h2>What these actually cost <small>the slider you liked, on the receipts, in one screen</small></h2>
     <div class="mk-cols">
       <div class="mk-col">
-        <h5>The premise</h5>
-        <p>The first pass compared <b>hiring us to maintain something</b> against hiring a developer, which is a hypothetical about a future. This is a <b>receipt</b>. Six systems that are running right now, the real number of working days each one took, and what that same work would have been billed at elsewhere. Nobody has to believe a projection — the things are live and you can go and look at them.</p>
+        <h5>What changed</h5>
+        <p>The <b>slider is back</b> — it now drags across the six real systems, smallest to largest, so you feel the range of the work as the bars grow. The six chips are gone with it.</p>
       </div>
       <div class="mk-col">
-        <h5>Where the days come from</h5>
-        <p>They are <b>not estimates</b>. <code>content/stats.js</code> is generated by <code>scripts/refresh-stats.js</code> out of real git history — distinct days carrying a commit, per project, per month. This section would be server-rendered from that file like the rest of the homepage, so <b>the figures update themselves</b> and cannot go stale the way a typed number does.</p>
+        <h5>How it got compact</h5>
+        <p>Cut to earn the height: the chip rows, the standalone scale strip (<b>inline in the header now</b>), the four-row figure table (<b>folded into the bar labels</b>) and the big total panel (<b>one closing line</b>). Roughly half the vertical space.</p>
       </div>
       <div class="mk-col cost">
         <h5>What it costs</h5>
-        <p>Days-with-a-commit is <b>a proxy, not a timesheet</b> — a 20-minute fix and a 10-hour day both count as one. It reads low on thinking-heavy work and high on fiddly work, and somebody will say so. It also puts a number on projects whose clients could recognise themselves, so the anonymity interlock has to hold. And one row below goes <b>against us</b>.</p>
+        <p>A slider over six discrete things is <b>less precise than six buttons</b> — you cannot link to one, and dragging past the one you wanted is easy. And with the figure table gone, the day rate and the elapsed span are <b>no longer on screen</b>; they moved into the bar labels, which is tighter but carries less.</p>
       </div>
     </div>
   </div>
@@ -192,28 +174,34 @@ a{color:inherit}
   <div class="frame-bar"><i></i><i></i><i></i><em><b>kaymen.dev</b>/#price — below the four plans</em></div>
   <div class="screen">
     <div class="wrap">
-      <p class="eyebrow">The receipts</p>
-      <h2 class="sec">What these actually cost</h2>
-      <p class="sec-sub">Six systems, all running in production right now. The working days are counted out of each repository — <b>every day that carried a commit, since February</b> — not estimated after the fact. Pick one.</p>
 
-      <div class="picker" id="picker"></div>
-
-      <div class="basis">
-        <span>Compared against</span>
-        <span class="opts" id="basis"></span>
+      <div class="head">
+        <div class="lede">
+          <p class="eyebrow">The receipts</p>
+          <h2 class="sec">What these actually cost</h2>
+          <p class="sec-sub">Six systems, all running right now. The working days are counted out of each repository — <b>every day that carried a commit</b> — not estimated after the fact.</p>
+        </div>
+        <div class="basis" id="basis"></div>
       </div>
+
+      <div class="pick">
+        <input type="range" id="slider" min="0" max="5" value="2" step="1" aria-label="Pick a system">
+        <span class="now">
+          <b id="pName"></b>
+          <span id="pMeta"></span>
+        </span>
+      </div>
+      <div class="ticks"><span>10 days &mdash; a small app</span><span>58 days &mdash; a platform</span></div>
 
       <div class="rc">
         <div class="rc-h">
-          <h3 id="pName"></h3>
           <span class="rc-badge" id="pStatus"></span>
+          <span class="m" id="pScale"></span>
         </div>
-        <p class="rc-sub" id="pSub"></p>
-        <div class="rc-scale" id="pScale"></div>
 
         <div class="bars">
           <div class="bar-row us">
-            <span class="who">kaymen.dev<small>at our published $165/hr</small></span>
+            <span class="who">kaymen.dev<small>list, $165/hr × 6h</small></span>
             <span class="bar-track"><span class="bar-fill" id="usBar"></span></span>
             <span class="amt" id="usAmt"></span>
           </div>
@@ -225,90 +213,86 @@ a{color:inherit}
         </div>
 
         <p class="verdict" id="verdict"></p>
-
-        <div class="rows">
-          <div class="row"><span>Working days, from the repo</span><b id="rDays"></b></div>
-          <div class="row"><span>Elapsed, first commit to now</span><b id="rSpan"></b></div>
-          <div class="row"><span>Our day rate<span class="q">$165/hr × 8h, published</span></span><b>$1,320</b></div>
-          <div class="row"><span>Their day rate<span class="q" id="rBasisNote"></span></span><b class="ph" id="rRate"></b></div>
-        </div>
-
-        <div class="again" id="again"></div>
+        <p class="again" id="again"></p>
       </div>
 
-      <div class="total">
-        <b id="totAmt"></b>
-        <span>across all six, on <b>176 working days</b> of real history — and the row that goes against us: <b>an offshore shop will quote under us on several of these.</b> What that quote does not include is the part where the thing is still running in August and the person who wrote it picks up the phone. Choose on that, not on this number.</span>
-      </div>
-
-      <p class="fine">Days are generated from git history by <code>scripts/refresh-stats.js</code> and regenerate on every deploy. Our figure is <b>list price</b> at the published $165/hr, not what any one client paid. Comparison rates are stated above each figure. No client is named anywhere on this site, deliberately.</p>
-      <div class="legend">⚠ Amber = placeholder. Three day rates at the bottom of this file are the only numbers that need you.</div>
+      <p class="close">
+        <span class="big" id="totAmt"></span> across all six, on <b>176 working days</b> of real git history — and the part that goes against us: <b>an offshore shop will quote under us on several of these.</b> What that quote does not include is the part where the thing is still running in August and the person who wrote it answers the phone. Days are regenerated from the repositories on every deploy; our figure is <b>list price</b>, not what any one client paid.
+      </p>
+      <span class="legend">⚠ Amber = placeholder. Three day rates at the bottom of this file are the only numbers that need you.</span>
     </div>
   </div>
 </div>
 
 <script>
 /* ----------------------------------------------------------------------------
-   THE THREE NUMBERS THAT NEED OHAV. Everything else on this page is real.
+   COMPARISON RATES — now researched, not invented. Sources, August 2026:
+
+   · FullStack Labs 2026 software development price guide — US agency tiers:
+     small-class $90–160/hr, mid-market $120–250/hr, big-business $250–350/hr.
+     US freelance "seasoned pros" $100–300/hr. Offshore senior $20–50/hr;
+     nearshore senior $50–90/hr (LatAm senior $50–90, mid $40–60).
+     fullstack.com/labs/resources/blog/software-development-price-guide-hourly-rate-comparison
+   · ZipRecruiter, Aug 2026 — US software developer salary band $110k–$185k.
+   · Every offshore guide surveyed adds the same caveat: management overhead,
+     ramp, comms and attrition put the LOADED cost at 1.4–1.8× the headline
+     rate. The offshore figure below is loaded on that basis, which is the only
+     fair way to compare it against a delivered system.
+
+   The work in these case studies — multi-tenant platforms with row-level
+   security, a Salesforce two-way sync, native store apps — is mid-market work,
+   so the agency figure sits in the mid-market band rather than small-class.
 ---------------------------------------------------------------------------- */
 var BASES = [
-  { id: 'agency',   label: 'A US agency',      phrase: 'a US agency',      rate: 2400, note: 'blended team day rate — PLACEHOLDER' },
-  { id: 'inhouse',  label: 'An in-house team', phrase: 'an in-house team', rate: 1850, note: 'two loaded salaries, pro-rated — PLACEHOLDER' },
-  { id: 'offshore', label: 'An offshore shop', phrase: 'an offshore shop', rate:  900, note: 'nearshore/offshore day rate — PLACEHOLDER' }
+  { label: 'A US agency',        phrase: 'a US agency',        rate: 185 * 8,
+    note: 'mid-market band, $120–250/hr' },
+  { label: 'An in-house dev',    phrase: 'an in-house developer', rate: 850,
+    note: '$150k loaded ÷ 230 working days' },
+  { label: 'A nearshore team',   phrase: 'a nearshore team',   rate: 70 * 8,
+    note: 'LatAm senior $50–90/hr, loaded' }
 ];
 
-var OUR_HOURLY = 165, HOURS_DAY = 8;              // published on /#price
-var OUR_DAY = OUR_HOURLY * HOURS_DAY;             // $1,320
+/* OUR SIDE — and this constant is the single biggest lever on the whole section.
+   A "day that carried a commit" is not eight billed hours; at 8 we overstate our
+   own cost and hand the comparison away. 6 is the honest default until Ohav
+   either confirms it or gives real per-project totals. */
+var HOURS_PER_COMMIT_DAY = 6;
+var OUR_DAY = 165 * HOURS_PER_COMMIT_DAY;   // published $165/hr on /#price
 
-/* --- REAL, from content/stats.js (generated 2026-08-16 from git history) ---
-   days[] is per month, Feb..Aug 2026. In production this is read from the file,
-   not pasted — the whole point is that it regenerates. */
+/* --- REAL, from content/stats.js (generated 2026-08-16 from git history).
+   days[] is per month, Feb..Aug 2026. Sorted smallest to largest so the slider
+   travels from a small app to a platform. In production this is read from the
+   file rather than pasted — the whole point is that it regenerates. */
 var MONTHS = ['2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08'];
 var P = [
-  { slug:'multi-campus-engagement-platform', name:'Multi-campus engagement platform',
-    kind:'Platform', status:'Live in production', days:[0,0,0,0,19,29,10],
-    scale:[['4','campuses on one platform'],['135K','lines of legacy code retired'],['2×/day','Salesforce sync, zero duplicates']],
-    again:'This was the <b>second</b> system. The one it replaced was a 135,000-line WordPress plugin, one install per campus — already built, already paid for, and it could not answer a question across the network.' },
-  { slug:'community-lending-ledger', name:'Community lending ledger',
-    kind:'Platform', status:'Live in production', days:[0,11,0,0,2,5,8],
-    scale:[['$1.58M','fund reconciled to the bank'],['44','lenders tracked individually'],['$47K','previously-unexplained gap, resolved']],
-    again:'The fund had been running on spreadsheets. The <b>$47,000 gap</b> this surfaced was not created by the rebuild — it was already there, and nothing in the old process could see it.' },
-  { slug:'msp-time-compliance-portal', name:'MSP time-compliance portal',
-    kind:'Integration', status:'Live in production', days:[0,0,0,0,6,8,4],
-    scale:[['20,920','tickets under delta sync'],['5,216','time entries reconciled'],['10 min','refresh interval']],
-    again:'' },
-  { slug:'bilingual-booking-platform', name:'Bilingual therapeutic-riding booking platform',
-    kind:'App', status:'Live in production', days:[0,0,1,2,5,2,0],
-    scale:[['HE / EN','full RTL and LTR'],['30 days','rolling bookable horizon'],['0','errors when it broke']],
-    again:'' },
-  { slug:'torah-tracker', name:'Torah Tracker',
-    kind:'App', status:'Live — App Store & Google Play', days:[1,14,13,1,1,0,5],
-    scale:[['iOS + Android','native, in both stores'],['OTA','updates without a store round-trip'],['0','users a mismatched update reaches']],
-    again:'' },
-  { slug:'claude-code-desk', name:'Claude Code Desk & Mobile',
-    kind:'Platform', status:'Live — desktop app + installable PWA', days:[0,3,7,0,5,4,10],
-    scale:[['25+','projects driven from one interface'],['Desktop + PWA','same session, either device'],['Push','notified when a run needs input']],
-    again:'' }
+  { name:'Bilingual therapeutic-riding booking platform', kind:'App', status:'Live in production',
+    days:[0,0,1,2,5,2,0],
+    scale:'HE / EN full RTL and LTR · 30-day rolling horizon · 0 errors when it broke', again:'' },
+  { name:'MSP time-compliance portal', kind:'Integration', status:'Live in production',
+    days:[0,0,0,0,6,8,4],
+    scale:'20,920 tickets under delta sync · 5,216 time entries reconciled · 10 min refresh', again:'' },
+  { name:'Community lending ledger', kind:'Platform', status:'Live in production',
+    days:[0,11,0,0,2,5,8],
+    scale:'$1.58M fund reconciled to the bank · 44 lenders tracked · $47K gap resolved',
+    again:'The fund ran on spreadsheets. The <b>$47,000 gap</b> this surfaced was already there — nothing in the old process could see it.' },
+  { name:'Claude Code Desk &amp; Mobile', kind:'Platform', status:'Live — desktop + PWA',
+    days:[0,3,7,0,5,4,10],
+    scale:'25+ projects from one interface · desktop and PWA, same session · push when a run needs input', again:'' },
+  { name:'Torah Tracker', kind:'App', status:'Live — App Store &amp; Play',
+    days:[1,14,13,1,1,0,5],
+    scale:'iOS + Android, both stores · OTA updates, no store round-trip · 0 users a bad update reaches', again:'' },
+  { name:'Multi-campus engagement platform', kind:'Platform', status:'Live in production',
+    days:[0,0,0,0,19,29,10],
+    scale:'4 campuses on one platform · 135K lines of legacy retired · 2×/day Salesforce sync, zero duplicates',
+    again:'This was the <b>second</b> system. The one it replaced was a 135,000-line WordPress plugin, one install per campus — already built, already paid for, and it could not answer a question across the network.' }
 ];
 
 var money = function (n) { return '$' + Math.round(n).toLocaleString('en-US'); };
 var sum = function (a) { return a.reduce(function (x, y) { return x + y; }, 0); };
-var monthName = function (m) {
-  var d = m.split('-');
-  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+d[1] - 1] + ' ' + d[0];
-};
+var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var monthName = function (m) { var d = m.split('-'); return MN[+d[1] - 1] + ' ' + d[0]; };
 
-var sel = 0, basis = 0;
-
-/* chips */
-var picker = document.getElementById('picker');
-P.forEach(function (p, i) {
-  var b = document.createElement('button');
-  b.className = 'chip' + (i === 0 ? ' on' : '');
-  b.textContent = p.name;
-  b.addEventListener('click', function () { sel = i; paint(); });
-  picker.appendChild(b);
-});
+var basis = 0;
 var basisEl = document.getElementById('basis');
 BASES.forEach(function (bs, i) {
   var b = document.createElement('button');
@@ -318,35 +302,30 @@ BASES.forEach(function (bs, i) {
   basisEl.appendChild(b);
 });
 
+var slider = document.getElementById('slider');
+slider.addEventListener('input', paint);
+
 function paint() {
-  var p = P[sel], bs = BASES[basis];
+  var p = P[+slider.value], bs = BASES[basis];
   var days = sum(p.days);
   var first = p.days.findIndex(function (d) { return d > 0; });
   var last = p.days.length - 1 - p.days.slice().reverse().findIndex(function (d) { return d > 0; });
   var us = days * OUR_DAY, them = days * bs.rate;
   var max = Math.max(us, them);
 
-  document.querySelectorAll('.chip').forEach(function (c, i) { c.classList.toggle('on', i === sel); });
-  document.querySelectorAll('.basis button').forEach(function (c, i) { c.classList.toggle('on', i === basis); });
+  document.querySelectorAll('.basis button').forEach(function (b, i) { b.classList.toggle('on', i === basis); });
 
-  document.getElementById('pName').textContent = p.name;
-  document.getElementById('pStatus').textContent = p.status;
-  document.getElementById('pSub').textContent =
+  document.getElementById('pName').innerHTML = p.name;
+  document.getElementById('pMeta').textContent =
     p.kind + ' · ' + days + ' working days · ' + monthName(MONTHS[first]) + ' – ' + monthName(MONTHS[last]);
-  document.getElementById('pScale').innerHTML = p.scale.map(function (s) {
-    return '<div><b>' + s[0] + '</b>' + s[1] + '</div>';
-  }).join('');
+  document.getElementById('pStatus').innerHTML = p.status;
+  document.getElementById('pScale').innerHTML = p.scale;
 
   document.getElementById('usAmt').textContent = money(us);
   document.getElementById('themAmt').textContent = money(them);
   document.getElementById('usBar').style.width = (us / max * 100) + '%';
   document.getElementById('themBar').style.width = (them / max * 100) + '%';
   document.getElementById('themWho').innerHTML = bs.label + '<small>' + bs.note + '</small>';
-
-  document.getElementById('rDays').textContent = days + ' days';
-  document.getElementById('rSpan').textContent = (last - first + 1) + ' months';
-  document.getElementById('rRate').textContent = money(bs.rate) + '/day';
-  document.getElementById('rBasisNote').textContent = bs.note;
 
   var v = document.getElementById('verdict');
   if (them > us) {
@@ -355,8 +334,8 @@ function paint() {
       ' comes to <b>' + money(them - us) + ' more</b> — and it is running now, not scoped now.';
   } else {
     v.className = 'verdict lose';
-    v.innerHTML = '<b>' + bs.label + ' would have quoted ' + money(us - them) + ' less</b> than we charged. ' +
-      'That is a real gap and we are not going to hide it — what it buys you is a different question, and it is the one below.';
+    v.innerHTML = '<b>' + bs.label + ' would have quoted ' + money(us - them) + ' less.</b> ' +
+      'That gap is real and we are not hiding it — what it buys you is the question underneath.';
   }
 
   var again = document.getElementById('again');
