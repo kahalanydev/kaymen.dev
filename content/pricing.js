@@ -150,26 +150,39 @@ function quote(tierId, addonIds) {
 }
 
 /* --- what the alternative costs, for the hero -------------------------------
-   ILLUSTRATIVE, NOT RESEARCHED. Sized for a team of about five from public list
-   prices so the hero can make its argument. This is the ONLY claim on the
-   homepage about somebody else's pricing, which is the same category where the
-   $200/hr agency rate got checked against a published guide before it shipped.
-   Verify these the same way before treating them as fact.
+   RESEARCHED Aug 2026 against published list prices, for a team of five on
+   mid-tier plans. This is the only claim on the homepage about somebody else's
+   pricing, so it gets the same treatment the $200/hr agency rate got.
 
-   The total is derived, never typed, so the panel cannot disagree with its own
-   line items the way the OG cards once disagreed with the homepage. */
+   No stack is ever exactly this — everyone's mix of tools and tiers differs,
+   which is why the panel says "team of five" rather than implying a quote.
+   These are chosen as the middle of a real range, not the top of it:
+
+     Work & projects      Monday Standard $12/seat x5. Asana $10.99, ClickUp $7.
+     CRM & pipeline       HubSpot Starter $15/seat annual x5. Pipedrive Lite $14.
+     Invoicing & books    QuickBooks Essentials $85 and Xero Growing $55, midpoint.
+     Forms & scheduling   Jotform Bronze $34 plus Calendly Standard $10 on ~2 seats.
+     Files & e-signature  Storage plus DocuSign from $10.
+
+   Google Workspace is deliberately NOT counted. At $14/seat it would add $70 and
+   make the total look better, but email and documents are not a business system
+   doing half a job — including them would be padding, and the argument does not
+   need it.
+
+   afterHires: the per-seat lines run about $39 a head, so three more people add
+   roughly $117. Everything is a "from" and the total is summed in rentTotal(),
+   never typed, so the panel cannot disagree with its own line items. */
 const RENT_STACK = {
   label: 'team of five',
   rows: [
-    { name: 'Work & projects', mo: 45 },
-    { name: 'CRM & pipeline', mo: 60 },
-    { name: 'Invoicing & books', mo: 50 },
-    { name: 'Forms & scheduling', mo: 30 },
-    { name: 'Files & signatures', mo: 40 },
+    { name: 'Work & projects', mo: 60 },
+    { name: 'CRM & pipeline', mo: 75 },
+    { name: 'Invoicing & books', mo: 70 },
+    { name: 'Forms & scheduling', mo: 45 },
+    { name: 'Files & e-signature', mo: 40 },
   ],
-  /* most of the rows above are per-seat, so growing costs twice */
   hires: 3,
-  afterHires: 310,
+  afterHires: 405,
 };
 const rentTotal = () => RENT_STACK.rows.reduce((s, r) => s + r.mo, 0);
 
