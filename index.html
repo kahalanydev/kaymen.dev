@@ -3,1355 +3,294 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>kaymen.dev — Custom Software Solutions</title>
-    <meta name="description" content="We build production-grade web apps, mobile apps, AI tools, and custom software platforms. From idea to deployed product.">
+    <title>kaymen.dev — We build it. Then we run it.</title>
+    <meta name="description" content="Multi-tenant platforms, the integrations most shops decline, and apps in the stores — built and maintained by the same people. A portfolio shows work that is finished. Everything here is still switched on.">
     <link rel="canonical" href="https://kaymen.dev/">
     <!-- Open Graph / social -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://kaymen.dev/">
     <meta property="og:site_name" content="kaymen.dev">
-    <meta property="og:title" content="kaymen.dev — Custom Software Solutions">
-    <meta property="og:description" content="20+ production apps: full-stack web, mobile, AI tools, and multi-tenant platforms — taken from idea to live, deployed product.">
-    <meta property="og:image" content="https://kaymen.dev/favicon.svg">
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="kaymen.dev — Custom Software Solutions">
-    <meta name="twitter:description" content="20+ production apps: full-stack web, mobile, AI tools, and multi-tenant platforms — from idea to deployed product.">
-    <meta name="theme-color" content="#09090b">
+    <meta property="og:title" content="kaymen.dev — We build it. Then we run it.">
+    <meta property="og:description" content="Multi-tenant platforms, hard integrations, apps in the stores. Six case studies — each one includes the part that broke and how we found it.">
+    <meta property="og:image" content="https://kaymen.dev/assets/og/default.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="kaymen.dev — We build it. Then we run it.">
+    <meta name="twitter:description" content="Multi-tenant platforms, hard integrations, apps in the stores. Six case studies — each one includes the part that broke and how we found it.">
+    <meta name="twitter:image" content="https://kaymen.dev/assets/og/default.png">
+    <meta name="theme-color" content="#ffffff">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 </head>
 <body>
-    <!-- NAV -->
-    <nav class="nav" id="nav">
-        <div class="nav-inner">
-            <a href="#" class="nav-logo">
-                <span class="logo-bracket">{</span> kaymen<span class="logo-dot">.</span>dev <span class="logo-bracket">}</span>
-            </a>
-            <div class="nav-links" id="navLinks">
-                <a href="#work" data-track="nav-work">Work</a>
-                <a href="#capabilities" data-track="nav-capabilities">Capabilities</a>
-                <a href="#process" data-track="nav-process">Process</a>
-                <a href="#contact" class="nav-cta" data-track="nav-contact">Let's Talk</a>
-            </div>
-            <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
-                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-            </button>
-            <button class="nav-hamburger" id="hamburger" aria-label="Toggle menu">
-                <span></span><span></span><span></span>
-            </button>
+
+<div class="ambient" aria-hidden="true"><i class="g1"></i><i class="g2"></i><i class="g3"></i></div>
+
+<!-- ======================================================== FLOATING RAIL -->
+<nav class="rail left" id="rail" aria-label="Sections">
+  <div class="rail-prog" aria-hidden="true"><i id="prog"></i></div>
+
+  <a href="#start" class="rail-brand">
+    <span class="mark">K</span>
+    <span class="rail-wordmark"><b>kaymen</b><span>.</span>dev</span>
+  </a>
+
+  <div class="rail-nav" id="railNav">
+    <span class="lozenge" id="lozenge"></span>
+    <a href="#start" class="rail-link on" data-sec="start" data-track="nav-start">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg><span>Start</span>
+    </a>
+    <a href="#need" class="rail-link" data-sec="need" data-track="nav-need">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9.1 9a3 3 0 1 1 4.2 2.7c-.8.4-1.3 1.1-1.3 2v.4"/><circle cx="12" cy="17.5" r=".8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="9.2"/></svg><span>What you need</span>
+    </a>
+    <a href="#running" class="rail-link" data-sec="running" data-track="nav-running">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h4l2.5-6 4 13L16 12h5"/></svg><span>Still running</span>
+    </a>
+    <a href="#work" class="rail-link" data-sec="work" data-track="nav-work">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2.5" y="6.5" width="19" height="13.5" rx="2.2"/><path d="M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/></svg><span>The work</span>
+    </a>
+    <a href="#price" class="rail-link" data-sec="price" data-track="nav-price">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5v19M16.8 6.3H9.9a3.1 3.1 0 0 0 0 6.2h4.2a3.1 3.1 0 0 1 0 6.2H6.7"/></svg><span>What it costs</span>
+    </a>
+    <a href="#terms" class="rail-link" data-sec="terms" data-track="nav-terms">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.8 4.5 6v6c0 4.6 3.1 8 7.5 9.2 4.4-1.2 7.5-4.6 7.5-9.2V6z"/><path d="M9.2 12.2l2 2 3.6-3.9"/></svg><span>No hostages</span>
+    </a>
+    <a href="#talk" class="rail-link" data-sec="talk" data-track="nav-talk">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.2 9.2 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.3 8.3 0 0 1 3.6 11.5a8.4 8.4 0 0 1 8.9-8.4 8.4 8.4 0 0 1 8.5 8.4z"/></svg><span>Talk to us</span>
+    </a>
+  </div>
+
+  <div class="rail-foot">
+    <span class="pulse"></span><em><!--{{LIVE}}--> systems live now</em>
+  </div>
+</nav>
+
+<!-- ================================================== MOBILE GLASS TABBAR -->
+<nav class="tabbar" id="tabbar" aria-label="Sections">
+  <a href="#start" class="tab on" data-sec="start">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg><em>Start</em>
+  </a>
+  <a href="#running" class="tab" data-sec="running">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h4l2.5-6 4 13L16 12h5"/></svg><em>Running</em>
+  </a>
+  <a href="#work" class="tab" data-sec="work">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2.5" y="6.5" width="19" height="13.5" rx="2.2"/><path d="M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/></svg><em>Work</em>
+  </a>
+  <a href="#price" class="tab" data-sec="price">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2.5v19M16.8 6.3H9.9a3.1 3.1 0 0 0 0 6.2h4.2a3.1 3.1 0 0 1 0 6.2H6.7"/></svg><em>Pricing</em>
+  </a>
+  <a href="#talk" class="tab" data-sec="talk">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.2 9.2 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.3 8.3 0 0 1 3.6 11.5a8.4 8.4 0 0 1 8.9-8.4 8.4 8.4 0 0 1 8.5 8.4z"/></svg><em>Talk</em>
+  </a>
+</nav>
+
+<main class="page">
+
+  <!-- ================================================================ HERO -->
+  <section class="hero" id="start">
+    <div class="wrap hero-grid">
+      <div class="rv">
+        <div class="chip"><span class="pulse"></span><span><b><!--{{LIVE}}--> systems</b> running in production right now</span></div>
+        <h1>We build it.<br>Then we <span>run it</span>.</h1>
+        <p class="lead">Multi-tenant platforms, the integrations most shops decline, and apps in the stores — built and maintained by the same people. A portfolio shows work that is finished. Everything here is still switched on.</p>
+        <div class="actions">
+          <a href="#need" class="btn btn-primary" data-track="cta-what-you-need">What do you need?</a>
+          <a href="#running" class="btn btn-ghost" data-track="cta-see-running">See what's running</a>
         </div>
-    </nav>
+      </div>
 
-    <!-- HERO -->
-    <section class="hero" id="hero">
-        <div class="hero-bg">
-            <div class="grid-lines"></div>
+      <!-- The graphic: the fleet, drawn from measured git history.
+           Server-rendered from content/stats.js — see server/render.js. -->
+      <!--{{FLEET}}-->
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- ============================================================== ROUTING -->
+  <section id="need">
+    <div class="wrap">
+      <div class="prose rv">
+        <p class="eyebrow">Start here</p>
+        <h2 class="sec">What do you need?</h2>
+        <p class="sec-sub">Pick the one that sounds like you.</p>
+      </div>
+
+      <div class="qcards rv">
+        <button class="q" data-answer="build" aria-pressed="false" aria-controls="answer" data-track="route-build">
+          <h3>Something built</h3>
+          <p>You have an idea, a spreadsheet that has outgrown itself, or six tools that do not talk to each other.</p>
+          <span class="go">See how that goes →</span>
+        </button>
+        <button class="q" data-answer="run" aria-pressed="false" aria-controls="answer" data-track="route-run">
+          <h3>Something kept alive</h3>
+          <p>It exists and it works. The person who built it is gone, or is about to be.</p>
+          <span class="go">See how that goes →</span>
+        </button>
+        <button class="q" data-answer="unsure" aria-pressed="false" aria-controls="answer" data-track="route-unsure">
+          <h3>Not sure yet</h3>
+          <p>You know the problem. You do not yet know whether it is software, and you would like a straight answer.</p>
+          <span class="go">See how that goes →</span>
+        </button>
+      </div>
+
+      <div class="answer" id="answer">
+        <div class="answer-in">
+          <div>
+            <h4 id="aTitle"></h4>
+            <p id="aBody"></p>
+            <ul id="aList"></ul>
+          </div>
+          <div class="price-block">
+            <div class="amt" id="aPrice"></div>
+            <div class="per" id="aPer"></div>
+            <a href="#talk" class="btn btn-primary" style="margin-top:16px" data-track="route-start">Start with this →</a>
+          </div>
         </div>
-        <div class="hero-content">
-            <div class="hero-badge">Available for new projects</div>
-            <h1>We build software<br>that <span class="hero-highlight" id="rotatingText">ships</span></h1>
-            <p class="hero-sub">Full-stack web apps, mobile apps, AI-powered tools, and custom platforms — taken from idea to live, deployed product.</p>
-            <div class="hero-stats">
-                <div class="stat">
-                    <span class="stat-num" data-count="20">0</span><span class="stat-plus">+</span>
-                    <span class="stat-label">Production Apps</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
-                    <span class="stat-num" data-count="8">0</span>
-                    <span class="stat-label">Tech Stacks</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat">
-                    <span class="stat-num" data-count="12">0</span><span class="stat-plus">+</span>
-                    <span class="stat-label">Live Platforms</span>
-                </div>
-            </div>
-            <div class="hero-actions">
-                <a href="#work" class="btn btn-primary" data-track="cta-see-work">See Our Work</a>
-                <a href="#contact" class="btn btn-secondary" data-track="cta-start-project">Start a Project</a>
-            </div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <!-- WORK: the running board (#running) and the case studies (#work).
+       Server-rendered from content/projects.js by server/render.js.
+       This placeholder must survive any rewrite of this file — without it the
+       two sections silently vanish and only render.js logs it. -->
+  <!--{{WORK}}-->
+
+  <!-- =============================================================== PRICE -->
+  <section id="price">
+    <div class="wrap">
+      <div class="prose rv">
+        <p class="eyebrow">Pricing</p>
+        <h2 class="sec">Published, because you will ask anyway</h2>
+        <p class="sec-sub">Every build ends in a plan, priced into the contract.</p>
+      </div>
+
+      <div class="plans rv">
+        <div class="plan">
+          <div class="pn">Simple Site</div>
+          <div class="pp">$2,500</div>
+          <div class="pu">to build · about 2 weeks</div>
+          <p class="pb">A site that loads fast, reads well, and is yours. Then Site Care at $200/mo keeps it patched and online.</p>
+          <a href="#talk" class="pick" data-track="plan-simple-site">Start with this</a>
         </div>
-        <div class="hero-scroll">
-            <div class="scroll-line"></div>
+        <div class="plan">
+          <div class="pn">Keep Running</div>
+          <div class="pp">$600<small>/mo</small></div>
+          <div class="pu">maintenance only</div>
+          <p class="pb">Something already exists. Updates, security patches, backups verified, and someone who answers when it breaks.</p>
+          <a href="#talk" class="pick" data-track="plan-keep-running">Start with this</a>
         </div>
-    </section>
-
-    <!-- WORK / PORTFOLIO -->
-    <section class="section work" id="work">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Portfolio</span>
-                <h2>Built, deployed, <em>running in production</em></h2>
-                <p>Not mockups. Not prototypes. These are real applications used by real people.</p>
-            </div>
-
-            <div class="project-filters">
-                <button class="filter-btn active" data-filter="all" data-track="filter-all">All</button>
-                <button class="filter-btn" data-filter="web" data-track="filter-web">Web Apps</button>
-                <button class="filter-btn" data-filter="mobile" data-track="filter-mobile">Mobile</button>
-                <button class="filter-btn" data-filter="ai" data-track="filter-ai">AI / ML</button>
-                <button class="filter-btn" data-filter="wordpress" data-track="filter-wordpress">WordPress</button>
-            </div>
-
-            <div class="projects-grid">
-                <!-- Thrive (flagship) -->
-                <div class="project-card showcase" data-tags="web ai">
-                    <div class="mockup-browser" style="--m-accent: #14b8a6;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">olamiherzliya.org</span>
-                        </div>
-                        <div class="mockup-screen mockup-thrive">
-                            <div class="m-sidebar teal">
-                                <div class="m-logo-bar"></div>
-                                <div class="m-nav-item active"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                            </div>
-                            <div class="m-main">
-                                <div class="m-org-tabs">
-                                    <span class="m-org-pill active"></span>
-                                    <span class="m-org-pill"></span>
-                                    <span class="m-org-pill"></span>
-                                    <span class="m-org-pill"></span>
-                                </div>
-                                <div class="m-cards-row">
-                                    <div class="m-stat-card teal"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                </div>
-                                <div class="m-content-row">
-                                    <div class="m-table" style="width:55%">
-                                        <div class="m-table-header"></div>
-                                        <div class="m-table-row"></div>
-                                        <div class="m-table-row"></div>
-                                        <div class="m-table-row"></div>
-                                        <div class="m-table-row"></div>
-                                    </div>
-                                    <div class="m-activity-feed">
-                                        <div class="m-activity-dot"></div>
-                                        <div class="m-activity-dot"></div>
-                                        <div class="m-activity-dot"></div>
-                                        <div class="m-activity-dot"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>Laravel</span><span>Filament</span><span>PostgreSQL</span><span>React Native</span>
-                            </div>
-                            <span class="project-badge teal">Flagship</span>
-                        </div>
-                        <h3>Thrive Platform</h3>
-                        <p>A multi-tenant CRM and engagement platform that replaced a 135K-line legacy WordPress system. One database serves many organizations, each with its own admin panel, drag-and-drop website builder, cross-org HQ oversight, Salesforce sync, and an AI admin assistant — and it powers the live OLAMI mobile app. Productized per client, from OLAMI Herzliya to the standalone Nitzavim deployment.</p>
-                        <div class="project-features">
-                            <span>Multi-tenant (RLS)</span>
-                            <span>Filament admin</span>
-                            <span>Website builder</span>
-                            <span>Salesforce sync</span>
-                            <span>AI assistant</span>
-                            <span>Mobile app + push</span>
-                        </div>
-                        <a href="https://olamiherzliya.org" target="_blank" rel="noopener" class="project-link" data-track="project-thrive">View Live <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                    </div>
-                </div>
-
-                <!-- NodeAI -->
-                <div class="project-card showcase" data-tags="web ai">
-                    <div class="mockup-browser" style="--m-accent: #3b82f6;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">nodeai.kaymen.dev</span>
-                        </div>
-                        <div class="mockup-screen mockup-nodeai">
-                            <div class="m-sidebar">
-                                <div class="m-logo-bar"></div>
-                                <div class="m-nav-item active"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                            </div>
-                            <div class="m-main">
-                                <div class="m-topbar"></div>
-                                <div class="m-cards-row">
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card accent"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                </div>
-                                <div class="m-content-row">
-                                    <div class="m-map">
-                                        <div class="m-map-pin" style="top:25%;left:40%"></div>
-                                        <div class="m-map-pin" style="top:55%;left:60%"></div>
-                                        <div class="m-map-pin" style="top:40%;left:30%"></div>
-                                        <div class="m-map-ring" style="top:20%;left:35%"></div>
-                                        <div class="m-map-ring" style="top:50%;left:55%"></div>
-                                    </div>
-                                    <div class="m-table">
-                                        <div class="m-table-header"></div>
-                                        <div class="m-table-row"></div>
-                                        <div class="m-table-row"></div>
-                                        <div class="m-table-row"></div>
-                                        <div class="m-table-row"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>Next.js</span><span>Supabase</span><span>TypeScript</span><span>Shopify API</span>
-                            </div>
-                            <span class="project-badge">Live</span>
-                        </div>
-                        <h3>NodeAI</h3>
-                        <p>Same-day, on-demand delivery network with a multi-carrier courier rate-shop. Live-quotes Uber Direct, DoorDash Drive, and the Nash aggregator, injects dynamic delivery pricing straight into Shopify checkout, and routes every dispatch through a human-in-the-loop approval gate. Three portals: Brand, Node Terminal (an iPad PWA for local fulfillment), and 3PL.</p>
-                        <div class="project-features">
-                            <span>Multi-carrier rate-shop</span>
-                            <span>Shopify checkout pricing</span>
-                            <span>Courier approval gate</span>
-                            <span>iPad terminal PWA</span>
-                            <span>Barcode scanning</span>
-                            <span>Realtime WebSocket</span>
-                        </div>
-                        <a href="https://nodeai.kaymen.dev" target="_blank" rel="noopener" class="project-link" data-track="project-nodeai">View Live <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                    </div>
-                </div>
-
-                <!-- BridgeMortgage -->
-                <div class="project-card showcase" data-tags="web">
-                    <div class="mockup-browser" style="--m-accent: #6366f1;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">bridgemtg.kaymen.dev</span>
-                        </div>
-                        <div class="mockup-screen mockup-kanban">
-                            <div class="m-main full">
-                                <div class="m-kanban">
-                                    <div class="m-kanban-col">
-                                        <div class="m-kanban-head"></div>
-                                        <div class="m-kanban-card"></div>
-                                        <div class="m-kanban-card"></div>
-                                    </div>
-                                    <div class="m-kanban-col">
-                                        <div class="m-kanban-head b"></div>
-                                        <div class="m-kanban-card"></div>
-                                        <div class="m-kanban-card"></div>
-                                        <div class="m-kanban-card"></div>
-                                    </div>
-                                    <div class="m-kanban-col">
-                                        <div class="m-kanban-head g"></div>
-                                        <div class="m-kanban-card"></div>
-                                    </div>
-                                    <div class="m-kanban-col">
-                                        <div class="m-kanban-head a"></div>
-                                        <div class="m-kanban-card"></div>
-                                        <div class="m-kanban-card"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>Next.js</span><span>TypeScript</span><span>PostgreSQL</span><span>OAuth</span>
-                            </div>
-                            <span class="project-badge amber">Launching Soon</span>
-                        </div>
-                        <h3>BridgeMortgage</h3>
-                        <p>A client portal and internal CRM for an Israeli mortgage broker serving foreign buyers. Kanban deal pipeline, a guided 6-step client journey, a digital mortgage application, and document management — fully bilingual English/Hebrew with RTL. Replaces a tangle of Monday.com, Google Sheets, and Drive, launched with 310 clients and 313 deals migrated in.</p>
-                        <div class="project-features">
-                            <span>Kanban pipeline</span>
-                            <span>6-step journey</span>
-                            <span>Digital application</span>
-                            <span>Document vault</span>
-                            <span>EN/HE bilingual</span>
-                            <span>35-table schema</span>
-                        </div>
-                        <a href="https://staging.bridgemtg.kaymen.dev" target="_blank" rel="noopener" class="project-link" data-track="project-bridgemtg">Preview <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                    </div>
-                </div>
-
-                <!-- Predictable -->
-                <div class="project-card showcase" data-tags="ai web">
-                    <div class="mockup-browser" style="--m-accent: #10b981;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">predictable.kaymen.dev</span>
-                        </div>
-                        <div class="mockup-screen mockup-predictable">
-                            <div class="m-sidebar dark">
-                                <div class="m-logo-bar"></div>
-                                <div class="m-nav-item active"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                            </div>
-                            <div class="m-main dark">
-                                <div class="m-topbar"></div>
-                                <div class="m-verdict-banner">
-                                    <div class="m-score-circle"></div>
-                                    <div class="m-verdict-text">
-                                        <div class="m-verdict-line w70"></div>
-                                        <div class="m-verdict-line w50"></div>
-                                    </div>
-                                </div>
-                                <div class="m-chart-area">
-                                    <svg viewBox="0 0 200 60" preserveAspectRatio="none" class="m-chart-line">
-                                        <path d="M0,50 C20,48 40,45 60,35 C80,25 100,30 120,20 C140,10 160,15 180,8 L200,5" fill="none" stroke="#10b981" stroke-width="2"/>
-                                        <path d="M0,50 C20,48 40,45 60,35 C80,25 100,30 120,20 C140,10 160,15 180,8 L200,5 L200,60 L0,60Z" fill="url(#greenGrad)" opacity="0.15"/>
-                                        <defs><linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="transparent"/></linearGradient></defs>
-                                    </svg>
-                                </div>
-                                <div class="m-cards-row">
-                                    <div class="m-score-card"><div class="m-mini-ring"></div><div class="m-score-label"></div></div>
-                                    <div class="m-score-card"><div class="m-mini-ring green"></div><div class="m-score-label"></div></div>
-                                    <div class="m-score-card"><div class="m-mini-ring amber"></div><div class="m-score-label"></div></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>React</span><span>Python</span><span>FastAPI</span><span>Gemini</span>
-                            </div>
-                            <span class="project-badge">Live</span>
-                        </div>
-                        <h3>Predictable</h3>
-                        <p>AI stock-market analysis platform that generates full investment theses and a verdict score. Blends technical signals (RSI, MACD, Bollinger) and fundamentals with search-grounded AI — Gemini for news, Grok/X for social sentiment. A newer Polymarket probe reuses the same engine to price prediction-market events and score its calls against the crowd (Brier / skill score).</p>
-                        <div class="project-features">
-                            <span>Investment theses</span>
-                            <span>Search-grounded AI</span>
-                            <span>Gemini + Grok/X</span>
-                            <span>Polymarket probe</span>
-                            <span>240+ tickers</span>
-                            <span>Verdict scoring</span>
-                        </div>
-                        <a href="https://predictable.kaymen.dev" target="_blank" rel="noopener" class="project-link" data-track="project-predictable">View Live <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                    </div>
-                </div>
-
-                <!-- OLAMI -->
-                <div class="project-card showcase" data-tags="wordpress web">
-                    <div class="mockup-browser" style="--m-accent: #8b5cf6;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">olami-command-center</span>
-                        </div>
-                        <div class="mockup-screen mockup-olami">
-                            <div class="m-sidebar purple">
-                                <div class="m-logo-bar"></div>
-                                <div class="m-nav-item active"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                            </div>
-                            <div class="m-main">
-                                <div class="m-topbar wide"></div>
-                                <div class="m-cards-row">
-                                    <div class="m-stat-card purple"><div class="m-stat-icon">48</div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-icon">12</div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-icon">156</div><div class="m-stat-lbl"></div></div>
-                                </div>
-                                <div class="m-checkin-grid">
-                                    <div class="m-checkin-row header"></div>
-                                    <div class="m-checkin-row"><span class="m-check"></span></div>
-                                    <div class="m-checkin-row"><span class="m-check checked"></span></div>
-                                    <div class="m-checkin-row"><span class="m-check checked"></span></div>
-                                    <div class="m-checkin-row"><span class="m-check"></span></div>
-                                    <div class="m-checkin-row"><span class="m-check checked"></span></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>WordPress</span><span>PHP</span><span>JavaScript</span><span>AJAX</span>
-                            </div>
-                            <span class="project-badge purple">V5.36</span>
-                        </div>
-                        <h3>OLAMI Master Manager</h3>
-                        <p>Enterprise-grade WordPress plugin for managing student programs, events, check-ins, and gamification. Handles RSVPs, approval workflows, multi-template emails, bulk operations, leaderboards, an arena with a custom HTML5 Canvas game, and a full coin economy with a store.</p>
-                        <div class="project-features">
-                            <span>35+ PHP modules</span>
-                            <span>Canvas game engine</span>
-                            <span>Approval workflows</span>
-                            <span>Bulk email system</span>
-                            <span>Coin economy</span>
-                            <span>Leaderboards</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- OLAMI Herzliya (app) -->
-                <div class="project-card showcase" data-tags="mobile">
-                    <div class="mockup-phone" style="--m-accent: #B41F51;">
-                        <div class="phone-frame">
-                            <div class="phone-notch"></div>
-                            <div class="phone-screen mockup-olami-app">
-                                <div class="m-app-header"><div class="m-app-title"></div></div>
-                                <div class="m-ticket-banner">
-                                    <div class="m-ticket-dot"></div>
-                                    <div class="m-ticket-lines"><div class="m-line w60"></div><div class="m-line w40"></div></div>
-                                    <div class="m-ticket-badge"></div>
-                                </div>
-                                <div class="m-session-list">
-                                    <div class="m-session-item"><span class="m-dot magenta"></span><div class="m-session-lines"><div class="m-line w70"></div><div class="m-line w40"></div></div><span class="m-time"></span></div>
-                                    <div class="m-session-item"><span class="m-dot magenta"></span><div class="m-session-lines"><div class="m-line w60"></div><div class="m-line w35"></div></div><span class="m-time"></span></div>
-                                    <div class="m-session-item"><span class="m-dot blue"></span><div class="m-session-lines"><div class="m-line w80"></div><div class="m-line w45"></div></div><span class="m-time"></span></div>
-                                </div>
-                                <div class="m-bottom-nav">
-                                    <span class="m-tab active"></span>
-                                    <span class="m-tab"></span>
-                                    <span class="m-tab"></span>
-                                    <span class="m-tab"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>React Native</span><span>Expo</span><span>TypeScript</span><span>Push</span>
-                            </div>
-                            <span class="project-badge amber">App Store</span>
-                        </div>
-                        <h3>OLAMI Herzliya</h3>
-                        <p>The student engagement app for OLAMI Herzliya — live on the App Store and Google Play, powered by the Thrive backend. Event tickets with location-based auto check-in (marks you attended the moment you reach the venue), RSVPs, profiles, Apple/Google sign-in, and push notifications.</p>
-                        <div class="project-features">
-                            <span>iOS + Android</span>
-                            <span>Geo auto check-in</span>
-                            <span>Event tickets</span>
-                            <span>Apple/Google sign-in</span>
-                            <span>Push notifications</span>
-                            <span>Thrive-powered</span>
-                        </div>
-                        <a href="https://apps.apple.com/us/app/olami-herzliya/id6769781161" target="_blank" rel="noopener" class="project-link" data-track="project-olami-app">App Store <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                    </div>
-                </div>
-
-                <!-- Kartov -->
-                <div class="project-card showcase" data-tags="mobile ai">
-                    <div class="mockup-phone" style="--m-accent: #22c55e;">
-                        <div class="phone-frame">
-                            <div class="phone-notch"></div>
-                            <div class="phone-screen mockup-kartov">
-                                <div class="m-app-header"><div class="m-app-title"></div></div>
-                                <div class="m-shop">
-                                    <div class="m-shop-cat"></div>
-                                    <div class="m-shop-item"><span class="m-shop-check checked"></span><div class="m-line w70"></div></div>
-                                    <div class="m-shop-item"><span class="m-shop-check"></span><div class="m-line w50"></div></div>
-                                    <div class="m-shop-cat"></div>
-                                    <div class="m-shop-item"><span class="m-shop-check checked"></span><div class="m-line w60"></div></div>
-                                    <div class="m-shop-item"><span class="m-shop-check"></span><div class="m-line w80"></div></div>
-                                    <div class="m-shop-item"><span class="m-shop-check"></span><div class="m-line w45"></div></div>
-                                </div>
-                                <div class="m-snap-btn">+</div>
-                                <div class="m-bottom-nav">
-                                    <span class="m-tab"></span>
-                                    <span class="m-tab active"></span>
-                                    <span class="m-tab"></span>
-                                    <span class="m-tab"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>React Native</span><span>Expo</span><span>Gemini</span><span>PWA</span>
-                            </div>
-                            <span class="project-badge">Live</span>
-                        </div>
-                        <h3>Kartov</h3>
-                        <p>A smart, shared shopping-list and meal-planning app for families. AI "Snap &amp; Add" turns a photo into categorized items, scan-a-list bulk-imports a handwritten note, and recipes get parsed into ingredients — all synced live across the household. Ships on iOS, Android, and web with a freemium Pro tier.</p>
-                        <div class="project-features">
-                            <span>Snap &amp; Add (AI)</span>
-                            <span>Scan a list</span>
-                            <span>Recipe parsing</span>
-                            <span>Shared households</span>
-                            <span>Meal planning</span>
-                            <span>iOS · Android · Web</span>
-                        </div>
-                        <a href="https://kartov.app" target="_blank" rel="noopener" class="project-link" data-track="project-kartov">View Live <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                    </div>
-                </div>
-
-                <!-- Temani Chacham -->
-                <div class="project-card showcase" data-tags="mobile">
-                    <div class="mockup-phone" style="--m-accent: #d4a017;">
-                        <div class="phone-frame">
-                            <div class="phone-notch"></div>
-                            <div class="phone-screen mockup-temani">
-                                <div class="m-zmanim-bar">
-                                    <span class="m-zman"></span>
-                                    <span class="m-zman"></span>
-                                    <span class="m-zman"></span>
-                                    <span class="m-compass"></span>
-                                </div>
-                                <div class="m-siddur-body">
-                                    <div class="m-siddur-h"></div>
-                                    <div class="m-line w90"></div>
-                                    <div class="m-line w80"></div>
-                                    <div class="m-line gold w70"></div>
-                                    <div class="m-line w85"></div>
-                                    <div class="m-line w60"></div>
-                                    <div class="m-siddur-h"></div>
-                                    <div class="m-line w80"></div>
-                                    <div class="m-line w70"></div>
-                                </div>
-                                <div class="m-bottom-nav">
-                                    <span class="m-tab"></span>
-                                    <span class="m-tab active"></span>
-                                    <span class="m-tab"></span>
-                                    <span class="m-tab"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>React Native</span><span>Expo</span><span>TypeScript</span><span>Node</span>
-                            </div>
-                            <span class="project-badge amber">App Store</span>
-                        </div>
-                        <h3>Temani Chacham</h3>
-                        <p>A smart Yemenite (Baladi) siddur that assembles the exact prayer text for today — automatically folding in the right holiday and seasonal insertions for the current date. Includes zmanim, a Jerusalem-facing compass, Tehillim, and full offline support, with an in-app dedication ("Le'ilui Nishmat") sponsorship feature.</p>
-                        <div class="project-features">
-                            <span>Dynamic prayer assembly</span>
-                            <span>Zmanim</span>
-                            <span>Jerusalem compass</span>
-                            <span>Tehillim</span>
-                            <span>Offline</span>
-                            <span>Dedications</span>
-                        </div>
-                        <a href="https://temani.kaymen.dev" target="_blank" rel="noopener" class="project-link" data-track="project-temani">View Live <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                    </div>
-                </div>
-
-                <!-- TorahTracker -->
-                <div class="project-card showcase" data-tags="mobile web">
-                    <div class="mockup-phone" style="--m-accent: #f59e0b;">
-                        <div class="phone-frame">
-                            <div class="phone-notch"></div>
-                            <div class="phone-screen mockup-torah">
-                                <div class="m-app-header">
-                                    <div class="m-app-title"></div>
-                                </div>
-                                <div class="m-progress-ring">
-                                    <svg viewBox="0 0 80 80">
-                                        <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(245,158,11,0.15)" stroke-width="6"/>
-                                        <circle cx="40" cy="40" r="34" fill="none" stroke="#f59e0b" stroke-width="6" stroke-dasharray="160 214" stroke-linecap="round" transform="rotate(-90 40 40)"/>
-                                    </svg>
-                                    <span class="m-ring-text">75%</span>
-                                </div>
-                                <div class="m-streak-bar">
-                                    <div class="m-flame"></div>
-                                    <div class="m-streak-text"></div>
-                                </div>
-                                <div class="m-session-list">
-                                    <div class="m-session-item"><span class="m-dot gold"></span><div class="m-session-lines"><div class="m-line w70"></div><div class="m-line w40"></div></div><span class="m-time"></span></div>
-                                    <div class="m-session-item"><span class="m-dot blue"></span><div class="m-session-lines"><div class="m-line w60"></div><div class="m-line w35"></div></div><span class="m-time"></span></div>
-                                    <div class="m-session-item"><span class="m-dot green"></span><div class="m-session-lines"><div class="m-line w80"></div><div class="m-line w45"></div></div><span class="m-time"></span></div>
-                                </div>
-                                <div class="m-bottom-nav">
-                                    <span class="m-tab"></span>
-                                    <span class="m-tab active"></span>
-                                    <span class="m-tab"></span>
-                                    <span class="m-tab"></span>
-                                    <span class="m-tab"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>PWA</span><span>Capacitor</span><span>iOS</span><span>Android</span><span>PHP</span>
-                            </div>
-                            <span class="project-badge amber">App Store</span>
-                        </div>
-                        <h3>Torah Tracker</h3>
-                        <p>Cross-platform mobile app for tracking daily Torah learning. Published on the App Store and Google Play. Features spaced repetition review scheduling, learning plan management, streak tracking, coverage maps for the entire Talmud, and push notifications.</p>
-                        <div class="project-features">
-                            <span>iOS + Android</span>
-                            <span>Spaced repetition</span>
-                            <span>Offline support</span>
-                            <span>Push notifications</span>
-                            <span>Coverage maps</span>
-                            <span>Service worker</span>
-                        </div>
-                        <a href="https://torahtracker.app" target="_blank" rel="noopener" class="project-link" data-track="project-torahtracker">View Live <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                    </div>
-                </div>
-
-                <!-- ShipHeroAI -->
-                <div class="project-card showcase" data-tags="ai web">
-                    <div class="mockup-browser" style="--m-accent: #ef4444;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">shipai.kaymen.dev</span>
-                        </div>
-                        <div class="mockup-screen mockup-chat">
-                            <div class="m-sidebar red">
-                                <div class="m-logo-bar"></div>
-                                <div class="m-nav-item active"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                            </div>
-                            <div class="m-chat-main">
-                                <div class="m-chat-header"></div>
-                                <div class="m-chat-messages">
-                                    <div class="m-msg user"><div class="m-msg-bubble user-b"></div></div>
-                                    <div class="m-msg ai">
-                                        <div class="m-msg-bubble ai-b">
-                                            <div class="m-line w90"></div>
-                                            <div class="m-line w70"></div>
-                                            <div class="m-line w80"></div>
-                                        </div>
-                                    </div>
-                                    <div class="m-msg user"><div class="m-msg-bubble user-b short"></div></div>
-                                    <div class="m-msg ai">
-                                        <div class="m-msg-bubble ai-b">
-                                            <div class="m-tool-call"></div>
-                                            <div class="m-line w60"></div>
-                                            <div class="m-line w85"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="m-chat-input"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>Python</span><span>FastAPI</span><span>Claude API</span><span>OpenAI</span><span>Gemini</span>
-                            </div>
-                            <span class="project-badge red">76+ Tools</span>
-                        </div>
-                        <h3>ShipHero AI</h3>
-                        <p>AI-powered warehouse management assistant. Full rewrite from PHP to Python/FastAPI. Supports 3 LLM providers (Claude, OpenAI, Gemini) with 76+ AI tools across 14 modules. Features a conversational chat interface for querying and managing warehouse operations.</p>
-                        <div class="project-features">
-                            <span>76+ AI tools</span>
-                            <span>3 LLM providers</span>
-                            <span>AES-256-GCM encryption</span>
-                            <span>Admin panel</span>
-                            <span>Mobile responsive</span>
-                            <span>Docker deploy</span>
-                        </div>
-                        <a href="https://shipai.kaymen.dev" target="_blank" rel="noopener" class="project-link" data-track="project-shipai">View Live <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                    </div>
-                </div>
-
-                <!-- Davenen -->
-                <div class="project-card showcase" data-tags="web mobile">
-                    <div class="mockup-browser" style="--m-accent: #6366f1;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">davenen.kaymen.dev</span>
-                        </div>
-                        <div class="mockup-screen mockup-davenen">
-                            <div class="m-hero-section">
-                                <div class="m-hero-title"></div>
-                                <div class="m-hero-sub"></div>
-                                <div class="m-hero-btn"></div>
-                            </div>
-                            <div class="m-partner-cards">
-                                <div class="m-partner-card">
-                                    <div class="m-avatar"></div>
-                                    <div class="m-partner-info"><div class="m-line w60"></div><div class="m-line w40"></div></div>
-                                    <div class="m-day-counter">Day 18/40</div>
-                                </div>
-                                <div class="m-partner-card">
-                                    <div class="m-avatar"></div>
-                                    <div class="m-partner-info"><div class="m-line w50"></div><div class="m-line w35"></div></div>
-                                    <div class="m-day-counter">Day 32/40</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>Laravel</span><span>Expo</span><span>iOS</span><span>MySQL</span>
-                            </div>
-                            <span class="project-badge">Live</span>
-                        </div>
-                        <h3>Davenen Partner</h3>
-                        <p>Prayer-partner matching platform with a native iOS app on top of a Laravel web backend. 40-day cycle tracking, an automated matching algorithm, streak counters, push + email re-engagement, an admin funnel dashboard, and a security layer with IP blocking, spam detection, and rate limiting.</p>
-                        <div class="project-features">
-                            <span>iOS app</span>
-                            <span>Matching algorithm</span>
-                            <span>40-day cycles</span>
-                            <span>Funnel analytics</span>
-                            <span>Push + email</span>
-                            <span>Spam protection</span>
-                        </div>
-                        <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center">
-                            <a href="https://davenen.kaymen.dev" target="_blank" rel="noopener" class="project-link" data-track="project-davenen">View Live <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                            <a href="https://apps.apple.com/us/app/davenen/id6761419326" target="_blank" rel="noopener" class="project-link" data-track="project-davenen-app">App Store <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Horse & Harmony -->
-                <div class="project-card showcase" data-tags="web">
-                    <div class="mockup-browser" style="--m-accent: #059669;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">horseandharmonyil.com</span>
-                        </div>
-                        <div class="mockup-screen mockup-calendar">
-                            <div class="m-main full">
-                                <div class="m-cal-head">
-                                    <div class="m-cal-title"></div>
-                                    <div class="m-cal-nav"><span></span><span></span></div>
-                                </div>
-                                <div class="m-cal-grid">
-                                    <div class="m-cal-dow"></div><div class="m-cal-dow"></div><div class="m-cal-dow"></div><div class="m-cal-dow"></div><div class="m-cal-dow"></div><div class="m-cal-dow"></div><div class="m-cal-dow"></div>
-                                    <div class="m-cal-day"></div><div class="m-cal-day booked"></div><div class="m-cal-day"></div><div class="m-cal-day booked"></div><div class="m-cal-day"></div><div class="m-cal-day"></div><div class="m-cal-day blocked"></div>
-                                    <div class="m-cal-day booked"></div><div class="m-cal-day"></div><div class="m-cal-day"></div><div class="m-cal-day today"></div><div class="m-cal-day booked"></div><div class="m-cal-day booked"></div><div class="m-cal-day blocked"></div>
-                                    <div class="m-cal-day"></div><div class="m-cal-day booked"></div><div class="m-cal-day"></div><div class="m-cal-day"></div><div class="m-cal-day"></div><div class="m-cal-day booked"></div><div class="m-cal-day blocked"></div>
-                                    <div class="m-cal-day booked"></div><div class="m-cal-day"></div><div class="m-cal-day booked"></div><div class="m-cal-day"></div><div class="m-cal-day"></div><div class="m-cal-day"></div><div class="m-cal-day blocked"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>Astro</span><span>Express</span><span>MySQL</span><span>Cloudflare R2</span>
-                            </div>
-                            <span class="project-badge">Live</span>
-                        </div>
-                        <h3>Horse &amp; Harmony</h3>
-                        <p>A bilingual (Hebrew/English, RTL) booking site for an equine-therapy business in Israel. A public booking flow sits on top of a full admin: availability calendar, reusable weekly scheduling templates, automatic Jewish-holiday blocking via hebcal, client records, gallery, and FAQ — with a Cloudflare R2 image pipeline behind it all.</p>
-                        <div class="project-features">
-                            <span>Online booking</span>
-                            <span>Availability calendar</span>
-                            <span>Weekly templates</span>
-                            <span>Holiday blocking</span>
-                            <span>Bilingual HE/EN</span>
-                            <span>R2 media pipeline</span>
-                        </div>
-                        <a href="https://horseandharmonyil.com" target="_blank" rel="noopener" class="project-link" data-track="project-horseharmony">View Live <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                    </div>
-                </div>
-
-                <!-- PassaicCliftonGemach -->
-                <div class="project-card showcase" data-tags="web">
-                    <div class="mockup-browser" style="--m-accent: #f59e0b;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">pcg.kaymen.dev</span>
-                        </div>
-                        <div class="mockup-screen mockup-gemach">
-                            <div class="m-main full">
-                                <div class="m-topbar amber"></div>
-                                <div class="m-gemach-hero">
-                                    <div class="m-balance-big">$12,450</div>
-                                    <div class="m-balance-label"></div>
-                                </div>
-                                <div class="m-cards-row">
-                                    <div class="m-stat-card amber"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                </div>
-                                <div class="m-chart-area amber">
-                                    <svg viewBox="0 0 200 50" preserveAspectRatio="none" class="m-chart-line">
-                                        <path d="M0,40 C30,38 50,30 80,25 C110,20 130,22 160,15 L200,10" fill="none" stroke="#f59e0b" stroke-width="2"/>
-                                        <path d="M0,40 C30,38 50,30 80,25 C110,20 130,22 160,15 L200,10 L200,50 L0,50Z" fill="#f59e0b" opacity="0.1"/>
-                                    </svg>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>Laravel</span><span>PHP</span><span>MySQL</span><span>Charts</span>
-                            </div>
-                            <span class="project-badge amber">Live</span>
-                        </div>
-                        <h3>Community Lending Platform</h3>
-                        <p>Full-featured Gemach (interest-free loan fund) management system. Lender portal with personalized dashboards, balance tracking, contribution history with running totals, balance line graphs, and a "Contribute More" request flow. Rep system for community outreach.</p>
-                        <div class="project-features">
-                            <span>Lender dashboard</span>
-                            <span>Balance tracking</span>
-                            <span>Contribution workflow</span>
-                            <span>Transaction history</span>
-                            <span>Rep system</span>
-                            <span>Admin panel</span>
-                        </div>
-                        <a href="https://pcg.kaymen.dev" target="_blank" rel="noopener" class="project-link" data-track="project-pcg">View Live <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                    </div>
-                </div>
-
-                <!-- MSP Metrics Portal -->
-                <div class="project-card showcase" data-tags="web">
-                    <div class="mockup-browser" style="--m-accent: #06b6d4;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">autotask.kaymen.dev</span>
-                        </div>
-                        <div class="mockup-screen mockup-metrics">
-                            <div class="m-main">
-                                <div class="m-topbar"></div>
-                                <div class="m-cards-row">
-                                    <div class="m-stat-card cyan"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                </div>
-                                <div class="m-content-row">
-                                    <div class="m-bars">
-                                        <div class="m-bar" style="height:60%"></div>
-                                        <div class="m-bar ok" style="height:82%"></div>
-                                        <div class="m-bar" style="height:45%"></div>
-                                        <div class="m-bar warn" style="height:30%"></div>
-                                        <div class="m-bar ok" style="height:90%"></div>
-                                        <div class="m-bar" style="height:55%"></div>
-                                        <div class="m-bar ok" style="height:72%"></div>
-                                    </div>
-                                    <div class="m-status-list">
-                                        <div class="m-status-row"><span class="m-status-dot ok"></span><div class="m-line w70"></div></div>
-                                        <div class="m-status-row"><span class="m-status-dot warn"></span><div class="m-line w50"></div></div>
-                                        <div class="m-status-row"><span class="m-status-dot ok"></span><div class="m-line w60"></div></div>
-                                        <div class="m-status-row"><span class="m-status-dot bad"></span><div class="m-line w45"></div></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>FastAPI</span><span>SQLite</span><span>Autotask API</span><span>Chart.js</span>
-                            </div>
-                            <span class="project-badge cyan">Live</span>
-                        </div>
-                        <h3>MSP Metrics Portal</h3>
-                        <p>A leadership dashboard for an IT managed-service provider. Syncs on a schedule from the Autotask REST API to track every technician's time entry, billable ratio, and compliance — with color-coded per-engineer status and daily-log alerts that surface who's falling behind before it becomes a problem.</p>
-                        <div class="project-features">
-                            <span>Autotask sync</span>
-                            <span>Billable ratios</span>
-                            <span>Per-engineer status</span>
-                            <span>Compliance alerts</span>
-                            <span>Scheduled jobs</span>
-                            <span>Chart.js dashboards</span>
-                        </div>
-                        <a href="https://autotask.kaymen.dev" target="_blank" rel="noopener" class="project-link" data-track="project-metrics">View Live <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                    </div>
-                </div>
-
-                <!-- Richmount Capital -->
-                <div class="project-card showcase" data-tags="web">
-                    <div class="mockup-browser" style="--m-accent: #c9a227;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">richmountcapital.com</span>
-                        </div>
-                        <div class="mockup-screen mockup-richmount">
-                            <div class="m-main full">
-                                <div class="m-rc-hero">
-                                    <div class="m-rc-title"></div>
-                                    <div class="m-rc-sub"></div>
-                                    <div class="m-rc-cta"></div>
-                                </div>
-                                <div class="m-rc-row">
-                                    <div class="m-rc-card"></div>
-                                    <div class="m-rc-card"></div>
-                                    <div class="m-rc-card"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>HTML</span><span>CSS</span><span>JavaScript</span><span>Docker</span>
-                            </div>
-                            <span class="project-badge">Live</span>
-                        </div>
-                        <h3>Richmount Capital</h3>
-                        <p>A crisp marketing site for an investment firm focused on social arbitrage in U.S. equities. Fast, content-driven, and responsive — built as a lightweight static site and deployed on Docker/nginx with automatic SSL.</p>
-                        <div class="project-features">
-                            <span>Marketing site</span>
-                            <span>Static + fast</span>
-                            <span>Responsive</span>
-                            <span>Docker / nginx</span>
-                            <span>Auto-SSL</span>
-                            <span>Coolify deploy</span>
-                        </div>
-                        <a href="https://richmountcapital.com" target="_blank" rel="noopener" class="project-link" data-track="project-richmount">View Live <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M5.22 14.78a.75.75 0 001.06 0l7.22-7.22v5.69a.75.75 0 001.5 0v-7.5a.75.75 0 00-.75-.75h-7.5a.75.75 0 000 1.5h5.69l-7.22 7.22a.75.75 0 000 1.06z"/></svg></a>
-                    </div>
-                </div>
-
-                <!-- Hero Animator -->
-                <div class="project-card showcase" data-tags="wordpress web">
-                    <div class="mockup-browser" style="--m-accent: #f97316;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">hero-animator</span>
-                        </div>
-                        <div class="mockup-screen mockup-hero-animator">
-                            <div class="m-main full">
-                                <div class="m-ha-hero">
-                                    <div class="m-ha-bg-layers">
-                                        <div class="m-ha-layer"></div>
-                                    </div>
-                                    <div class="m-ha-content">
-                                        <div class="m-ha-title"></div>
-                                        <div class="m-ha-subtitle"></div>
-                                        <div class="m-ha-buttons">
-                                            <div class="m-ha-btn primary"></div>
-                                            <div class="m-ha-btn"></div>
-                                        </div>
-                                    </div>
-                                    <div class="m-ha-scroll-ind"></div>
-                                </div>
-                                <div class="m-ha-controls">
-                                    <div class="m-ha-control-item active">
-                                        <span class="m-ha-icon">▶</span>
-                                        <div class="m-line w50"></div>
-                                    </div>
-                                    <div class="m-ha-control-item">
-                                        <span class="m-ha-icon">◆</span>
-                                        <div class="m-line w40"></div>
-                                    </div>
-                                    <div class="m-ha-control-item">
-                                        <span class="m-ha-icon">≡</span>
-                                        <div class="m-line w35"></div>
-                                    </div>
-                                    <div class="m-ha-timeline">
-                                        <div class="m-ha-track">
-                                            <div class="m-ha-keyframe" style="left: 10%"></div>
-                                            <div class="m-ha-keyframe" style="left: 35%"></div>
-                                            <div class="m-ha-keyframe" style="left: 60%"></div>
-                                            <div class="m-ha-keyframe" style="left: 85%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>WordPress</span><span>PHP</span><span>Elementor</span><span>CSS3</span><span>JS</span>
-                            </div>
-                            <span class="project-badge orange">Plugin</span>
-                        </div>
-                        <h3>Hero Animator</h3>
-                        <p>Advanced Elementor widget plugin for building fully-animated hero sections. Ken Burns cinematic backgrounds, 18+ text entrance animations, video backgrounds (YouTube/Vimeo), parallax effects, pattern overlays, and dual CTA buttons with 15+ hover effects.</p>
-                        <div class="project-features">
-                            <span>18+ animations</span>
-                            <span>Ken Burns effect</span>
-                            <span>Video backgrounds</span>
-                            <span>Parallax system</span>
-                            <span>Scroll indicator</span>
-                            <span>100+ controls</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SnapGrid Pro -->
-                <div class="project-card showcase" data-tags="wordpress web">
-                    <div class="mockup-browser" style="--m-accent: #ec4899;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">snapgrid-pro</span>
-                        </div>
-                        <div class="mockup-screen mockup-snapgrid">
-                            <div class="m-main full">
-                                <div class="m-ji-header">
-                                    <div class="m-ji-avatar"></div>
-                                    <div class="m-ji-stats">
-                                        <div class="m-ji-stat"><div class="m-ji-num">128</div><div class="m-ji-label"></div></div>
-                                        <div class="m-ji-stat"><div class="m-ji-num">2.4k</div><div class="m-ji-label"></div></div>
-                                        <div class="m-ji-stat"><div class="m-ji-num">847</div><div class="m-ji-label"></div></div>
-                                    </div>
-                                    <div class="m-ji-follow"></div>
-                                </div>
-                                <div class="m-ji-grid">
-                                    <div class="m-ji-photo p1"></div>
-                                    <div class="m-ji-photo p2"></div>
-                                    <div class="m-ji-photo p3"></div>
-                                    <div class="m-ji-photo p4"></div>
-                                    <div class="m-ji-photo p5"></div>
-                                    <div class="m-ji-photo p6"></div>
-                                    <div class="m-ji-photo p7"></div>
-                                    <div class="m-ji-photo p8"></div>
-                                    <div class="m-ji-photo p9"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>WordPress</span><span>PHP</span><span>Instagram API</span><span>Elementor</span>
-                            </div>
-                            <span class="project-badge pink">Plugin</span>
-                        </div>
-                        <h3>SnapGrid Pro</h3>
-                        <p>Professional WordPress plugin for displaying Instagram feeds with 10 responsive layouts — grid, masonry, carousel, marquee, wave, and more. Features 12 hover effects, lightbox gallery, AJAX load-more, token auto-refresh, and a native Elementor widget with 60+ settings.</p>
-                        <div class="project-features">
-                            <span>10 layouts</span>
-                            <span>12 hover effects</span>
-                            <span>Lightbox gallery</span>
-                            <span>Elementor widget</span>
-                            <span>Token auto-refresh</span>
-                            <span>30+ shortcode params</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Claude Code UI -->
-                <div class="project-card showcase" data-tags="ai">
-                    <div class="mockup-browser" style="--m-accent: #d946ef;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">Claude Code UI.exe</span>
-                        </div>
-                        <div class="mockup-screen mockup-ccui">
-                            <div class="m-sidebar magenta">
-                                <div class="m-logo-bar"></div>
-                                <div class="m-file-tree">
-                                    <div class="m-file-item folder"></div>
-                                    <div class="m-file-item indent"></div>
-                                    <div class="m-file-item indent"></div>
-                                    <div class="m-file-item folder"></div>
-                                    <div class="m-file-item indent"></div>
-                                </div>
-                            </div>
-                            <div class="m-chat-main dark">
-                                <div class="m-tab-bar">
-                                    <span class="m-tab-item active"></span>
-                                    <span class="m-tab-item"></span>
-                                    <span class="m-tab-item"></span>
-                                </div>
-                                <div class="m-chat-messages">
-                                    <div class="m-msg ai">
-                                        <div class="m-msg-bubble ai-b">
-                                            <div class="m-code-block">
-                                                <div class="m-line w50 code"></div>
-                                                <div class="m-line w70 code"></div>
-                                                <div class="m-line w40 code"></div>
-                                            </div>
-                                            <div class="m-line w80"></div>
-                                        </div>
-                                    </div>
-                                    <div class="m-msg user"><div class="m-msg-bubble user-b"></div></div>
-                                    <div class="m-msg ai">
-                                        <div class="m-msg-bubble ai-b">
-                                            <div class="m-diff-block">
-                                                <div class="m-diff-del"></div>
-                                                <div class="m-diff-add"></div>
-                                                <div class="m-diff-add"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="m-chat-input"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>Electron</span><span>Node.js</span><span>WebSocket</span><span>PWA</span>
-                            </div>
-                            <span class="project-badge magenta">Desktop · PWA</span>
-                        </div>
-                        <h3>Claude Code UI</h3>
-                        <p>A desktop and mobile companion for the Claude Code CLI — the environment all of this work actually ships from. Electron on the desktop, an installable PWA on the phone (served over a Cloudflare tunnel), with local Whisper voice transcription, a live model picker, named multi-window sessions per project, a git diff viewer, and real-time WebSocket streaming.</p>
-                        <div class="project-features">
-                            <span>Desktop + mobile PWA</span>
-                            <span>Whisper voice notes</span>
-                            <span>Live model picker</span>
-                            <span>Named sessions</span>
-                            <span>Remote over tunnel</span>
-                            <span>Stream-JSON IPC</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Client Management Platform -->
-                <div class="project-card showcase" data-tags="web">
-                    <div class="mockup-browser" style="--m-accent: #8b5cf6;">
-                        <div class="mockup-chrome">
-                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-                            <span class="mockup-url">portal.example.com/admin</span>
-                        </div>
-                        <div class="mockup-screen mockup-cmp">
-                            <div class="m-sidebar purple">
-                                <div class="m-logo-bar"></div>
-                                <div class="m-nav-item active"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                                <div class="m-nav-item"></div>
-                            </div>
-                            <div class="m-main dark">
-                                <div class="m-topbar"></div>
-                                <div class="m-cards-row">
-                                    <div class="m-stat-card accent"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                    <div class="m-stat-card"><div class="m-stat-val"></div><div class="m-stat-lbl"></div></div>
-                                </div>
-                                <div class="m-content-row">
-                                    <div class="m-table" style="flex:2">
-                                        <div class="m-table-header"></div>
-                                        <div class="m-table-row"></div>
-                                        <div class="m-table-row"></div>
-                                        <div class="m-table-row"></div>
-                                    </div>
-                                    <div class="m-activity-feed">
-                                        <div class="m-activity-dot"></div>
-                                        <div class="m-activity-dot"></div>
-                                        <div class="m-activity-dot"></div>
-                                        <div class="m-activity-dot"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-body">
-                        <div class="project-meta">
-                            <div class="project-tags">
-                                <span>Node.js</span><span>SQLite</span><span>Vanilla JS</span><span>JWT</span>
-                            </div>
-                            <span class="project-badge purple">Live</span>
-                        </div>
-                        <h3>Client Management Platform</h3>
-                        <p>Full-stack admin panel and client portal for managing projects, milestones, tickets, and plan approvals. Google OAuth, real-time visitor analytics, security monitoring, SMTP notifications, and a lead-to-client conversion pipeline — all as a lightweight PWA with dark/light themes.</p>
-                        <div class="project-features">
-                            <span>Admin + Portal</span>
-                            <span>Google OAuth</span>
-                            <span>Visitor analytics</span>
-                            <span>Ticket system</span>
-                            <span>Plan approvals</span>
-                            <span>PWA</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="plan f">
+          <span class="flag">Most common</span>
+          <div class="pn">Run &amp; Improve</div>
+          <div class="pp">$1,800<small>/mo</small></div>
+          <div class="pu">maintenance + development</div>
+          <p class="pb">Kept alive and moved forward every month. Hours roll over one month. This is what most live systems actually need.</p>
+          <a href="#talk" class="pick" data-track="plan-run-improve">Start with this</a>
         </div>
-    </section>
-
-    <!-- CAPABILITIES -->
-    <section class="section capabilities" id="capabilities">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Capabilities</span>
-                <h2>Whatever the stack, <em>we've built with it</em></h2>
-            </div>
-
-            <div class="caps-grid">
-                <div class="cap-card">
-                    <div class="cap-icon" style="--accent: #3b82f6;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
-                    </div>
-                    <h3>Full-Stack Web Apps</h3>
-                    <p>React, Next.js, Laravel, FastAPI, Supabase, MySQL, SQLite. From database schema to deployed product.</p>
-                    <div class="cap-techs">
-                        <span>React</span><span>Next.js</span><span>Laravel</span><span>FastAPI</span><span>Supabase</span>
-                    </div>
-                </div>
-
-                <div class="cap-card">
-                    <div class="cap-icon" style="--accent: #10b981;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/></svg>
-                    </div>
-                    <h3>Mobile Apps</h3>
-                    <p>Native iOS + Android apps via Capacitor, PWAs with offline support, push notifications, and App Store deployment.</p>
-                    <div class="cap-techs">
-                        <span>iOS</span><span>Android</span><span>Capacitor</span><span>PWA</span><span>Push Notifications</span>
-                    </div>
-                </div>
-
-                <div class="cap-card">
-                    <div class="cap-icon" style="--accent: #8b5cf6;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"/></svg>
-                    </div>
-                    <h3>AI & Machine Learning</h3>
-                    <p>Claude, OpenAI, and Gemini integration. ML prediction models, AI tool systems, and intelligent automation.</p>
-                    <div class="cap-techs">
-                        <span>Claude API</span><span>OpenAI</span><span>Gemini</span><span>scikit-learn</span><span>76+ AI tools</span>
-                    </div>
-                </div>
-
-                <div class="cap-card">
-                    <div class="cap-icon" style="--accent: #f59e0b;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125"/></svg>
-                    </div>
-                    <h3>WordPress & Plugins</h3>
-                    <p>Custom plugins, complex admin panels, AJAX-driven UIs, WooCommerce integration, and Elementor widgets.</p>
-                    <div class="cap-techs">
-                        <span>WordPress</span><span>PHP</span><span>Custom Plugins</span><span>Elementor</span><span>AJAX</span>
-                    </div>
-                </div>
-
-                <div class="cap-card">
-                    <div class="cap-icon" style="--accent: #ef4444;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z"/></svg>
-                    </div>
-                    <h3>Infrastructure & DevOps</h3>
-                    <p>Docker, Coolify, Hetzner VPS, Traefik, auto-deploy pipelines, staging/production environments, SSL.</p>
-                    <div class="cap-techs">
-                        <span>Docker</span><span>Coolify</span><span>Hetzner</span><span>Traefik</span><span>CI/CD</span>
-                    </div>
-                </div>
-
-                <div class="cap-card">
-                    <div class="cap-icon" style="--accent: #06b6d4;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"/></svg>
-                    </div>
-                    <h3>Desktop Apps</h3>
-                    <p>Electron apps with custom UIs, IPC communication, file system access, and native OS integration.</p>
-                    <div class="cap-techs">
-                        <span>Electron</span><span>Node.js</span><span>IPC</span><span>Stream JSON</span><span>Packaging</span>
-                    </div>
-                </div>
-            </div>
+        <div class="plan">
+          <div class="pn">Product Partner</div>
+          <div class="pp">$4,500+<small>/mo</small></div>
+          <div class="pu">$4,500 – $6,500 / month</div>
+          <p class="pb">We are the product team. Roadmap, releases, on-call, and the architecture decisions that come with it.</p>
+          <a href="#talk" class="pick" data-track="plan-product-partner">Start with this</a>
         </div>
-    </section>
+      </div>
 
-    <!-- PROCESS -->
-    <section class="section process" id="process">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">How We Work</span>
-                <h2>From idea to <em>live product</em></h2>
-                <p>We don't just write code. We ship complete, deployed solutions.</p>
-            </div>
+      <p class="fine rv">Overflow is $165/hr. Nonprofits get 25% off, publicly and without asking. Not sure which one? The answer is sometimes "none of these yet."</p>
+    </div>
+  </section>
 
-            <div class="process-steps">
-                <div class="process-step">
-                    <div class="step-num">01</div>
-                    <div class="step-content">
-                        <h3>Understand</h3>
-                        <p>We learn your business, your users, and what success looks like. No generic solutions — every build starts with the real problem.</p>
-                    </div>
-                </div>
-                <div class="process-step">
-                    <div class="step-num">02</div>
-                    <div class="step-content">
-                        <h3>Architect</h3>
-                        <p>Pick the right stack for your needs. Design the database, map the features, plan the deployment. Get alignment before writing a single line.</p>
-                    </div>
-                </div>
-                <div class="process-step">
-                    <div class="step-num">03</div>
-                    <div class="step-content">
-                        <h3>Build</h3>
-                        <p>Rapid, iterative development with AI-augmented workflows. You see working builds as we go — not a reveal at the end.</p>
-                    </div>
-                </div>
-                <div class="process-step">
-                    <div class="step-num">04</div>
-                    <div class="step-content">
-                        <h3>Deploy & Support</h3>
-                        <p>Docker, CI/CD, staging environments, production deployment. We set up the infrastructure and stick around to iterate.</p>
-                    </div>
-                </div>
-            </div>
+  <hr class="rule">
+
+  <!-- =============================================================== TERMS -->
+  <section id="terms">
+    <div class="wrap">
+      <div class="prose rv">
+        <p class="eyebrow">The commitment</p>
+        <h2 class="sec">No hostages</h2>
+        <p class="sec-sub">The builder vanishing is the real fear. So this is in writing.</p>
+      </div>
+
+      <div class="terms rv">
+        <div class="term"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span><p><b>The code lives in your account.</b> Not ours, not a private repo you cannot see.</p></div>
+        <div class="term"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span><p><b>Domain, servers and logins are in your name.</b> We are a user on your infrastructure, not the landlord of it.</p></div>
+        <div class="term"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span><p><b>Data exports on request.</b> Any format you can actually open, any time you ask.</p></div>
+        <div class="term"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span><p><b>Thirty days' notice, no penalty.</b> Leaving is a calendar event, not a negotiation.</p></div>
+        <div class="term"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg></span><p><b>We write the handover document.</b> The next team should be able to run it without calling us — that is the test.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================================================================ TALK -->
+  <section id="talk">
+    <div class="wrap">
+      <div class="talk rv">
+        <h2>Tell us what is not working.</h2>
+        <p>Not a brief, not a spec. The problem in your own words is enough to start — and we never show you one option.</p>
+        <div class="actions">
+          <a href="#ideaForm" class="btn btn-light" data-track="cta-start-conversation">Start a conversation</a>
+          <a href="mailto:hello@kaymen.dev" class="btn btn-outline" data-track="contact-email">hello@kaymen.dev</a>
         </div>
-    </section>
+      </div>
 
-    <!-- CTA / CONTACT -->
-    <section class="section contact" id="contact">
-        <div class="container">
-            <div class="contact-card">
-                <div class="contact-content">
-                    <span class="section-tag">Start a Project</span>
-                    <h2>What do you want to build?</h2>
-                    <p>Tell us about your idea — we'll get back to you within 24 hours with a plan.</p>
-                    <form id="ideaForm" class="idea-form">
-                        <div class="form-group">
-                            <label for="ideaName">Your Name</label>
-                            <input type="text" id="ideaName" placeholder="John Doe" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="ideaEmail">Email</label>
-                            <input type="email" id="ideaEmail" placeholder="you@company.com" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="ideaProject">Project Name <span style="color:var(--text-dim);font-weight:400">(optional)</span></label>
-                            <input type="text" id="ideaProject" placeholder="My Awesome App">
-                        </div>
-                        <div class="form-group">
-                            <label for="ideaText">Describe Your Idea</label>
-                            <textarea id="ideaText" placeholder="I need an app that..." rows="4" required maxlength="2000"></textarea>
-                        </div>
-                        <!-- hp -->
-                        <div style="position:absolute;left:-9999px;top:-9999px" aria-hidden="true">
-                            <input type="text" name="website" id="ideaWebsite" tabindex="-1" autocomplete="off">
-                        </div>
-                        <button type="submit" class="btn btn-primary" id="ideaSubmitBtn">Send It Over</button>
-                        <div id="ideaMsg"></div>
-                    </form>
-                    <div class="contact-divider"><span>or reach out directly</span></div>
-                    <div class="contact-methods">
-                        <a href="https://wa.me/18623005027" target="_blank" rel="noopener" class="contact-method" data-track="contact-whatsapp">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                            <div>
-                                <span class="contact-label">WhatsApp</span>
-                                <span class="contact-value">Message us</span>
-                            </div>
-                        </a>
-                        <a href="mailto:hello@kaymen.dev" class="contact-method" data-track="contact-email">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
-                            <div>
-                                <span class="contact-label">Email</span>
-                                <span class="contact-value">hello@kaymen.dev</span>
-                            </div>
-                        </a>
-                    </div>
-                </div>
+      <div class="talk-form rv">
+        <h3>Describe the problem</h3>
+        <p>Whatever detail you have. We reply within 24 hours, with a shape and a number or with the reason not to build it.</p>
+        <form id="ideaForm">
+          <div class="tf-grid">
+            <div class="tf-field">
+              <label for="ideaName">Your name</label>
+              <input type="text" id="ideaName" placeholder="Jane Cohen" required autocomplete="name">
             </div>
-        </div>
-    </section>
+            <div class="tf-field">
+              <label for="ideaEmail">Email</label>
+              <input type="email" id="ideaEmail" placeholder="you@company.com" required autocomplete="email">
+            </div>
+            <div class="tf-field full">
+              <label for="ideaProject">What are you building? <i>(optional)</i></label>
+              <input type="text" id="ideaProject" placeholder="Booking system, client portal, an integration…">
+            </div>
+            <div class="tf-field full">
+              <label for="ideaText">What is not working</label>
+              <textarea id="ideaText" placeholder="Right now we track this in a spreadsheet and…" rows="5" required maxlength="2000"></textarea>
+            </div>
+          </div>
+          <!-- honeypot + timing gate: bots that fill this, or submit inside two
+               seconds, get a silent success from /api/contact -->
+          <div style="position:absolute;left:-9999px;top:-9999px" aria-hidden="true">
+            <input type="text" name="website" id="ideaWebsite" tabindex="-1" autocomplete="off">
+          </div>
+          <div class="tf-actions">
+            <button type="submit" class="btn btn-primary" id="ideaSubmitBtn" data-track="contact-submit">Send it over</button>
+            <span class="tf-alt">Or message us on <a href="https://wa.me/18623005027" target="_blank" rel="noopener" data-track="contact-whatsapp">WhatsApp</a>.</span>
+          </div>
+          <div id="ideaMsg"></div>
+        </form>
+      </div>
+    </div>
+  </section>
 
-    <!-- FOOTER -->
-    <footer class="footer">
-        <div class="container footer-inner">
-            <div class="footer-logo">
-                <span class="logo-bracket">{</span> kaymen<span class="logo-dot">.</span>dev <span class="logo-bracket">}</span>
-            </div>
-            <div class="footer-links">
-                <a href="#work">Work</a>
-                <a href="#capabilities">Capabilities</a>
-                <a href="#contact">Contact</a>
-            </div>
-            <div class="footer-copy">&copy; 2026 Kaymen Group LLC</div>
-        </div>
-    </footer>
+  <footer>
+    <div class="wrap foot">
+      <span class="fm"><b>kaymen</b><span>.</span>dev</span>
+      <nav>
+        <a href="/work">Work</a>
+        <a href="#price">Pricing</a>
+        <a href="#terms">No hostages</a>
+        <a href="#talk">Contact</a>
+      </nav>
+      <span>&copy; 2026 Kaymen Group LLC</span>
+    </div>
+  </footer>
+</main>
 
-    <script src="script.js"></script>
-    <script src="tracker.js" defer></script>
+<script src="/script.js"></script>
+<script src="/tracker.js" defer></script>
 </body>
 </html>

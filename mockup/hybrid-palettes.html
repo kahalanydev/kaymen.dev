@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>kaymen.dev — hybrid (1+4), five visual systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Figtree:wght@300;400;500;600;700;800;900&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#15161a;font-family:Figtree,system-ui,sans-serif;color:#fff}
+
+/* ---------- shell ---------- */
+.chrome{position:sticky;top:0;z-index:100;background:#15161a;border-bottom:1px solid #2c2e36;padding:10px 16px}
+.chrome-in{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.chrome h1{font-size:13px;margin:0;font-weight:600;color:#8b8f9c;white-space:nowrap}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{appearance:none;border:1px solid #33353f;background:#1d1f25;color:#c9ccd6;font:inherit;font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:7px;cursor:pointer;display:flex;align-items:center;gap:7px}
+.tab:hover{background:#26282f}
+.tab[aria-selected=true]{background:#fff;color:#15161a;border-color:#fff}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block;border:1px solid rgba(255,255,255,.25)}
+.spacer{flex:1 1 auto}
+.widths{display:flex;gap:3px;background:#1d1f25;border:1px solid #33353f;border-radius:7px;padding:3px}
+.w{appearance:none;border:0;background:transparent;color:#8b8f9c;font:inherit;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:5px;cursor:pointer}
+.w[aria-pressed=true]{background:#33353f;color:#fff}
+.caption{max-width:1240px;margin:0 auto;padding:11px 16px 13px;font-size:13px;line-height:1.5;color:#9aa0ae}
+.caption b{color:#fff}
+.caption .risk{color:#e0a45f}
+.stagewrap{padding:0 16px 60px}
+.frame{margin:0 auto;container-type:inline-size;container-name:frame;overflow:hidden;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+.note{max-width:1240px;margin:0 auto;padding:0 16px 22px;font-size:12.5px;color:#6f7482;line-height:1.55}
+.note b{color:#9aa0ae}
+
+/* ---------- THEMES ---------- */
+.t{
+  --radius:10px;
+  --display:Archivo,system-ui,sans-serif;
+  --body:Figtree,system-ui,sans-serif;
+  --tight:-.035em;
+}
+/* A — Ink & Acid */
+.t.a{--bg:#0e0e0f;--ink:#f4f4f1;--muted:#8e8e96;--line:#26262b;--card:#17171a;
+ --accent:#d4ff3f;--on-accent:#16210a;--band:#d4ff3f;--on-band:#16210a;--pop:#ff6a3d;
+ --stats:#17171a;--on-stats:#f4f4f1;--num:#d4ff3f;--radius:10px;
+ --display:Archivo,system-ui,sans-serif;--tight:-.04em}
+/* B — Oxblood & Brass */
+.t.b{--bg:#f7f2e9;--ink:#2a1416;--muted:#7c6a63;--line:#e2d7c6;--card:#fffdf8;
+ --accent:#7d1f2b;--on-accent:#f7f2e9;--band:#2a1416;--on-band:#f7f2e9;--pop:#b98b3c;
+ --stats:#7d1f2b;--on-stats:#f7f2e9;--num:#e8c98a;--radius:5px;
+ --display:"Instrument Serif",Georgia,serif;--tight:-.005em}
+/* C — Terracotta & Pine */
+.t.c{--bg:#fdf6ef;--ink:#241c16;--muted:#7d6a5c;--line:#eddfd1;--card:#fff;
+ --accent:#c2542a;--on-accent:#fff5ee;--band:#1f5c4a;--on-band:#eef7f2;--pop:#1f5c4a;
+ --stats:#c2542a;--on-stats:#fff5ee;--num:#ffe6c9;--radius:16px;
+ --display:Fraunces,Georgia,serif;--tight:-.02em}
+/* D — Forest & Copper */
+.t.d{--bg:#eef3ef;--ink:#10231a;--muted:#5d7268;--line:#d5e2d8;--card:#fff;
+ --accent:#0f5136;--on-accent:#eaf6ee;--band:#0f5136;--on-band:#eaf6ee;--pop:#c1743a;
+ --stats:#10231a;--on-stats:#eaf6ee;--num:#c1743a;--radius:3px;
+ --display:"Space Grotesk",system-ui,sans-serif;--tight:-.03em}
+/* E — Ultramarine & Chartreuse */
+.t.e{--bg:#f2f2ee;--ink:#0d0f2b;--muted:#6b6d85;--line:#dcdce6;--card:#fff;
+ --accent:#2019d6;--on-accent:#ffffff;--band:#2019d6;--on-band:#eef0ff;--pop:#d8f24a;
+ --stats:#0d0f2b;--on-stats:#fff;--num:#d8f24a;--radius:22px;
+ --display:Syne,system-ui,sans-serif;--tight:-.03em}
+
+/* ---------- page ---------- */
+.t{background:var(--bg);color:var(--ink);font-family:var(--body);display:none}
+.t.on{display:block}
+.t p,.t h1,.t h2,.t h3,.t ul,.t li{margin:0}
+.t ul{list-style:none;padding:0}
+.t button{font:inherit;cursor:pointer}
+.pad{padding:34px 20px}
+@container frame (min-width:760px){.pad{padding:66px 44px}}
+@container frame (min-width:1080px){.pad{padding:84px 66px}}
+.wrap{max-width:1080px;margin:0 auto}
+.disp{font-family:var(--display);letter-spacing:var(--tight);font-weight:900;line-height:1.02}
+.t.b .disp,.t.c .disp{font-weight:400}
+.t.c .disp{font-weight:600}
+
+/* ribbon */
+.ribbon{position:sticky;top:0;z-index:9;background:var(--band);color:var(--on-band);display:flex;align-items:center;gap:14px;padding:0 14px;height:48px;overflow:hidden}
+.rb-brand{font-family:var(--display);font-weight:900;letter-spacing:var(--tight);font-size:17px;white-space:nowrap}
+.t.b .rb-brand,.t.c .rb-brand{font-weight:600}
+.rb-track{flex:1;overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+.rb-run{display:flex;gap:26px;white-space:nowrap;animation:scroll 46s linear infinite;width:max-content}
+@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.rb-item{display:flex;align-items:center;gap:7px;font-size:11.5px;letter-spacing:.03em;opacity:.72;font-weight:600}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none;opacity:.9}
+.rb-cta{background:var(--on-band);color:var(--band);font-weight:800;font-size:12.5px;border:0;padding:9px 15px;border-radius:calc(var(--radius) - 2px);white-space:nowrap}
+
+/* hero */
+.hero h1{font-size:40px;max-width:15ch}
+@container frame (min-width:760px){.hero h1{font-size:72px}}
+@container frame (min-width:1080px){.hero h1{font-size:88px}}
+.kicker{font-size:11px;letter-spacing:.22em;text-transform:uppercase;font-weight:800;color:var(--accent);margin-bottom:18px}
+.hero .lead{margin-top:20px;font-size:16.5px;line-height:1.55;max-width:48ch;color:var(--muted)}
+@container frame (min-width:760px){.hero .lead{font-size:20px}}
+.qrow{margin-top:44px;padding-top:34px;border-top:2px solid var(--ink)}
+.qrow h2{font-size:22px;font-family:var(--display);letter-spacing:var(--tight);font-weight:800}
+@container frame (min-width:760px){.qrow h2{font-size:30px}}
+.t.b .qrow h2,.t.c .qrow h2{font-weight:600}
+.answers{display:grid;gap:10px;margin-top:20px}
+@container frame (min-width:760px){.answers{grid-template-columns:repeat(3,1fr);gap:14px}}
+.ans{background:var(--card);border:2px solid var(--line);border-radius:var(--radius);padding:20px;text-align:left;color:var(--ink);transition:.14s}
+.ans:hover{border-color:var(--accent)}
+.ans .t2{font-size:18px;font-weight:800;letter-spacing:-.02em;line-height:1.2;font-family:var(--display)}
+.t.b .ans .t2,.t.c .ans .t2{font-weight:600}
+.ans .d{font-size:13.5px;line-height:1.45;margin-top:8px;color:var(--muted)}
+.ans .arrow{margin-top:14px;font-size:13px;font-weight:800;color:var(--accent)}
+.ans[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.ans[aria-pressed=true] .d,.ans[aria-pressed=true] .arrow{color:var(--on-accent);opacity:.85}
+
+/* reveal */
+.reveal{display:none;background:var(--card);border-top:2px solid var(--ink);border-bottom:2px solid var(--ink)}
+.reveal.on{display:block}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:800;color:var(--accent)}
+.reveal h3{font-size:26px;font-family:var(--display);letter-spacing:var(--tight);font-weight:900;margin-top:12px}
+@container frame (min-width:760px){.reveal h3{font-size:40px}}
+.t.b .reveal h3,.t.c .reveal h3{font-weight:600}
+.reveal .lead{font-size:16px;line-height:1.55;color:var(--muted);margin-top:12px;max-width:52ch}
+.matchplan{margin-top:26px;border:2px solid var(--ink);border-radius:var(--radius);padding:24px;display:grid;gap:20px;background:var(--bg)}
+@container frame (min-width:760px){.matchplan{grid-template-columns:1fr auto;align-items:center;padding:30px 34px}}
+.matchplan .pn{font-size:19px;font-weight:900;font-family:var(--display);letter-spacing:-.02em}
+.t.b .matchplan .pn,.t.c .matchplan .pn{font-weight:600}
+.matchplan .pb{font-size:14px;color:var(--muted);margin-top:7px;line-height:1.5;max-width:44ch}
+.matchplan ul{margin-top:13px;display:grid;gap:6px}
+.matchplan li{font-size:13px;color:var(--muted);padding-left:16px;position:relative}
+.matchplan li:before{content:"";position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.matchplan .pp{font-size:34px;font-weight:900;font-family:var(--display);letter-spacing:var(--tight)}
+.t.b .matchplan .pp,.t.c .matchplan .pp{font-weight:600}
+.matchplan .pu{font-size:12px;color:var(--muted);margin-top:2px}
+.matchplan .go{margin-top:14px;background:var(--accent);color:var(--on-accent);border:0;font-weight:800;font-size:13.5px;padding:13px 20px;border-radius:calc(var(--radius) - 2px);width:100%}
+@container frame (min-width:760px){.matchplan .amt{text-align:right}.matchplan .go{width:auto}}
+.ex{display:grid;gap:10px;margin-top:24px}
+@container frame (min-width:760px){.ex{grid-template-columns:repeat(3,1fr);gap:14px}}
+.exi{border:1px solid var(--line);border-radius:var(--radius);padding:18px;background:var(--bg)}
+.exi .nm{font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px}
+.exi .nm .dot{background:var(--accent);opacity:1}
+.exi .wt{font-size:13.5px;color:var(--muted);margin-top:8px;line-height:1.45}
+.exi .yr{font-size:11.5px;color:var(--accent);margin-top:10px;font-weight:800;letter-spacing:.04em}
+
+/* stats */
+.stats{background:var(--stats);color:var(--on-stats);display:grid;grid-template-columns:1fr 1fr}
+@container frame (min-width:760px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{padding:26px 20px;border-right:1px solid rgba(255,255,255,.13);border-bottom:1px solid rgba(255,255,255,.13)}
+@container frame (min-width:760px){.stat{padding:40px 28px;border-bottom:0}}
+.stat .n{font-family:var(--display);font-size:40px;letter-spacing:var(--tight);font-weight:900;color:var(--num);line-height:1;font-variant-numeric:tabular-nums}
+@container frame (min-width:760px){.stat .n{font-size:56px}}
+.t.b .stat .n,.t.c .stat .n{font-weight:600}
+.stat .l{font-size:12.5px;margin-top:9px;line-height:1.35;opacity:.72}
+
+/* band (fears) */
+.band{background:var(--band);color:var(--on-band)}
+.band h3{font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:800;opacity:.6}
+.fears{display:grid;gap:16px;margin-top:20px}
+@container frame (min-width:760px){.fears{grid-template-columns:repeat(3,1fr);gap:28px}}
+.fear{font-size:18px;line-height:1.35;font-weight:600;padding-left:16px;border-left:3px solid var(--on-band);opacity:.95}
+@container frame (min-width:760px){.fear{font-size:22px}}
+
+/* sections */
+h2.sec{font-size:28px;font-family:var(--display);letter-spacing:var(--tight);font-weight:900}
+@container frame (min-width:760px){h2.sec{font-size:44px}}
+.t.b h2.sec,.t.c h2.sec{font-weight:600}
+.sub{color:var(--muted);font-size:14.5px;margin-top:10px;max-width:60ch;line-height:1.55}
+
+/* board */
+.board{margin-top:28px;border-top:2px solid var(--ink)}
+.row{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:16px 0;border-bottom:1px solid var(--line);align-items:start}
+@container frame (min-width:760px){.row{grid-template-columns:14px 1.05fr 2fr auto;gap:22px;align-items:center}}
+.row .dot{background:var(--accent);opacity:1;margin-top:7px}
+@container frame (min-width:760px){.row .dot{margin-top:0}}
+.row .nm{font-weight:800;font-size:15.5px}
+.row .nm i{font-style:normal;display:block;color:var(--muted);font-weight:600;font-size:10.5px;margin-top:4px;letter-spacing:.09em;text-transform:uppercase}
+.row .wt{color:var(--muted);font-size:14.5px;line-height:1.45}
+.row .yr{font-size:11.5px;font-weight:800;color:var(--accent);white-space:nowrap;justify-self:start;letter-spacing:.04em}
+
+/* plans */
+.plans{display:grid;gap:12px;margin-top:28px}
+@container frame (min-width:760px){.plans{grid-template-columns:repeat(2,1fr)}}
+@container frame (min-width:1080px){.plans{grid-template-columns:repeat(4,1fr)}}
+.plan{border:2px solid var(--line);border-radius:var(--radius);padding:22px;display:flex;flex-direction:column;background:var(--card)}
+.plan.f{border-color:var(--accent);background:var(--accent);color:var(--on-accent)}
+.plan .pn{font-weight:800;font-size:16px;font-family:var(--display)}
+.t.b .plan .pn,.t.c .plan .pn{font-weight:600}
+.plan .pp{font-size:28px;font-weight:900;font-family:var(--display);letter-spacing:var(--tight);margin-top:12px}
+.t.b .plan .pp,.t.c .plan .pp{font-weight:600}
+.plan .pu{font-size:11.5px;color:var(--muted);margin-top:3px}
+.plan.f .pu,.plan.f .pb,.plan.f li{color:inherit;opacity:.86}
+.plan .pb{font-size:13.5px;color:var(--muted);margin-top:13px;line-height:1.5}
+.plan ul{margin-top:14px;display:grid;gap:8px}
+.plan li{font-size:12.5px;color:var(--muted);padding-left:16px;position:relative;line-height:1.45}
+.plan li:before{content:"";position:absolute;left:0;top:6px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.plan.f li:before{background:var(--on-accent)}
+.plan .pick{margin-top:auto;padding-top:18px}
+.plan .pick button{width:100%;border:2px solid var(--ink);background:transparent;color:var(--ink);font-weight:800;font-size:13px;padding:11px;border-radius:calc(var(--radius) - 2px)}
+.plan.f .pick button{background:var(--on-accent);color:var(--accent);border-color:var(--on-accent)}
+.tagf{display:inline-block;background:var(--on-accent);color:var(--accent);font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;padding:4px 8px;border-radius:4px;margin-bottom:10px}
+
+/* own */
+.own{background:var(--band);color:var(--on-band)}
+.own ul{display:grid;gap:14px;margin-top:22px}
+@container frame (min-width:760px){.own ul{grid-template-columns:1fr 1fr;gap:18px 36px}}
+.own li{font-size:16px;line-height:1.45;padding-left:28px;position:relative;opacity:.92}
+.own li:before{content:"→";position:absolute;left:0;font-weight:900;opacity:.75}
+
+/* voices */
+.voices{display:grid;gap:14px;margin-top:24px}
+@container frame (min-width:760px){.voices{grid-template-columns:repeat(3,1fr)}}
+.voice{border:1px solid var(--line);border-radius:var(--radius);padding:22px;background:var(--card)}
+.voice q{quotes:none;display:block;font-size:15.5px;line-height:1.5;font-weight:500}
+.voice .by{margin-top:14px;font-size:12.5px;color:var(--muted)}
+.voice .by b{color:var(--ink)}
+.draftflag{display:inline-block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:900;background:var(--pop);color:var(--bg);padding:5px 9px;border-radius:4px;margin-bottom:14px}
+
+/* cta */
+.cta{background:var(--stats);color:var(--on-stats);border-radius:var(--radius);padding:32px}
+@container frame (min-width:760px){.cta{padding:56px}}
+.cta h2{font-size:30px;font-family:var(--display);letter-spacing:var(--tight);font-weight:900}
+@container frame (min-width:760px){.cta h2{font-size:48px}}
+.t.b .cta h2,.t.c .cta h2{font-weight:600}
+.cta p{opacity:.72;margin-top:14px;max-width:52ch;line-height:1.55;font-size:15.5px}
+.cta .go{margin-top:24px;background:var(--num);color:var(--stats);border:0;font-weight:900;font-size:15px;padding:15px 28px;border-radius:calc(var(--radius) - 2px)}
+.chip{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;border-radius:30px;padding:9px 16px;margin-bottom:18px;background:var(--num);color:var(--stats)}
+</style>
+</head>
+<body>
+
+<header class="chrome">
+  <div class="chrome-in">
+    <h1>hybrid 1+4 —</h1>
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="spacer"></div>
+    <div class="widths" id="widths">
+      <button class="w" data-w="390" aria-pressed="false">Phone</button>
+      <button class="w" data-w="860" aria-pressed="false">Tablet</button>
+      <button class="w" data-w="100%" aria-pressed="true">Desktop</button>
+    </div>
+  </div>
+</header>
+
+<div class="caption" id="caption"></div>
+
+<div class="stagewrap">
+  <div class="frame" id="frame">
+    <div class="t a" id="ta"></div>
+    <div class="t b" id="tb"></div>
+    <div class="t c" id="tc"></div>
+    <div class="t d" id="td"></div>
+    <div class="t e" id="te"></div>
+  </div>
+</div>
+
+<p class="note"><b>Identical structure and identical words in all five</b> — the live ribbon and proof board from direction 1, the question that routes the page from direction 4. Only the colour system and the typeface change, so you are judging presence, not layout. Click an answer to see it route; click a plan to see it carry down to the closing block.</p>
+
+<script>
+/* ============ shared content (unchanged from the last round) ============ */
+const C = {
+  brand:'Kaymen',
+  promise:'We build it. Then we run it.',
+  sub:'Most software is abandoned by whoever made it. Ours is not. We stay on it every month — keeping it alive, and keeping it moving.',
+  stats:[{n:'14',l:'systems live right now'},{n:'3 yrs',l:'oldest one still running'},{n:'7',l:'changes shipped this week'},{n:'0',l:'hours down this month'}],
+  fearTitle:'What usually happens',
+  fears:['The person who built it stopped answering.','Nobody left can safely change a line of it.','A phone update broke it, and it quietly vanished from the store.'],
+  fleetTitle:'What we keep running',
+  fleetSub:'Every one of these is live today. Three are named with permission; the rest we describe without naming the client.',
+  fleet:[
+    {nm:'Bridge Mortgage',meta:'Mortgage brokerage',wt:'Clients apply for a mortgage online instead of emailing a document back and forth.',yr:'1 yr'},
+    {nm:'Thrive / OLAMI',meta:'Education nonprofit · 4 campuses',wt:'Thousands of students — events, meetings and follow-up finally in one place.',yr:'1 yr'},
+    {nm:'Logystico',meta:'Logistics',wt:'Warehouse staff ask a question in plain English and get the answer from live shipping data.',yr:'1 yr'},
+    {nm:'A community loan fund',meta:'Nonprofit',wt:'$1.58M lent interest-free, tracked to the dollar.',yr:'2 yrs'},
+    {nm:'A therapeutic riding centre',meta:'Healthcare',wt:'Families book sessions in Hebrew or English, from a phone.',yr:'1 yr'},
+    {nm:'An IT firm’s billing',meta:'Managed IT',wt:'Engineer hours checked every night; invoices audited before they go out.',yr:'1 yr'},
+    {nm:'Torah Tracker',meta:'Our own product · both app stores',wt:'A daily learning habit, used every morning.',yr:'3 yrs'},
+    {nm:'A prayer-partner service',meta:'Community',wt:'Matches people to a learning partner anywhere in the world.',yr:'2 yrs'},
+    {nm:'A grocery delivery network',meta:'Retail technology',wt:'Orders routed to whichever local store can get there fastest.',yr:'1 yr'},
+    {nm:'A shared lists app for families',meta:'Consumer · both app stores',wt:'Shopping and meal planning that stays in sync between phones.',yr:'1 yr'},
+    {nm:'A prayer book for a Yemenite community',meta:'Community · both app stores',wt:'Centuries-old text, set correctly, on a phone.',yr:'1 yr'},
+    {nm:'A private investment firm',meta:'Finance',wt:'A quiet, serious site for a firm that does not advertise.',yr:'1 yr'},
+    {nm:'A stock research desk',meta:'Our own product',wt:'Reads the market every morning and explains what changed.',yr:'1 yr'},
+    {nm:'A messaging tool',meta:'Our own product',wt:'Sends a personal message to a long list, one at a time.',yr:'1 yr'}
+  ],
+  plansTitle:'Three ways to work with us',
+  plansSub:'Prices are real and they are on the page on purpose. Pick one to tell us where to start — nothing is charged and nothing is committed.',
+  plans:[
+    {id:'site',pn:'Simple Site',pp:'from $2,500',pu:'to build, then $200 / month',pb:'A proper site, live in two weeks — and we keep it alive after that.',pts:['Several designs to choose from','Hosting, backups and updates','An hour of edits every month']},
+    {id:'keep',pn:'Keep Running',pp:'$600',pu:'per month',pb:'Your system stays up, safe and current. We fix what breaks.',pts:['Hosting, monitoring, tested backups','Security and platform updates','Answered by the next working day']},
+    {id:'improve',pn:'Run & Improve',pp:'$1,800',pu:'per month',f:true,pb:'Everything above, plus real work on it every single month.',pts:['12 hours of changes a month, unused hours roll over','Same-day answer · four hours if it is down','A monthly call and a plan for what is next']},
+    {id:'partner',pn:'Product Partner',pp:'from $4,500',pu:'per month',pb:'A team on your product, permanently. Several systems, one plan.',pts:['30–40 hours a month across everything you run','A direct line to us, priority on everything','We build the roadmap with you']}
+  ],
+  ownTitle:'You own it. All of it.',
+  ownSub:'The reason to stay with us should be that we are good, never that leaving is painful.',
+  own:['The code lives in your own account, not ours.','The domain, the servers and the logins are in your name.','Your data exports whenever you ask for it.','Thirty days’ notice, no penalty — and we write the handover for whoever comes next.'],
+  designTitle:'We never show you one option.',
+  designBody:'Every design starts with three or four complete directions — genuinely different, not the same idea in another colour. You pick one. Then we refine it until you are happy.',
+  voicesTitle:'In their words',
+  voices:[
+    {q:'I used to email every client a document and chase it for a week. Now they fill it in themselves and I watch it arrive.',by:'Isaac',role:'Mortgage broker'},
+    {q:'Something broke on a Friday afternoon. It was fixed before I had finished explaining it.',by:'Moshe',role:'Therapeutic riding centre'},
+    {q:'Four campuses were each keeping their own spreadsheets. Now it is one system and I can see the whole picture.',by:'Todd',role:'Programme director'}
+  ],
+  ctaTitle:'Tell us what you need.',
+  ctaBody:'No cost and no commitment. If you picked a plan above it comes with you — it just tells us where to start.',
+  ctaBtn:'Start the conversation'
+};
+
+const ANS=[
+  {key:'site',t:'I need a site',d:'Something simple, done properly, that actually looks like us.',plan:'site',pick:[11,3,12],
+   h:'A real site — and someone still there in a year.',lead:'Most sites are built once and then rot quietly. Yours gets built well, then looked after, for less than a phone plan.'},
+  {key:'build',t:'I need something built',d:'A system that runs a real part of my business.',plan:'improve',pick:[0,2,5],
+   h:'Built for the way you actually work.',lead:'We start with several complete designs, not one guess. Then we build it — and then we stay on it, because the build is the short part.'},
+  {key:'inherit',t:'I have something already',d:'It exists, but nobody is really looking after it.',plan:'keep',pick:[1,4,6],
+   h:'We can take it over.',lead:'We take on systems other people built. We read it, secure it, get it back under control, and then keep it that way.'}
+];
+
+const THEMES=[
+  {id:'ta',cls:'a',name:'Ink & Acid',sw:'#d4ff3f',
+   idea:'Near-black with one hot acid signal and a heavy grotesk. Loud, current, expensive-looking — the opposite of plain.',
+   risk:'It is still a dark site, which is the register you rejected before; the acid can read young.'},
+  {id:'tb',cls:'b',name:'Oxblood & Brass',sw:'#7d1f2b',
+   idea:'Bone paper, deep oxblood, brass numerals, a high-contrast serif. Reads like an old firm that happens to build software.',
+   risk:'Skews formal and older — great for the institutions, possibly stiff for a young business owner.'},
+  {id:'tc',cls:'c',name:'Terracotta & Pine',sw:'#c2542a',
+   idea:'Warm clay and deep pine on cream, soft serif, generous curves. Human and editorial — nothing about it says tech agency.',
+   risk:'The warmest and least corporate; could read boutique rather than operational.'},
+  {id:'td',cls:'d',name:'Forest & Copper',sw:'#0f5136',
+   idea:'Deep forest green, copper accents, sharp corners, a technical grotesk. Serious and alive — green does the "still running" work.',
+   risk:'The safest of the five. Handsome, but closest to something a competitor could also land on.'},
+  {id:'te',cls:'e',name:'Ultramarine & Chartreuse',sw:'#2019d6',
+   idea:'Saturated ultramarine against chartreuse, big soft radii, a distinctive display face. Maximum presence, maximum confidence.',
+   risk:'The most fashion-forward — strong personality that a conservative buyer may find loud.'}
+];
+
+let state={plan:null};
+const planById=id=>C.plans.find(p=>p.id===id);
+const chip=()=>state.plan?'<div class="chip">Selected: <b>'+planById(state.plan).pn+'</b></div>':'';
+
+function page(){
+  const ticker=C.fleet.map(f=>'<span class="rb-item"><i class="dot"></i>'+f.nm+' · live</span>').join('');
+  return `
+  <div class="ribbon">
+    <span class="rb-brand">${C.brand}</span>
+    <div class="rb-track"><div class="rb-run">${ticker}${ticker}</div></div>
+    <button class="rb-cta">Start</button>
+  </div>
+
+  <section class="pad hero"><div class="wrap">
+    <div class="kicker">Build &amp; run</div>
+    <h1 class="disp">${C.promise}</h1>
+    <p class="lead">${C.sub}</p>
+    <div class="qrow">
+      <h2>What do you need?</h2>
+      <div class="answers">
+        ${ANS.map(a=>`<button class="ans" data-ans="${a.key}" aria-pressed="false">
+          <div class="t2">${a.t}</div><div class="d">${a.d}</div><div class="arrow">Show me →</div></button>`).join('')}
+      </div>
+    </div>
+  </div></section>
+
+  ${ANS.map(a=>{const p=planById(a.plan);return `<div class="reveal" data-rev="${a.key}"><div class="pad"><div class="wrap">
+    <div class="eyebrow">${a.t}</div>
+    <h3>${a.h}</h3>
+    <p class="lead">${a.lead}</p>
+    <div class="matchplan">
+      <div>
+        <div class="pn">${p.pn}</div>
+        <div class="pb">${p.pb}</div>
+        <ul>${p.pts.map(t=>`<li>${t}</li>`).join('')}</ul>
+      </div>
+      <div class="amt">
+        <div class="pp">${p.pp}</div><div class="pu">${p.pu}</div>
+        <button class="go" data-plan="${p.id}">Start with this →</button>
+      </div>
+    </div>
+    <div class="ex">${a.pick.map(i=>{const f=C.fleet[i];return `<div class="exi">
+      <div class="nm"><i class="dot"></i>${f.nm}</div><div class="wt">${f.wt}</div>
+      <div class="yr">${f.yr} running · still ours to look after</div></div>`}).join('')}</div>
+  </div></div></div>`}).join('')}
+
+  <div class="stats">${C.stats.map(s=>`<div class="stat"><div class="n">${s.n}</div><div class="l">${s.l}</div></div>`).join('')}</div>
+
+  <section class="pad band"><div class="wrap">
+    <h3>${C.fearTitle}</h3>
+    <div class="fears">${C.fears.map(f=>`<div class="fear">${f}</div>`).join('')}</div>
+  </div></section>
+
+  <section class="pad"><div class="wrap">
+    <h2 class="sec">${C.fleetTitle}</h2>
+    <p class="sub">${C.fleetSub}</p>
+    <div class="board">${C.fleet.map(f=>`<div class="row">
+      <i class="dot"></i>
+      <div class="nm">${f.nm}<i>${f.meta}</i></div>
+      <div class="wt">${f.wt}</div>
+      <div class="yr">${f.yr} running</div></div>`).join('')}</div>
+  </div></section>
+
+  <section class="pad" style="padding-top:0"><div class="wrap">
+    <h2 class="sec">${C.plansTitle}</h2>
+    <p class="sub">${C.plansSub}</p>
+    <div class="plans">${C.plans.map(p=>`<div class="plan ${p.f?'f':''}">
+      ${p.f?'<span class="tagf">Most chosen</span>':''}
+      <div class="pn">${p.pn}</div>
+      <div class="pp">${p.pp}</div><div class="pu">${p.pu}</div>
+      <div class="pb">${p.pb}</div>
+      <ul>${p.pts.map(t=>`<li>${t}</li>`).join('')}</ul>
+      <div class="pick"><button data-plan="${p.id}">Start with this →</button></div>
+    </div>`).join('')}</div>
+  </div></section>
+
+  <section class="pad own"><div class="wrap">
+    <h2 class="sec">${C.ownTitle}</h2>
+    <p class="sub" style="color:inherit;opacity:.72">${C.ownSub}</p>
+    <ul>${C.own.map(o=>`<li>${o}</li>`).join('')}</ul>
+  </div></section>
+
+  <section class="pad"><div class="wrap">
+    <h2 class="sec">${C.designTitle}</h2>
+    <p class="sub">${C.designBody}</p>
+  </div></section>
+
+  <section class="pad" style="padding-top:0"><div class="wrap">
+    <span class="draftflag">Draft — to confirm with each client</span>
+    <h2 class="sec">${C.voicesTitle}</h2>
+    <div class="voices">${C.voices.map(v=>`<div class="voice"><q>“${v.q}”</q><div class="by"><b>${v.by}</b> · ${v.role}</div></div>`).join('')}</div>
+  </div></section>
+
+  <section class="pad" style="padding-top:0"><div class="wrap"><div class="cta">
+    ${chip()}
+    <h2>${C.ctaTitle}</h2>
+    <p>${C.ctaBody}</p>
+    <button class="go">${C.ctaBtn}</button>
+  </div></div></section>`;
+}
+
+function paint(){ THEMES.forEach(t=>{document.getElementById(t.id).innerHTML=page()}); }
+paint();
+
+const tabsEl=document.getElementById('tabs');
+tabsEl.innerHTML=THEMES.map((t,i)=>`<button class="tab" role="tab" data-t="${t.id}" aria-selected="${i===0}"><i class="sw" style="background:${t.sw}"></i>${t.name}</button>`).join('');
+function show(id){
+  THEMES.forEach(t=>document.getElementById(t.id).classList.toggle('on',t.id===id));
+  [...tabsEl.children].forEach(b=>b.setAttribute('aria-selected',b.dataset.t===id));
+  const t=THEMES.find(x=>x.id===id);
+  document.getElementById('caption').innerHTML='<b>'+t.name+'.</b> '+t.idea+' <span class="risk">Risk: '+t.risk+'</span>';
+  window.scrollTo({top:0});
+}
+tabsEl.addEventListener('click',e=>{const b=e.target.closest('[data-t]');if(b)show(b.dataset.t)});
+show('ta');
+
+const frame=document.getElementById('frame');
+document.getElementById('widths').addEventListener('click',e=>{
+  const b=e.target.closest('[data-w]');if(!b)return;
+  [...e.currentTarget.children].forEach(x=>x.setAttribute('aria-pressed',x===b));
+  frame.style.width=b.dataset.w==='100%'?'100%':b.dataset.w+'px';
+});
+
+frame.addEventListener('click',e=>{
+  const pick=e.target.closest('[data-plan]');
+  if(pick){
+    state.plan=pick.dataset.plan;
+    const active=document.querySelector('.t.on').id;
+    const openAns=document.querySelector('.t.on [data-rev].on');
+    const openKey=openAns?openAns.dataset.rev:null;
+    paint(); show(active);
+    if(openKey){
+      const root=document.querySelector('.t.on');
+      root.querySelectorAll('[data-ans]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.ans===openKey));
+      root.querySelectorAll('[data-rev]').forEach(r=>r.classList.toggle('on',r.dataset.rev===openKey));
+    }
+    const c=document.querySelector('.t.on .chip');
+    if(c) c.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  const ans=e.target.closest('[data-ans]');
+  if(ans){
+    const root=ans.closest('.t'), k=ans.dataset.ans;
+    const already=ans.getAttribute('aria-pressed')==='true';
+    root.querySelectorAll('[data-ans]').forEach(b=>b.setAttribute('aria-pressed',!already&&b===ans));
+    root.querySelectorAll('[data-rev]').forEach(r=>r.classList.toggle('on',!already&&r.dataset.rev===k));
+    const open=root.querySelector('[data-rev].on');
+    if(open) setTimeout(()=>open.scrollIntoView({behavior:'smooth',block:'start'}),40);
+  }
+});
+</script>
+</body>
+</html>

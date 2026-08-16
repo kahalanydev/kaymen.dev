@@ -111,21 +111,69 @@ app.use('/portal', express.static(path.join(__dirname, '..', 'portal'), {
   index: 'index.html'
 }));
 
+// --- Marketing site (server-rendered from content/projects.js) ---------------
+// Rendered rather than served flat so case studies get real HTML and real
+// per-page OG tags. Templates are cached in production and re-read in dev so
+// editing content doesn't need a restart.
+const fs = require('fs');
+const { homeSections, fleetPanel, liveCount, caseStudyPage, workIndexPage, notFoundPage } = require('./render');
+
+const IS_DEV = process.env.NODE_ENV !== 'production';
+const HOME_TEMPLATE_PATH = path.join(__dirname, '..', 'index.html');
+
+// index.html is a template, not a page. Each placeholder is substituted with a
+// FUNCTION replacement, never a string: the rendered content contains "$" runs
+// ("$1.58M", "$47K") and $&, $', $1 are all special in string replacements.
+const PLACEHOLDERS = [
+  // work sections (running board + case studies)
+  { token: '<!--{{WORK}}-->', render: homeSections, required: true },
+  // hero graphic, drawn from measured git history in content/stats.js
+  { token: '<!--{{FLEET}}-->', render: fleetPanel, required: true },
+  // live-systems count, from the Coolify API at last stats refresh
+  { token: '<!--{{LIVE}}-->', render: liveCount, required: false },
+];
+
+let homeCache = null;
+function renderHome() {
+  if (homeCache && !IS_DEV) return homeCache;
+  let html = fs.readFileSync(HOME_TEMPLATE_PATH, 'utf8');
+  for (const p of PLACEHOLDERS) {
+    if (!html.includes(p.token)) {
+      // Fail loudly in the log, degrade gracefully in the response — a missing
+      // placeholder means the page renders without that block, which is a
+      // content regression worth seeing rather than a reason to 500 the
+      // homepage. Nothing else notices, so this log is the only signal.
+      if (p.required) console.error(`[render] ${p.token} not found in index.html — block omitted`);
+      continue;
+    }
+    html = html.split(p.token).join(p.render());
+  }
+  if (!IS_DEV) homeCache = html;
+  return html;
+}
+
+const sendHtml = (res, html) =>
+  res.set('Content-Type', 'text/html; charset=utf-8').send(html);
+
+app.get('/', (req, res) => sendHtml(res, renderHome()));
+app.get('/work', (req, res) => sendHtml(res, workIndexPage()));
+
+app.get('/work/:slug', (req, res, next) => {
+  const html = caseStudyPage(req.params.slug);
+  if (!html) return next(); // falls through to the 404 handler
+  sendHtml(res, html);
+});
+
 // Serve main site (static files from root, only allowed extensions)
 const STATIC_EXTENSIONS = /\.(html|css|js|svg|png|jpg|jpeg|gif|ico|woff2?|ttf|webp|webmanifest)$/;
 app.use((req, res, next) => {
-  if (req.path === '/' || STATIC_EXTENSIONS.test(req.path)) {
+  if (STATIC_EXTENSIONS.test(req.path)) {
     return express.static(path.join(__dirname, '..'), {
-      index: 'index.html',
+      index: false,
       dotfiles: 'deny'
     })(req, res, next);
   }
   next();
-});
-
-// Fallback: serve index.html for root paths (SPA-style)
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'index.html'));
 });
 
 // 404 handler — track scanner attempts
@@ -133,6 +181,10 @@ const { checkSuspicious } = require('./utils/detection');
 app.use((req, res) => {
   const ip = req.ip || req.socket.remoteAddress;
   checkSuspicious(ip, req.headers['user-agent'], req.path);
+  // A browser following a stale /work/<slug> link should get a page, not JSON.
+  if (!req.path.startsWith('/api/') && req.accepts(['html', 'json']) === 'html') {
+    return res.status(404).set('Content-Type', 'text/html; charset=utf-8').send(notFoundPage());
+  }
   res.status(404).json({ error: 'Not found' });
 });
 

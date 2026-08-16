@@ -1,163 +1,180 @@
-// ============================================
-// KAHALANY.DEV — Portfolio Site Scripts
-// ============================================
+/* ============================================================================
+   kaymen.dev — main site interactions
 
-document.addEventListener('DOMContentLoaded', () => {
-    // --- NAV SCROLL ---
-    const nav = document.getElementById('nav');
-    let lastScroll = 0;
-    window.addEventListener('scroll', () => {
-        const y = window.scrollY;
-        nav.classList.toggle('scrolled', y > 50);
-        lastScroll = y;
-    }, { passive: true });
+   Ported from mockup/v3-quiet.html (2026-08-15): rail scroll-spy + sliding
+   lozenge, scroll-progress hairline, reveal-on-scroll, the fleet panel and the
+   routing question. Plus the idea form, which is ours and not in the mockup.
 
-    // --- HAMBURGER ---
-    const hamburger = document.getElementById('hamburger');
-    const navLinks = document.getElementById('navLinks');
-    hamburger.addEventListener('click', () => {
-        hamburger.classList.toggle('open');
-        navLinks.classList.toggle('open');
-        document.body.style.overflow = navLinks.classList.contains('open') ? 'hidden' : '';
+   Every block guards its own elements: the rail ships on /work and every case
+   study too, where the homepage-only sections simply are not in the DOM.
+
+   The theme toggle was removed with the redesign. The new palette is
+   light-first and no dark variant is designed yet — see
+   HANDOFF-REDESIGN-2026-08-15.md §5. Do not re-add a half-working one.
+   ============================================================================ */
+
+(function () {
+  'use strict';
+
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail-link'));
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  var loz = document.getElementById('lozenge');
+  var prog = document.getElementById('prog');
+  var secs = links.map(function (l) { return document.getElementById(l.dataset.sec); });
+
+  /* ---- the lozenge follows the active item ------------------------------ */
+  function moveLozenge(i) {
+    var el = links[i];
+    if (!el || !loz) return;
+    loz.style.transform = 'translateY(' + el.offsetTop + 'px)';
+  }
+  function setActive(id) {
+    links.forEach(function (l, i) {
+      var on = l.dataset.sec === id;
+      l.classList.toggle('on', on);
+      if (on) moveLozenge(i);
     });
-    navLinks.querySelectorAll('a').forEach(a => {
-        a.addEventListener('click', () => {
-            hamburger.classList.remove('open');
-            navLinks.classList.remove('open');
-            document.body.style.overflow = '';
-        });
-    });
+    tabs.forEach(function (t) { t.classList.toggle('on', t.dataset.sec === id); });
+  }
 
-    // --- COUNTER ANIMATION ---
-    const counters = document.querySelectorAll('.stat-num[data-count]');
-    const counterObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (!entry.isIntersecting) return;
-            const el = entry.target;
-            const target = parseInt(el.dataset.count);
-            const duration = 1500;
-            const start = performance.now();
-            const animate = (now) => {
-                const progress = Math.min((now - start) / duration, 1);
-                const eased = 1 - Math.pow(1 - progress, 3);
-                el.textContent = Math.round(target * eased);
-                if (progress < 1) requestAnimationFrame(animate);
-            };
-            requestAnimationFrame(animate);
-            counterObserver.unobserve(el);
-        });
-    }, { threshold: 0.5 });
-    counters.forEach(c => counterObserver.observe(c));
+  /* ---- scroll spy -------------------------------------------------------- */
+  if (window.IntersectionObserver) {
+    var spy = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) setActive(e.target.id);
+      });
+    }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+    secs.forEach(function (s) { if (s) spy.observe(s); });
+  }
 
-    // --- ROTATING HERO TEXT ---
-    const words = ['ships', 'scales', 'works', 'lasts'];
-    const el = document.getElementById('rotatingText');
-    let wordIndex = 0;
-    setInterval(() => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(10px)';
-        setTimeout(() => {
-            wordIndex = (wordIndex + 1) % words.length;
-            el.textContent = words[wordIndex];
-            el.style.opacity = '1';
-            el.style.transform = 'translateY(0)';
-        }, 300);
-    }, 2500);
-    el.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-    el.style.display = 'inline-block';
+  /* ---- scroll progress on the rail hairline ------------------------------ */
+  if (prog) {
+    var ticking = false;
+    var onScroll = function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        var max = document.documentElement.scrollHeight - window.innerHeight;
+        var p = max > 0 ? Math.min(1, window.scrollY / max) : 0;
+        prog.style.height = (p * 100) + '%';
+        ticking = false;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
 
-    // --- SCROLL ANIMATIONS ---
-    const fadeEls = document.querySelectorAll(
-        '.project-card, .cap-card, .process-step, .contact-card, .section-header'
-    );
-    fadeEls.forEach(el => el.classList.add('fade-in'));
-    const fadeObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                fadeObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-    fadeEls.forEach(el => fadeObserver.observe(el));
+  /* ---- reveal on scroll --------------------------------------------------
+     Without IntersectionObserver .rv would stay at opacity 0 forever, so the
+     fallback reveals everything rather than hiding the page. */
+  var revealables = document.querySelectorAll('.rv');
+  if (window.IntersectionObserver) {
+    var rev = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('in'); rev.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+    Array.prototype.forEach.call(revealables, function (el) { rev.observe(el); });
+  } else {
+    Array.prototype.forEach.call(revealables, function (el) { el.classList.add('in'); });
+  }
 
-    // --- PROJECT FILTERS ---
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    const cards = document.querySelectorAll('.project-card');
+  /* ---- the fleet panel ---------------------------------------------------
+     Nothing to do here any more. The panel is server-rendered from
+     content/stats.js (generated by scripts/refresh-stats.js from each
+     project's git history), so the bars are in the HTML a crawler sees and
+     there is no client-side array anyone can quietly edit. It used to be a
+     hand-typed placeholder series, which is the one thing
+     HANDOFF-REDESIGN-2026-08-15.md §5 said must not ship. */
 
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            filterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            const filter = btn.dataset.filter;
-
-            cards.forEach(card => {
-                const tags = card.dataset.tags || '';
-                const show = filter === 'all' || tags.includes(filter);
-                card.classList.toggle('hidden', !show);
-            });
-        });
-    });
-
-    // --- SMOOTH SCROLL FOR ANCHOR LINKS ---
-    document.querySelectorAll('a[href^="#"]').forEach(a => {
-        a.addEventListener('click', (e) => {
-            const target = document.querySelector(a.getAttribute('href'));
-            if (target) {
-                e.preventDefault();
-                target.scrollIntoView({ behavior: 'smooth' });
-            }
-        });
-    });
-
-    // --- IDEA FORM ---
-    const ideaForm = document.getElementById('ideaForm');
-    const _ft = Date.now();
-    if (ideaForm) {
-        ideaForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('ideaSubmitBtn');
-            const msg = document.getElementById('ideaMsg');
-            btn.textContent = 'Sending...'; btn.disabled = true;
-            try {
-                const res = await fetch('/api/contact', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: document.getElementById('ideaName').value,
-                        email: document.getElementById('ideaEmail').value,
-                        project_name: document.getElementById('ideaProject').value,
-                        message: document.getElementById('ideaText').value,
-                        _hp: document.getElementById('ideaWebsite').value,
-                        _t: Date.now() - _ft
-                    })
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Failed to send');
-                msg.innerHTML = '<div class="success-msg">Message sent! We\'ll get back to you within 24 hours.</div>';
-                ideaForm.reset();
-            } catch (err) {
-                msg.innerHTML = '<div class="error-msg">' + err.message + '</div>';
-            }
-            btn.textContent = 'Send It Over'; btn.disabled = false;
-        });
+  /* ---- routing question --------------------------------------------------- */
+  var ANSWERS = {
+    build: {
+      t: 'A build, then a plan that keeps it alive',
+      b: 'We scope it, build it, and hand it over running — on your infrastructure, in your accounts. Then it moves onto a maintenance plan that is priced into the contract from day one, so there is no cliff at launch.',
+      l: ['Three to four complete design directions, never one', 'Working builds as we go, not a reveal at the end', 'Ends with a handover document, not a support ticket'],
+      p: 'from $2,500', per: 'to build · then from $200/mo'
+    },
+    run: {
+      t: 'Adoption of something we did not build',
+      b: 'First a read of what exists — what it runs on, what is going to break, and what is undocumented. Then it goes on a plan. Most inherited systems need somewhere between one and eight active days a month.',
+      l: ['Backups verified, not assumed to exist', 'Security patches and dependency updates', 'Someone who answers when it breaks'],
+      p: '$600/mo', per: 'Keep Running · $1,800/mo to also move it forward'
+    },
+    unsure: {
+      t: 'A straight answer about whether this is software at all',
+      b: 'Sometimes it is a process problem wearing a software costume, and the honest answer is not to build anything. That conversation is free and we will tell you if the answer is no.',
+      l: ['No payment, no commitment to a package', 'We will name the cheaper option if there is one', 'If it is worth building, you leave with a shape and a number'],
+      p: 'Free', per: 'one conversation'
     }
+  };
+  var answer = document.getElementById('answer');
+  if (answer) {
+    document.querySelectorAll('.q').forEach(function (q) {
+      q.addEventListener('click', function () {
+        var key = q.dataset.answer;
+        var open = q.getAttribute('aria-pressed') === 'true';
+        document.querySelectorAll('.q').forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
+        if (open) { answer.classList.remove('on'); return; }
+        q.setAttribute('aria-pressed', 'true');
+        var a = ANSWERS[key];
+        if (!a) return;
+        document.getElementById('aTitle').textContent = a.t;
+        document.getElementById('aBody').textContent = a.b;
+        document.getElementById('aList').innerHTML = a.l.map(function (x) {
+          return '<li>' + x.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</li>';
+        }).join('');
+        document.getElementById('aPrice').textContent = a.p;
+        document.getElementById('aPer').textContent = a.per;
+        answer.classList.add('on');
+      });
+    });
+  }
 
-    // --- THEME TOGGLE ---
-    const saved = localStorage.getItem('theme');
-    if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
-
-    const toggle = document.getElementById('themeToggle');
-    if (toggle) {
-        toggle.addEventListener('click', () => {
-            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-            if (isLight) {
-                document.documentElement.removeAttribute('data-theme');
-                localStorage.setItem('theme', 'dark');
-            } else {
-                document.documentElement.setAttribute('data-theme', 'light');
-                localStorage.setItem('theme', 'light');
-            }
+  /* ---- idea form ----------------------------------------------------------
+     Not in the mockup — the mockup's contact buttons were placeholders. This
+     posts to /api/contact, which is rate-limited and gated on the honeypot
+     (_hp) plus time-to-submit (_t). */
+  var ideaForm = document.getElementById('ideaForm');
+  var loadedAt = Date.now();
+  if (ideaForm) {
+    ideaForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById('ideaSubmitBtn');
+      var msg = document.getElementById('ideaMsg');
+      btn.textContent = 'Sending…';
+      btn.disabled = true;
+      msg.innerHTML = '';
+      try {
+        var res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('ideaName').value,
+            email: document.getElementById('ideaEmail').value,
+            project_name: document.getElementById('ideaProject').value,
+            message: document.getElementById('ideaText').value,
+            _hp: document.getElementById('ideaWebsite').value,
+            _t: Date.now() - loadedAt
+          })
         });
-    }
-});
+        var data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to send');
+        msg.innerHTML = '<div class="success-msg">Sent. We\'ll come back to you within 24 hours.</div>';
+        ideaForm.reset();
+      } catch (err) {
+        msg.innerHTML = '<div class="error-msg">' + String(err.message).replace(/</g, '&lt;') + '</div>';
+      }
+      btn.textContent = 'Send it over';
+      btn.disabled = false;
+    });
+  }
+
+  /* ---- lozenge needs a first position once fonts settle ------------------- */
+  function parkLozenge() {
+    var i = links.findIndex(function (l) { return l.classList.contains('on'); });
+    moveLozenge(i < 0 ? 0 : i);
+  }
+  window.addEventListener('load', parkLozenge);
+  parkLozenge();
+})();

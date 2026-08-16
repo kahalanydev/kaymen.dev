@@ -1108,3 +1108,190 @@ Nitzavim (folded into Thrive copy), Finplan, TapSend, Sefaradidur, Kaymen Group 
 - [ ] Convert lead to client button in admin dashboard (schema ready)
 - [x] ~~Add PWA support~~ — Added manifests + service workers for admin and portal
 - [x] ~~Mobile responsive overhaul~~ — Card tables, bottom nav, mobile top bar
+
+---
+
+## 2026-08-13 — Positioning rebuild: 19 cards -> 3 practice areas + 6 case studies
+
+### Context
+`Kaymen Group LLC/marketing/MARKETING-PLAN.md` diagnosed the site as "19 undifferentiated cards
+with fake CSS mockups... reads as freelancer who'll build anything, which caps deal size at
+freelancer rates." This is §7 of that plan (P0/P1 items) — the site half of the fix. Positioning
+calls come from `CHANNEL-PLAN.md` §7, which is the decision record.
+
+### What changed
+
+**Content layer — `content/projects.js` (new).** Single source of truth: 3 practice areas,
+6 case studies, 12-item long tail, evidence strip. `CLIENT_NAMING = 'anonymous'` is the one
+switch implementing CHANNEL-PLAN §7 decision 4 (no client name/logo/domain/product name
+anywhere). Every client project carries both its anonymous shape name and its real identity;
+only the anonymous form is ever emitted. **This is an interlock, not a style preference** — the
+no-attribution decision is what removes the need for client consent.
+
+**SSR — `server/render.js` (new).** Homepage sections, `/work`, `/work/:slug`, and an HTML 404.
+Server-rendered rather than client-hydrated so crawlers and social scrapers get real HTML and
+real per-page OG tags. No build step; templates re-read in dev, cached in prod.
+
+**Homepage.** Removed the 19 project cards, the filter bar, and the entire "Capabilities"
+section ("Whatever the stack, we've built with it" — the most on-the-nose freelancer line on the
+page). index.html went 1357 -> ~200 lines and is now a template with a `<!--{{WORK}}-->`
+placeholder. Hero vanity counters removed: "8 Tech Stacks" was breadth-as-the-pitch, which is
+the exact thing being fixed. New hero leads capability-first (decision 1: generalist) and closes
+on "Every case study below includes the part that went wrong."
+
+**Case studies.** Six, per plan §7: multi-campus engagement platform, community lending ledger,
+MSP time-compliance portal, bilingual booking platform, Torah Tracker, Claude Code Desk. Template
+is problem -> constraints -> what we built -> **the hard part** -> outcome -> stack. The hard-part
+section is written from real memory-file detail (the RLS bootstrap-superuser bypass, the fund-size
+accounting basis change, the slot horizon with no error state, the OTA runtime-version mismatch)
+and is the most visually distinct block on the page.
+
+**OG images.** 8 generated 1200x630 cards in `assets/og/`, replacing the favicon that every
+LinkedIn share was rendering. Generator is `C:/KDEV/_tools/showcase/gen-og.mjs` — lives with the
+showcase tool because that is where Playwright is installed, reads `content/projects.js` directly
+so cards cannot drift from the case studies. Output is committed; production needs no image
+toolchain.
+
+### Correction to the marketing plan
+
+`CHANNEL-PLAN.md` §0 lists "Torah Tracker screenshots come back blank" as an SPA paint-timing bug
+fixable with a `waitForSelector`. **That diagnosis is wrong.** Probed it: `torahtracker.app` is
+the app, not a marketing site. It opens on a 5-slide first-run onboarding carousel (pale, mostly
+whitespace — which is what read as "blank"), and dismissing it lands on a login wall. There is no
+public surface, so no wait condition can fix it and tier A was a misclassification. The showcase
+registry entry is now tier B, `capture: false`, with the real cause recorded. Enabling it needs
+auth against a **seeded demo account**, or App Store listing screenshots instead.
+
+### Still open
+- **No case study carries a real screenshot yet.** 4 of 6 are de-branded client platforms that
+  need seeded demo tenants (decision 3); Torah Tracker is behind auth (above); Claude Code Desk
+  is a local desktop tool. The `shots` array exists on every case study and is wired — it is
+  waiting on assets, not on code.
+- **Public client marketing sites** (the three whose brand *is* the design) remain the unresolved
+  sub-case of decision 4 — CHANNEL-PLAN §7a defaults them to excluded until Ohav says otherwise.
+  They are currently excluded here too: no names, no links, no shots.
+- Not committed, not pushed.
+
+---
+
+## 2026-08-13 (later) — Case studies became playable, not readable
+
+### Why
+Ohav's call on the first pass: "who is going to have the attention span to sit and read all of
+this... they don't feel so site-like." Correct — six essays is six essays, and a nicely-typeset
+dark portfolio proves nothing a template couldn't. For a software practice the site itself has to
+be the proof.
+
+### What changed
+Each case study's hard part is now a **playable artifact** instead of four paragraphs. Prose
+collapses to one caption; the full write-up moves behind a disclosure.
+
+- **RLS** — toggle between `thrive` (bootstrap superuser) and `thrive_app`. Same query, same
+  policies: 8 rows across 4 campuses vs 3 rows from one, with the leaked rows flagged red.
+- **Fund basis** — switch counting side; the headline animates $1,633,917.56 -> $1,586,533.86 and
+  the $47,383.70 gap relabels itself from "unexplained" to "spent".
+- **Slot horizon** — drag days-since-deploy; slots drain to zero while `200 OK` stays lit.
+  Detection and repair are deliberately SEPARATE checkboxes: with only the daily job enabled the
+  window never empties, so the alarm branch would be unreachable and half the lesson lost.
+- **OTA runtime** — two version dials; publish always reports success, reach shows 0%.
+- **Ingestion ceiling** — widen the history window until the unbounded query returns nothing at
+  all, then switch to bounded backfill + delta sync.
+- **Task id keying** — event stream where updates land on keys that don't exist yet; panel sits
+  at 0/5 then jumps at turn end.
+
+New files: `content/demos.js` (markup), `assets/demos.js` (behaviour), `assets/demos.css`.
+Demos load only on pages that have one. Every value is synthetic — these illustrate a mechanism,
+they never display a record.
+
+### Bug found and fixed: script.js was dead on every sub-page
+`#rotatingText` is homepage-only, and `script.js` dereferenced it unguarded at what was line 66.
+On `/work` and every case study that threw immediately, killing **every script registered after
+it** — including the theme toggle and scroll animations. It was masked because the earlier
+light-theme check forced `data-theme` manually. All homepage-only elements are now guarded, the
+dead project-filter block is gone, and the fade-in selector targets the new components.
+
+Also fixed: `String.replace` with a string replacement interprets `$&` and `$'`. The injected
+content contains `$1.58M` / `$1,633,917`, so all generated-content substitutions now use function
+replacements.
+
+### Mockup
+`node scripts/build-mockup.js` -> `mockup/site-mockup.html`, a SINGLE self-contained file
+(276kB). All 8 pages, device-width and theme switching, and in-preview links drive the switcher.
+CSS/JS are stored once and substituted per page — inlining them eight times made it 776kB, and
+this gets opened on a phone. Generated through the same `server/render.js` the real site uses, so
+reviewing the mockup is reviewing the implementation.
+
+Verified with Playwright (`_tools/showcase/demodrive.mjs`, `mockuptest.mjs`): all six demos boot
+and produce correct output, all four horizon states reachable, zero JS errors, demos work inside
+the mockup's iframe.
+
+### Still not done
+- Seeded demo tenants — deferred by Ohav. SSH now works (agent service enabled 2026-08-13), so
+  this is executable when picked up.
+- Screenshots — deferred; Ohav is supplying them.
+- OG cards still read as mini-brochures; they should carry one arresting number, not three.
+- Not committed, not pushed.
+
+---
+
+## 2026-08-15 — "Quiet" redesign ported, homepage numbers wired to real sources
+
+### The port
+`mockup/v3-quiet.html` landed in the real site. Design decisions per
+`HANDOFF-REDESIGN-2026-08-15.md` §1 (LOCKED): Kaymen Group palette, Sora display face, the
+always-labelled 224px glass rail, the wide measure, and the hero · routing · running board ·
+case studies · pricing · no-hostages · contact structure.
+
+| File | Change |
+|------|--------|
+| `styles.css` | Rebuilt from the mockup (2700 → ~785 lines). The ~1400 lines of CSS device mockups from the 19-card era are gone. Sub-page components (`/work`, case studies, long tail, CTA band, 404) rewritten in the new language, since they share this stylesheet. |
+| `index.html` | New shell — ambient washes, rail, mobile tabbar, hero grid, routing question, pricing, terms, contact, footer. |
+| `server/render.js` | Same data in, mockup markup out. Top nav replaced by the rail + tabbar on every page. Homepage practice-areas section dropped (the routing question replaces it); long tail moved to `/work` only. |
+| `script.js` | Scroll-spy, sliding lozenge, scroll-progress hairline, reveal, routing question, idea form. Theme toggle removed — the new palette is light-first and no dark variant is designed (handoff §5). |
+| `assets/shots/` | The three product screenshots extracted from the mockup's inlined base64. |
+
+Two deliberate departures from the mockup, both noted because the mockup is otherwise the
+reference: the contact form was kept (the mockup's contact buttons were `href="#"` placeholders
+and `/api/contact` is real, rate-limited and spam-gated), and `.case` is scoped to `.cases .case`
+because the case-study *page* also uses `<article class="case">` as its root.
+
+### Numbers: derived, not asserted
+Handoff §5 called the hero fleet panel out as placeholder data sitting directly above published
+prices. It is now generated.
+
+- **`scripts/refresh-stats.js`** — walks each case study's local repo, counts *distinct days
+  carrying a commit* per calendar month (same unit the retainer ladder is priced in), and queries
+  the Coolify API on `admin.kaymen.dev` for production apps in a running state. Writes
+  `content/stats.js`. The token is read from `COOLIFY_TOKEN`; the generated file carries data only.
+- **`content/stats.js`** — generated, committed. Re-run after a month rolls over or the fleet changes.
+- The panel is now **server-rendered** from that file, so the numbers are in the HTML a crawler
+  sees and there is no client-side array anyone can quietly edit.
+- Leading months in which the *whole* fleet was idle are trimmed. These systems are younger than
+  twelve months, so a fixed twelve-month axis was half empty and read as "nothing happened"
+  rather than "did not exist yet". The rendered caption always states the range it is showing.
+
+`index.html` gained `<!--{{FLEET}}-->` and `<!--{{LIVE}}-->` alongside `<!--{{WORK}}-->`;
+`renderHome()` now walks a placeholder table instead of doing one substitution.
+
+The stats band changed with the data. `20+ apps in production` → **19 systems running right now**
+(Coolify, non-staging, running). `12+ live platforms` → **commits in the last 12 months** across
+the six systems on the board. `4 apps in the App Store & Play` → **3**, which is what the content
+model actually marks — Kartov is not badged.
+
+The fleet caption also changed. It claimed maintenance activity at "2–5 days a month — which is
+where the plans come from"; the measured series is build-phase work reaching 29 days in a month,
+so the pricing derivation was dropped rather than dressed up.
+
+### Auto-deploy fixed
+The repo's GitHub webhook (id 603404325) still POSTed to the dead `admin.kahalany.dev`, returned
+200 and built nothing. Repointed to `https://admin.kaymen.dev/webhooks/source/github/events/manual`
+with the app's existing `manual_webhook_secret_github`. A push to `master` deploys again — the
+manual `POST /api/v1/deploy?uuid=…` trigger is now a fallback, not the only path.
+
+`mockup/`, `scripts/` and `_tools/` added to `.dockerignore` — Express serves `.html`/`.js` from
+the repo root, so they were publicly reachable in the built image.
+
+### Still not done
+- OG cards in `assets/og/*.png` are still the old dark palette and now clash with the site.
+- Seeded demo tenants — still the highest-value asset gap.
+- Per-project client naming (`CLIENT_NAMING` is still a global switch).

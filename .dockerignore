@@ -4,3 +4,6 @@ data
 .gitignore
 *.md
 .dockerignore
+mockup
+scripts
+_tools

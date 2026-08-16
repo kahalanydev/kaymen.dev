@@ -1,7 +1,11 @@
 # kaymen.dev — Application Map
 
 ## Overview
-Portfolio/showcase website for kaymen.dev (Kaymen Group LLC) — a custom software development practice. Node.js/Express backend with SQLite analytics database, admin panel, client portal, and visitor tracking. Deployed via Docker on Coolify. Showcases 19 project cards with CSS device mockups, project filtering, and responsive design. Both admin and portal are installable PWAs with mobile-first bottom navigation.
+Portfolio/showcase website for kaymen.dev (Kaymen Group LLC) — a custom software development practice. Node.js/Express backend with SQLite analytics database, admin panel, client portal, and visitor tracking. Deployed via Docker on Coolify. Both admin and portal are installable PWAs with mobile-first bottom navigation.
+
+**Marketing site restructured 2026-08-13** (per `Kaymen Group LLC/marketing/MARKETING-PLAN.md` §7): the 19 flat project cards with CSS device mockups and a filter bar were replaced by **3 practice areas + 6 deep case studies** at `/work/<slug>`. Case studies are **server-rendered from `content/projects.js`** so crawlers and social scrapers get real HTML and real per-page OG tags. The old "Capabilities" section ("Whatever the stack, we've built with it") was removed — breadth-as-the-pitch was the specific thing the restructure set out to fix.
+
+**Client naming is an interlock, not a style choice.** `CLIENT_NAMING` in `content/projects.js` is `'anonymous'`, per CHANNEL-PLAN.md §7 decision 4: no client name, logo, domain or product name appears anywhere. That decision is what removes the need for client consent — flipping the switch re-opens the consent question.
 
 - **Live URL**: https://kaymen.dev (also https://kahalany.dev — legacy, parallel)
 - **Repo**: https://github.com/kahalanydev/kahalany.dev
@@ -70,13 +74,19 @@ Portfolio/showcase website for kaymen.dev (Kaymen Group LLC) — a custom softwa
 ## File Structure
 ```
 Kahalany.Dev Site/
-├── index.html              # Main site (single-page, 6 sections + 9 portfolio cards)
-├── styles.css              # All styles including CSS device mockups
-├── script.js               # Main site interactions: nav, filters, counters, animations, contact form
+├── index.html              # Homepage TEMPLATE — contains <!--{{WORK}}--> placeholder
+├── styles.css              # All styles (incl. legacy CSS device mockups, now unused on the homepage)
+├── script.js               # Main site interactions: nav, theme, counters, animations, contact form
 ├── tracker.js              # Lightweight analytics tracker (scroll, clicks, sections)
 ├── favicon.svg             # Branded "K" favicon (SVG)
+├── content/
+│   └── projects.js         # SINGLE SOURCE OF TRUTH — practice areas, 6 case studies,
+│                           # long tail, evidence strip, CLIENT_NAMING policy switch
+├── assets/
+│   └── og/                 # Generated 1200x630 OG cards (committed; see README there)
 ├── server/
 │   ├── index.js            # Express entry point (port 8080), routes + static serving, contact form with spam protection
+│   ├── render.js           # SSR for homepage sections, /work, /work/:slug, and the HTML 404
 │   ├── db.js               # SQLite init, schema (17+ tables), wrapper, admin seeding, helpers
 │   ├── middleware/
 │   │   └── auth.js         # Auth: requireAuth, requireRole, enforceOrgScope, requireDevAuth, rateLimit
@@ -120,7 +130,9 @@ Kahalany.Dev Site/
 ### Request Flow
 ```
 Client → Traefik (SSL) → Express (:8080)
-  ├── /                    → static index.html + assets
+  ├── /                    → SSR: index.html with {{WORK}} replaced by content sections
+  ├── /work                → SSR: case study index
+  ├── /work/:slug          → SSR: one case study (real HTML + per-page og:image)
   ├── /admin               → admin SPA (admin/index.html)
   ├── /portal              → client portal SPA (portal/index.html)
   ├── /api/auth/*          → auth routes (JWT login, user management, SMTP config, Google OAuth)
@@ -203,17 +215,34 @@ Client → Traefik (SSL) → Express (:8080)
 - Two CTAs: "See Our Work" / "Start a Project" (tracked)
 - Subtle grid background + radial glow
 
-### 3. Portfolio (Work)
-- **Filter bar**: All / Web Apps / Mobile / AI·ML / WordPress (tracked)
-- **19 project cards** (flagship Thrive first), each with CSS device mockup, tech tags, status badge
-- "View Live" links for deployed projects (tracked)
-- Filter uses `data-tags` attributes, JS toggles `.hidden` class
+### 3. Evidence strip *(server-rendered)*
+- 4 checkable facts, no adjectives. Replaces the old hero vanity counters — "8 Tech Stacks" was
+  the clearest freelancer signal on the page and is gone deliberately.
 
-### 4. Capabilities
-- 6 cards in 3-column responsive grid
+### 4. Practice areas *(server-rendered)*
+- 3 equal-weight cards: Platforms / Integrations / Apps. Equal weight is decision 1 (generalist);
+  the nonprofit wedge is **not** the lead.
+- Each card: promise, detail, 3 proof points, stack chips.
 
-### 5. Process ("How We Work")
+### 5. Selected work *(server-rendered)*
+- 6 case-study teaser cards, uniform 3×2 grid → `/work/<slug>`
+- Each teaser surfaces its **"The hard part"** title on the card. That section is the
+  differentiator: it is what a portfolio of screenshots cannot fake.
+
+### 6. Long tail *(server-rendered)*
+- 12 further projects inside a collapsed `<details>`, grouped by practice area.
+- Breadth is real and worth showing — it just must not be the pitch, so it is below the fold
+  and closed by default.
+
+### 7. Process ("How we work")
 - 4-step vertical timeline
+
+## Case Study Pages (`/work/<slug>`)
+
+Template per MARKETING-PLAN.md §7: problem → constraints → what we built → **the hard part** →
+outcome → stack. The hard-part block is the most visually distinct element on the page (accent
+left border, elevated card, its own "What it taught us" aside) because it is the section that
+does the selling. Each page carries prev/next navigation and a closing CTA band.
 
 ### 6. Contact ("What Do You Want to Build?")
 - "Describe your idea" form: name, email, "What are you building?" (optional), message textarea
