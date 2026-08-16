@@ -1833,3 +1833,53 @@ fallback is serif, not sans, so a missed webfont does not degrade quietly here.
   than us being the stone. The metaphor runs the other way. Kept because the
   alternative leaves the name homeless; Ohav's call.
 - `assets/og/README.md` still documents the generator's old design note.
+
+---
+
+## 2026-08-16 — Front end: hero rebuilt, pricing merged, mark rolled out
+
+**See `HANDOFF-FRONTEND-2026-08-16.md` for the detail.** 22 commits,
+`ed6917f` … `76b5eac`, all live.
+
+### Landed
+
+- **`#need` and `#price` merged.** They asked the same question and both ended in
+  a price — 2,046px, 29% of the homepage. One section now, ~835px, keeping
+  `id="price"` so case-study links survive.
+- **Hero rebuilt** to "Own your software. Stop renting it.", argued through the
+  pain and answered with six what-you-get blocks. The right-hand panel is the
+  subscription stack they already pay for, server-rendered from
+  `content/pricing.js`.
+- **Subscription figures researched** (Aug 2026 list prices, team of five):
+  $290/mo, $405 after three hires. Google Workspace deliberately excluded.
+- **Picker opens on the $2,500 rung**, reworded a third time to name the *thing*
+  rather than the work — "Your first real system".
+- **BridgeMortgage retagged** `platform` → `stack`; at `platform` the cost block
+  showed year-one $42,000 against an agency $15,600–20,800 and argued against us.
+- **The mark rolled out everywhere** — lockup on the rail, both back offices,
+  email, social cards. Fixed a pipeline bug where every generated PNG was
+  flattened onto white, leaving `kaymen-lockup-white.png` effectively blank.
+- **Social cards generated from the site's own copy** (`scripts/build-og.js`),
+  after `default.png` spent a day advertising a superseded sentence.
+- **Mobile**: brand chip added and made to retract on scroll, mesh kept at 45%
+  with the source moved clear of the copy, tabbar reordered to match the page,
+  a dead `/#need` rail link removed from every sub-page.
+- **Clients named on the running board** — it asked `s.own` ("is this ours")
+  instead of `clientName()` ("may we name them"), so it hid BridgeMortgage,
+  Thrive, PCG and Horse & Harmony behind "Named on request" while the case study
+  one click away credited them.
+
+### The lesson worth carrying forward
+
+The hero mesh took **four attempts** because three tests measured the element and
+not the paint. `.hero` carried `overflow:hidden`, which clipped the full-bleed
+canvas while `getBoundingClientRect` still reported the full width. **When
+something looks wrong but measures right, measure what renders.**
+
+### Open
+
+- **Screenshot strip**: the Thrive back-end capture contains real student names.
+  Naming consent covers Thrive as a client, not the students in it. Shoot against
+  `scripts/seed-preview.js` demo data instead.
+- Existing shots are illegible at phone width; the mobile hero is cramped; the
+  pricing headline runs to four lines on mobile.
