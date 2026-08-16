@@ -164,7 +164,13 @@ const CASE_STUDIES = [
     tagline: 'Four campuses, one database, isolation that had to be provably real.',
     summary:
       'A network of campus organisations ran on a 135,000-line WordPress plugin. One install per campus, student records duplicated across sites, no shared reporting, and a Salesforce org nobody trusted. We replaced it with a single multi-tenant platform.',
-    year: '2026',
+    /* 2025, not 2026: this began as the OLAMI system and became Thrive. `year`
+       is LIVE SINCE — when it first carried real users — not when the current
+       repo starts. The KDEV repos were re-initialised, so git history begins
+       Feb–Jun 2026 and understates anything older (see the measurement table in
+       unified-memory retainer-pricing-ladder). Ohav confirmed 2026-08-16 that
+       only this, Torah Tracker and Davenen predate 2026. */
+    year: '2025',
     status: 'Live in production',
     scale: [
       { value: '4', label: 'campuses on one platform' },
@@ -283,7 +289,9 @@ const CASE_STUDIES = [
     tagline: 'A rewrite shipped to an installed base, without reaching zero users.',
     summary:
       'Shipping a rewrite to an installed base without dropping anyone. A daily-habit app moved from a progressive web app to React Native in both stores. The rewrite was the easy half. The hard half was delivering updates to people who already had the old build on their phone.',
-    year: '2026',
+    /* 2025 — see the note on the multi-campus platform above. Live since is when
+       it first had real users, not when the re-initialised repo begins. */
+    year: '2025',
     status: 'Live: App Store & Google Play',
     scale: [
       { value: 'iOS + Android', label: 'native, in both stores' },
