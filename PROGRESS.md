@@ -2,7 +2,7 @@
 
 > Portfolio/showcase site for Kahalany.Dev custom software practice.
 > Live at: https://kahalany.dev
-> Repo: https://github.com/kahalanydev/kahalany.dev
+> Repo: https://github.com/kahalanydev/kaymen.dev
 
 ---
 

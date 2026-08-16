@@ -8,7 +8,7 @@ Portfolio/showcase website for kaymen.dev (Kaymen Group LLC) — a custom softwa
 **Client naming is an interlock, not a style choice.** `CLIENT_NAMING` in `content/projects.js` is `'anonymous'`, per CHANNEL-PLAN.md §7 decision 4: no client name, logo, domain or product name appears anywhere. That decision is what removes the need for client consent — flipping the switch re-opens the consent question.
 
 - **Live URL**: https://kaymen.dev (also https://kahalany.dev — legacy, parallel)
-- **Repo**: https://github.com/kahalanydev/kahalany.dev
+- **Repo**: https://github.com/kahalanydev/kaymen.dev
 - **Coolify UUID**: `zcco40skss0o8wwocs40k4gs`
 
 ## Domains & Subdomains

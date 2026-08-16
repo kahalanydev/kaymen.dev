@@ -17,7 +17,7 @@ product:
 
 | | |
 |---|---|
-| Repo | `github.com/kahalanydev/kahalany.dev`, branch `master` (no staging branch) |
+| Repo | `github.com/kahalanydev/kaymen.dev`, branch `master` (no staging branch) |
 | Runtime | Express (`server/index.js`), Node 20, `Dockerfile` → port 8080 |
 | Marketing site | **Server-rendered** at request time by `server/render.js` from `content/projects.js` |
 | Also serves | `/admin` analytics panel, `/portal` client portal, `/api/*` routes |
@@ -29,15 +29,28 @@ A new folder would separate the front end from its own renderer, its analytics D
 its Dockerfile and its Coolify app — and then need all of them rebuilt. The redesign is a
 **visual-layer replacement inside this repo**, not a new project.
 
-### On the folder name
+### On the folder name — DONE 2026-08-15
 
-`Personal\Kahalany.Dev Site\` is stale branding. Renaming it is safe for git and Coolify (the
-remote is a URL and Coolify builds from GitHub — neither knows the local path), but it **does**
-break `unified-memory/_aliases.yaml`, which maps this project by `canonical_path:
-C:\KDEV\Personal\Kahalany.Dev Site` plus two CWD slugs. **Recommendation: do not rename
-mid-build.** When you do want to, it is a three-step chore — rename the folder, update
-`canonical_path` + add the new slug in `_aliases.yaml`, run `node generate.js` from
-`C:\KDEV\unified-memory`.
+The folder is now **`C:\KDEV\Personal\Kaymen.Dev Site`**, and the GitHub repo is
+**`kahalanydev/kaymen.dev`**. Both were renamed after the redesign shipped, per
+`REBRANDING-PLAN.md` Plan A. What was done, in order:
+
+1. Folder renamed. `unified-memory/_aliases.yaml` updated — `canonical_path` plus the new
+   `C--KDEV-Personal-Kaymen-Dev-Site` slug, old slugs kept — then `node generate.js` re-run from
+   `C:\KDEV\unified-memory`.
+2. Repo renamed with `gh repo rename`. GitHub keeps the webhook (same id) and redirects the old
+   URL, but the local remote was repointed anyway rather than left on a redirect.
+3. Coolify's `git_repository` PATCHed to `kahalanydev/kaymen.dev` and the app renamed to
+   "Kaymen Dev Site". **This is the step that actually matters** — the redirect would have masked
+   a stale value until the day GitHub stopped honouring it.
+
+**The canonical memory ID is still `kahalany-dev-site`, deliberately.** Renaming it would orphan
+`unified-memory/projects/kahalany-dev-site/` and every memory under it, which is the exact
+failure the alias map exists to prevent. Folder name and canonical ID are allowed to disagree.
+
+Still on the old name: the GitHub **account** `kahalanydev` (renaming a personal account touches
+every repo under it — its own decision), and the Docker volume `kahalany-dev-data` (renaming it
+risks the analytics DB; not worth it).
 
 ---
 
@@ -99,7 +112,15 @@ Superseded, keep only for reference: `mockup/directions-v2.html` (where the stru
 
 ---
 
-## 3. Build plan — how to land it
+## 3. Build plan — LANDED 2026-08-15
+
+**All six steps below are done and live on kaymen.dev.** Kept as the record of what was intended
+and why, not as a to-do list. See the 2026-08-15 entry in `PROGRESS.md` for what actually
+shipped, including the places the implementation deliberately departed from this plan.
+
+Two departures worth knowing before you read on: the contact form was **kept** (the mockup's
+contact buttons were `href="#"` placeholders and `/api/contact` is real), and the fleet panel is
+**server-rendered from generated data** rather than drawn client-side — see §5, which is resolved.
 
 The uncommitted 2026-08-13 round rebuilt the **content layer**, which is good and stays. The
 visual layer is what gets replaced.
@@ -130,6 +151,11 @@ visual layer is what gets replaced.
    base64 was only for the single-file mockup.
 6. Regenerate OG images. `assets/og/*.png` are all in the **old dark palette** and now clash.
    `_tools/showcase/gen-og.mjs` builds them.
+   *Done 2026-08-15.* The generator was redesigned onto `--deep` + the one accent + Sora, and each
+   card now carries **one** figure rather than three — the note that they "read as mini-brochures"
+   was right, and three numbers at feed thumbnail size means none of them survives. Case-study
+   cards lead with their strongest figure and their hard-part title. Run it with the site path:
+   `node C:/KDEV/_tools/showcase/gen-og.mjs "C:/KDEV/Personal/Kaymen.Dev Site"`
 
 ---
 
@@ -147,8 +173,8 @@ visual layer is what gets replaced.
   indistinguishable from a revoked token, which has cost real time before.
 - **`master` is production.** This repo has no staging branch — that is an explicit documented
   exception, not an oversight. Per `ask-before-shared-infra-changes`, confirm before pushing.
-- The `<!--{{WORK}}-->` placeholder must survive any `index.html` rewrite, or the work sections
-  silently vanish (`render.js` logs it, nothing else does).
+- The `<!--{{WORK}}-->`, `<!--{{FLEET}}-->` and `<!--{{LIVE}}-->` placeholders must survive any `index.html` rewrite, or those blocks
+  silently vanish (`server/index.js` logs it, nothing else does).
 
 ---
 
