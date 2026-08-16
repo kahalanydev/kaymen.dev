@@ -133,6 +133,31 @@ Two traps, both already paid for:
 - **The social cards went stale twice.** `build-og.js` fixes itself, but only when
   run. **Editing the hero means running it in the same commit.**
 
+### The course takes the light
+
+Ohav's, same day: the grey stones light in order from the keystone down both
+legs, then it starts again. `LIVE` in `content/logo.js` holds the tempo — one
+animation on every stone, delayed a step per ring out from the apex, so both
+legs stay in step without a second set of keyframes. **The keystone never
+moves**, for the same reason it is the only stone carrying weight.
+
+Three things about it that are not obvious:
+
+- **The keyframes are inside the SVG file.** The rail draws the lockup as a
+  `background-image`, and page CSS cannot reach into an SVG loaded as an image.
+  The browser does run the image's *own* declarative animation, which is why
+  this works at all — the same argument as the embedded Sora.
+- **Which also means the site's global `prefers-reduced-motion` rule cannot
+  silence it.** The file carries its own media query, and `styles.css` swaps the
+  background back to the static lockup as well. Belt and braces on purpose.
+- **`assets/lockup-live.svg` is not in `assets/brand/`.** That folder is the
+  handoff package — other teams, print, the icon slots — and none of them want a
+  logo that moves. Only `.rail-brand` and `.brandbar` point at the live pair;
+  admin and portal still draw the still one.
+
+`mockup/arch-glow.html` has four tempos side by side if the pace is ever
+reopened. Shipped as A: `cycle 5s · step 0.3s · lit 0.9s · peak 0.46`.
+
 ---
 
 ## 5. Mobile

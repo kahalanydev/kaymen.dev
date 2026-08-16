@@ -50,7 +50,7 @@ const WHITE = '#ffffff';
 /* The lockup carries its own typeface. Without this the file renders in
    whatever the opening machine has, which is not a logo. */
 const SORA = fs.readFileSync(path.join(ROOT, 'assets/brand/fonts/sora-700-latin.woff2')).toString('base64');
-const lockup = (cut, ctx) => LOGO.arch({ cut, ctx, embedFont: SORA });
+const lockup = (cut, ctx, live) => LOGO.arch({ cut, ctx, embedFont: SORA, live });
 const DEEP = LOGO.DEEP;
 
 function write(rel, body) {
@@ -120,6 +120,17 @@ async function cdp(port) {
      cut even though it is a vector and could scale to anything. */
   write('favicon.svg', stamp + tileDeep + '\n');
   write('assets/mark.svg', LOGO.glyph({ keyFill: WHITE, flankFill: WHITE, flankOpacity: 0.62 }) + '\n');
+
+  /* THE SITE'S OWN COPY, WHICH TAKES THE LIGHT. Identical geometry to
+     kaymen-lockup.svg plus the keyframes that run the light down the course
+     from the keystone out (see LIVE in content/logo.js).
+
+     OUTSIDE assets/brand ON PURPOSE. That folder is the handoff package — it
+     goes to other teams, print shops and the icon slots, and none of them want
+     a logo that moves. The static file stays the canonical one; this is the
+     marketing rail's copy and nothing else points at it. */
+  write('assets/lockup-live.svg', stamp + lockup('display', undefined, true) + '\n');
+  write('assets/lockup-live-text.svg', stamp + lockup('text', undefined, true) + '\n');
 
   const VECTORS = [
     ['kaymen-mark-tile.svg', tileDeep, 'the icon: deep tile, accent keystone'],

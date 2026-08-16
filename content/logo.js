@@ -203,6 +203,43 @@ const SPANS = {
   text: [18, 36, 36, 36, 18],
 };
 
+/* THE LIGHT RUNNING DOWN THE COURSE. Ohav's, 2026-08-16: the grey stones take
+   the light in order, from the keystone down both legs, then it starts again.
+
+   One animation on every stone, delayed by one step per ring out from the apex,
+   so both legs are always the same distance from the keystone and the wave is
+   symmetrical without a second set of keyframes to keep in sync.
+
+   IT HAS TO LIVE INSIDE THE FILE. The rail draws the lockup as a
+   background-image, and page CSS cannot reach inside an SVG loaded as an image.
+   The browser does run the image's own declarative animation, so the keyframes
+   are written into the file — the same argument as the embedded Sora. It also
+   means the page's global prefers-reduced-motion rule cannot reach it either,
+   hence the media query below AND the static fallback in styles.css.
+
+   `lit` is deliberately three times `step`: at one step per ring the four rings
+   read as four separate blinks, and the light has to still be on the stone above
+   when the one below takes it or there is no wave, only a queue.
+
+   THE KEYSTONE NEVER MOVES. It is the one stone carrying weight (see SPANS note
+   1) and a light that washes over it too flattens the one thing the mark exists
+   to point at. */
+const LIVE = { cycle: 5, step: 0.3, lit: 0.9, peak: 0.46, rest: 0.32 };
+
+function liveStyle(rings, o) {
+  const pct = (s) => r2((s / o.cycle) * 100);
+  const rest = `opacity:${o.rest};fill:${o.ink}`;
+  const delays = [];
+  for (let r = 2; r <= rings; r++) delays.push(`.r${r}{animation-delay:${r2((r - 1) * o.step)}s}`);
+  return '<style>' +
+    `@keyframes kd-course{0%{${rest}}` +
+    `${pct(o.lit * 0.4)}%{opacity:${o.peak};fill:${ACCENT}}` +
+    `${pct(o.lit)}%{${rest}}100%{${rest}}}` +
+    `.kl{animation:kd-course ${o.cycle}s ease-in-out infinite}${delays.join('')}` +
+    '@media(prefers-reduced-motion:reduce){.kl{animation:none}}' +
+    '</style>';
+}
+
 function arch(opts = {}) {
   const cut = opts.cut || 'display';
   const ctx = opts.ctx;
@@ -213,13 +250,21 @@ function arch(opts = {}) {
     ? customCourse(100, 98, 56, 80, SPANS.display, 3)
     : customCourse(100, 98, 54, 80, SPANS.text, 5);
   const size = px ? ` width="${px}" height="${r2(px * 0.52)}"` : '';
+  /* `bare` is tileLockup placing this geometry inside the icon: an app icon
+     that pulses is a different object, and the PNG exports would catch it
+     mid-wave anyway. */
+  const live = opts.live && !opts.bare
+    ? { ...LIVE, ...(opts.live === true ? {} : opts.live), ink }
+    : null;
+  const mid = (c.length - 1) / 2;
   const stones = c.map((v) => v.key
     ? `<path d="${v.d}" fill="${ACCENT}"/>`
-    : `<path d="${v.d}" fill="${ink}" opacity="0.32"/>`).join('');
+    : `<path d="${v.d}" fill="${ink}" opacity="0.32"${live ? ` class="kl r${Math.abs(v.i - mid)}"` : ''}/>`).join('');
   const fs = display ? 16 : 18;
   const y = display ? 85 : 86;
   const face = opts.embedFont && !opts.bare ? fontFace(opts.embedFont) : '';
-  const body = `${stones}` +
+  const anim = live ? liveStyle(mid, live) : '';
+  const body = `${anim}${stones}` +
          `<text x="100" y="${y}" text-anchor="middle" font-family="${WM_STACK}" font-weight="700" ` +
          `font-size="${fs}" letter-spacing="-0.6" fill="${ink}">kaymen<tspan fill="${ACCENT}">.dev</tspan></text>`;
   if (opts.bare) return body;
