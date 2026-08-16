@@ -28,7 +28,9 @@ what separates them. Always three stones or more.
 | Favicon, bare `/favicon.ico` requests | `favicon.ico` |
 | iOS home screen | `../../apple-touch-icon.png` (root, 180px) |
 | Android / PWA manifest | `../../icon-192.png`, `../../icon-512.png` (root) |
-| App icon, any other size | `kaymen-icon-{16,32,48,180,192,512}.png` |
+| App icon, 48px and under | `kaymen-icon-{16,32,48}.png` (three stones) |
+| App icon, 64px and up | `kaymen-icon-{64,128,180,192,512}.png` (name in the arch) |
+| Android maskable | `../../icon-maskable-512.png` (root) |
 | In-app icon on a coloured tile | `kaymen-mark-white.svg` |
 | Icon on a light background, no tile | `kaymen-mark-deep.svg` |
 | Print, embroidery, stamps, one colour | `kaymen-mark-mono.svg` |
@@ -36,6 +38,24 @@ what separates them. Always three stones or more.
 | Signature, 56 to 140px | `kaymen-lockup-text.svg` / `-white.svg` |
 | Email header | `email-lockup.png` (cropped, 2x) |
 | Email, where only the icon fits | `email-mark.png` |
+
+## The size split, which is not negotiable
+
+**48px and under: three stones only.** **64px and up: the name inside the**
+**arch.** 48 is the boundary because below 64 the wordmark falls under about
+5px and stops being type, becoming a grey smear that makes the whole tile look
+out of focus.
+
+The large tiles embed the lockup itself rather than a redrawing of it, so the
+icon and the logo cannot drift. The build asserts this: it checks the lockup's
+own path data appears verbatim inside the tile and fails if it does not.
+
+**Android maskable is a different picture, not the same one relabelled.**
+Android crops a maskable icon to a centred circle of 80% diameter. The lockup
+tile's corners sit 14.5 units from centre on a 32 grid where the safe radius is
+12.8, so it would lose its springing stones. The three stones reach only 10.7
+and clear it, which is why `icon-maskable-512.png` uses the small cut on a full
+bleed tile. Do not point `purpose:maskable` at `icon-512.png`.
 
 ## Sizes, because one drawing does not cover the range
 

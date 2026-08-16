@@ -158,6 +158,14 @@ const WM_STACK = "Sora, Inter, -apple-system, 'Segoe UI', sans-serif";
    OFL, so redistributing it this way is allowed; the licence ships beside it in
    assets/brand/fonts. Costs about 20KB, which is the correct trade for a file
    whose whole job is to look the same on someone else's computer. */
+function fontFace(b64) {
+  return `<defs><style>@font-face{font-family:'Sora';font-style:normal;font-weight:700;` +
+         `src:url(data:font/woff2;base64,${b64}) format('woff2')}</style></defs>`;
+}
+
+/* opts.bare returns the drawing without the <svg> wrapper, so tileLockup can
+   place the identical geometry inside its own coordinate space rather than a
+   re-derived copy of it. */
 function arch(opts = {}) {
   const cut = opts.cut || 'display';
   const ctx = opts.ctx;
@@ -185,16 +193,46 @@ function arch(opts = {}) {
      one of these, because it measures full font ascent, but the ink does not.
      The corner letters are a k and a v, and neither reaches its own box. */
   const y = display ? 82 : 84;
-  const face = opts.embedFont
-    ? `<defs><style>@font-face{font-family:'Sora';font-style:normal;font-weight:700;` +
-      `src:url(data:font/woff2;base64,${opts.embedFont}) format('woff2')}</style></defs>`
-    : '';
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 104"${size}>${face}${stones}` +
+  const face = opts.embedFont && !opts.bare ? fontFace(opts.embedFont) : '';
+  const body = `${stones}` +
          `<text x="100" y="${y}" text-anchor="middle" font-family="${WM_STACK}" font-weight="700" ` +
-         `font-size="${fs}" letter-spacing="-0.6" fill="${ink}">kaymen<tspan fill="${ACCENT}">.dev</tspan></text></svg>`;
+         `font-size="${fs}" letter-spacing="-0.6" fill="${ink}">kaymen<tspan fill="${ACCENT}">.dev</tspan></text>`;
+  if (opts.bare) return body;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 104"${size}>${face}${body}</svg>`;
+}
+
+/* THE APP ICON AT 64 AND UP: the lockup itself, set on the tile, rather than a
+   second drawing that merely resembles it. Ohav's split is by size, not by
+   purpose: three stones on the small icons, the name inside the arch on the
+   large ones.
+
+   Done by transforming the real lockup into the tile's coordinate space instead
+   of re-deriving it at 32 units, so "pixel perfect against the logo" is a
+   property of the code rather than a thing to check by eye. The lockup's arch
+   occupies x 20..180 and y 18..98 in its own 200x104 space, which is 160 by 80;
+   scaling that to 30 units wide puts it 15 tall, and an arch is 2:1 so those
+   empty bands above and below are the shape, not a mistake in the fitting. */
+function tileLockup(opts = {}) {
+  const kind = opts.kind || 'deep';
+  const px = opts.px;
+  const size = px ? ` width="${px}" height="${px}"` : '';
+  const bg = kind === 'accent' ? ACCENT : DEEP;
+  const rx = opts.radius == null ? 7.4 : opts.radius;
+  /* 26 of 32 units, not 30. At 30 the springing stones touched the tile edge,
+     which reads as a crop rather than as a logo with a margin. */
+  const s = 26 / 160;
+  const tx = r2(3 - 20 * s);
+  const ty = r2((32 - 80 * s) / 2 - 18 * s);
+  /* Always the on-deep ink: the tile supplies a dark ground either way, and the
+     accent tile is dark enough that white masonry is still the readable choice. */
+  const inner = arch({ cut: 'display', ctx: 'deep', embedFont: opts.embedFont, bare: true });
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"${size}>` +
+         (opts.embedFont ? fontFace(opts.embedFont) : '') +
+         `<rect width="32" height="32" rx="${rx}" fill="${bg}"/>` +
+         `<g transform="translate(${tx},${ty}) scale(${r2(s)})">${inner}</g></svg>`;
 }
 
 module.exports = {
   ACCENT, DEEP, WHITE, WM_STACK,
-  seg, course, glyphPaths, glyph, tile, markBare, arch,
+  seg, course, glyphPaths, glyph, tile, tileLockup, markBare, arch,
 };
