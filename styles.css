@@ -173,23 +173,20 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.03em;line-height:1.1;fon
 }
 
 /* brand mark */
+/* The lockup: arch with the name under it. The rail's inner width is 206px, so
+   this lands at ~169px wide — comfortably inside the display cut's 140px-and-up
+   band, which is the nine-segment drawing. Do not shrink it past 140px here;
+   below that the gaps fall under a physical pixel and the arch fuses into a
+   solid band, which is what the text cut exists to solve. */
 .rail-brand{
-  display:flex;align-items:center;gap:12px;
-  height:44px;padding:0 8px;margin-bottom:6px;flex:none;
-  position:relative;z-index:2;
+  display:block;flex:none;position:relative;z-index:2;
+  height:88px;margin:0 4px 8px;
+  background:url("/assets/brand/kaymen-lockup.svg") no-repeat center/contain;
 }
-.mark{
-  width:30px;height:30px;flex:none;border-radius:9px;
-  background-image:url("/assets/mark.svg"),linear-gradient(150deg,var(--accent) 0%,var(--accent-dark) 100%);
-  background-size:76% 76%,auto;background-position:center;background-repeat:no-repeat;
-  box-shadow:0 4px 12px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.45);
-}
-.rail-wordmark{
-  font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:-.02em;
-  white-space:nowrap;
-}
-.rail-wordmark b{font-weight:700}
-.rail-wordmark span{color:var(--accent)}
+/* .mark (the 30px tile) and .rail-wordmark (the text beside it) were the brand
+   before the lockup replaced it on 2026-08-16. Nothing on the marketing site
+   draws either any more. admin/ and portal/ keep their own copies of .mark in
+   their own stylesheets; this is only the marketing site's. */
 
 /* nav */
 .rail-nav{position:relative;display:flex;flex-direction:column;gap:2px;z-index:2}
@@ -645,11 +642,21 @@ footer{padding:36px 0 46px;border-top:1px solid var(--line);margin-top:80px}
    drift from the rail's. */
 .brandbar{display:none}
 @media (max-width:900px){
+  /* The text cut, not the display cut. At 104px wide the nine-segment drawing
+     fuses into a solid band, so this is the five-segment one with wider gaps —
+     they are three drawings, not one scaled. A rounded rect rather than a pill,
+     because the lockup is 1.92:1 and stacked, so it needs height a pill
+     cannot give it. */
   .brandbar{
-    display:inline-flex;align-items:center;gap:10px;
-    position:fixed;top:14px;left:12px;z-index:80;
-    height:46px;padding:0 16px 0 8px;border-radius:999px;
-    background:rgba(255,255,255,.55);
+    display:block;
+    position:fixed;top:12px;left:12px;z-index:80;
+    width:148px;height:74px;padding:0;border-radius:22px;
+    /* one declaration: image over colour. Two `background:` lines would mean
+       the second silently wins and the lockup never paints.
+       118px sits mid-band for the text cut (56–140px) rather than at its floor;
+       at 104px the larger type of this cut crowds the arch legs. */
+    background:url("/assets/brand/kaymen-lockup-text.svg") no-repeat center/118px auto,
+               rgba(255,255,255,.55);
     backdrop-filter:blur(34px) saturate(200%);
     -webkit-backdrop-filter:blur(34px) saturate(200%);
     box-shadow:
@@ -660,20 +667,13 @@ footer{padding:36px 0 46px;border-top:1px solid var(--line);margin-top:80px}
       inset 0 1px 0 rgba(255,255,255,.9);
   }
   .brandbar::before{
-    content:"";position:absolute;inset:0;border-radius:999px;pointer-events:none;mix-blend-mode:screen;
+    content:"";position:absolute;inset:0;border-radius:22px;pointer-events:none;mix-blend-mode:screen;
     background:linear-gradient(180deg,rgba(255,255,255,.6) 0%,rgba(255,255,255,.12) 30%,rgba(255,255,255,0) 58%);
   }
-  .brandbar .mark{position:relative;z-index:2}
-  .bb-wm{
-    position:relative;z-index:2;
-    font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:-.02em;white-space:nowrap;
-  }
-  .bb-wm span{color:var(--accent)}
-  /* The chip occupies 14–60px, and the hero's mobile padding-top was 78px, so
-     the "N systems running" pill sat 18px under it and read as cramped. The
-     sub-page heroes already open at 86px and are left alone — a padding-top
-     here would be overridden by their shorthand further down the file anyway. */
-  .hero{padding-top:96px}
+  /* The chip occupies 12–86px, so the hero needs more room than the 78px it had.
+     Sub-page heroes are set by .work-hero/.case-hero further down the file — a
+     padding-top here would be overridden by their shorthand. */
+  .hero{padding-top:118px}
 }
 
 .tabbar{display:none}
@@ -721,7 +721,11 @@ footer{padding:36px 0 46px;border-top:1px solid var(--line);margin-top:80px}
 .case-narrow{max-width:var(--w-prose)}
 
 .work-hero,.case-hero{padding:118px 0 56px;position:relative;z-index:1}
-@media (max-width:900px){.work-hero,.case-hero{padding:86px 0 44px}}
+/* 118px, not 86px: the mobile brand chip occupies 12–86px and 86px left the
+   first line touching it. This is the rule that governs sub-page heroes — a
+   padding-top in the .brandbar block above would be overridden by this
+   shorthand. */
+@media (max-width:900px){.work-hero,.case-hero{padding:118px 0 44px}}
 .work-hero h1,.case-hero h1{
   font-size:clamp(2.1rem,5vw,3.1rem);font-weight:800;letter-spacing:-.04em;
   line-height:1.08;margin-top:6px;

@@ -115,10 +115,7 @@ function rail(active = 'work') {
 <nav class="rail left" id="rail" aria-label="Sections">
   <div class="rail-prog" aria-hidden="true"><i id="prog"></i></div>
 
-  <a href="/#start" class="rail-brand">
-    <span class="mark"></span>
-    <span class="rail-wordmark"><b>kaymen</b><span>.</span>dev</span>
-  </a>
+  <a href="/#start" class="rail-brand" aria-label="kaymen.dev home"></a>
 
   <div class="rail-nav" id="railNav">
     <span class="lozenge" id="lozenge"></span>
@@ -134,10 +131,7 @@ function rail(active = 'work') {
   </div>
 </nav>
 
-<a href="/#start" class="brandbar" aria-label="kaymen.dev home">
-  <span class="mark"></span>
-  <span class="bb-wm"><b>kaymen</b><span>.</span>dev</span>
-</a>
+<a href="/#start" class="brandbar" aria-label="kaymen.dev home"></a>
 
 <nav class="tabbar" id="tabbar" aria-label="Sections">
   ${TAB_SECS.map((sec) => {

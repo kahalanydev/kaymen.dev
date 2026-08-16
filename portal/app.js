@@ -284,7 +284,7 @@ if ('serviceWorker' in navigator) {
     app.innerHTML = `
       <div class="login-page">
         <div class="login-card">
-          <div class="login-logo"><span class="mark"></span><span>kaymen<span class="accent">.</span>dev</span></div>
+          <div class="login-logo" role="img" aria-label="kaymen.dev"></div>
           <h2 class="login-title">Client Portal</h2>
           <div id="loginMsg">${oauthError ? `<div class="alert alert-error">${escapeHtml(errorMessages[oauthError] || 'Sign-in failed')}</div>` : ''}</div>
           ${googleEnabled ? `
@@ -325,7 +325,7 @@ if ('serviceWorker' in navigator) {
     app.innerHTML = `
       <div class="login-page">
         <div class="login-card">
-          <div class="login-logo"><span class="mark"></span><span>kaymen<span class="accent">.</span>dev</span></div>
+          <div class="login-logo" role="img" aria-label="kaymen.dev"></div>
           <h2 class="login-title">Change Password</h2>
           <div class="alert alert-warning">You must change your password before continuing.</div>
           <div id="cpError"></div>
@@ -390,10 +390,7 @@ if ('serviceWorker' in navigator) {
       </div>
       <div class="layout">
         <aside class="sidebar" id="sidebar">
-          <div class="sidebar-logo">
-            <span class="mark"></span>
-            <span>kaymen<span class="accent">.</span>dev</span>
-          </div>
+          <div class="sidebar-logo" role="img" aria-label="kaymen.dev"></div>
           <div class="sidebar-label">Client portal</div>
           <ul class="sidebar-nav">
             <li><a href="#/dashboard" class="${!state.projectId && activeNav === 'dashboard' ? 'active' : ''}" data-nav="dashboard">
@@ -1374,7 +1371,7 @@ if ('serviceWorker' in navigator) {
     app.innerHTML = `
       <div class="login-page">
         <div class="login-card">
-          <div class="login-logo"><span class="mark"></span><span>kaymen<span class="accent">.</span>dev</span></div>
+          <div class="login-logo" role="img" aria-label="kaymen.dev"></div>
           <h2 class="login-title">Set Up Your Password</h2>
           <div id="inviteMsg"><div class="loading"><div class="spinner"></div> Validating invite...</div></div>
           <form id="inviteForm" hidden>

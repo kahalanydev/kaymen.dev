@@ -34,7 +34,8 @@ what separates them. Always three stones or more.
 | Print, embroidery, stamps, one colour | `kaymen-mark-mono.svg` |
 | Signature, 140px and up | `kaymen-lockup.svg` / `-white.svg` |
 | Signature, 56 to 140px | `kaymen-lockup-text.svg` / `-white.svg` |
-| Email header | `email-mark.png` |
+| Email header | `email-lockup.png` (cropped, 2x) |
+| Email, where only the icon fits | `email-mark.png` |
 
 ## Sizes, because one drawing does not cover the range
 

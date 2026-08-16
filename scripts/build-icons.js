@@ -149,20 +149,34 @@ async function cdp(port) {
     await conn.send('Page.enable');
 
     /* One page per shot, sized to the artwork, so nothing is ever resampled. */
+    /* TRANSPARENCY IS A PROTOCOL CALL, NOT A CSS ONE. `background:transparent`
+       on html/body does nothing for a screenshot: Chrome composites the frame
+       onto its default white base, so every PNG here came out colour type 2
+       with no alpha channel at all. It went unnoticed because most of these are
+       tiles that fill their own square — but kaymen-lockup-white.png, the
+       handoff asset for dark backgrounds, was a white logo flattened onto white
+       and arrived essentially blank, and email-mark.png carried white corners
+       onto the deep mail header. setDefaultBackgroundColorOverride with a=0 is
+       what actually makes the base transparent. Verified below by asserting the
+       IHDR colour type, so this cannot silently regress. */
     const shoot = async (svg, w, h, transparent) => {
       const html = '<!doctype html><meta charset="utf-8">' +
         `<style>html,body{margin:0;padding:0;background:${transparent ? 'transparent' : '#fff'}}` +
         `svg{display:block;width:${w}px;height:${h}px}</style>` + svg;
       await conn.send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: false });
+      await conn.send('Emulation.setDefaultBackgroundColorOverride',
+        transparent ? { color: { r: 0, g: 0, b: 0, a: 0 } } : {});
       await conn.send('Page.navigate', { url: `data:text/html;charset=utf-8,${encodeURIComponent(html)}` });
       await sleep(340);
-      const r = await conn.send('Page.captureScreenshot', {
-        format: 'png', captureBeyondViewport: false,
-        ...(transparent ? { optimizeForSpeed: false } : {}),
-      });
+      const r = await conn.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false });
       const buf = Buffer.from(r.result.data, 'base64');
       if (buf.length < 200 || buf.toString('hex', 0, 8) !== '89504e470d0a1a0a') {
         throw new Error(`a ${w}x${h} shot came back as ${buf.length} bytes and is not a PNG`);
+      }
+      /* IHDR colour type lives at byte 25: 6 is truecolour+alpha, 2 is no alpha. */
+      if (transparent && buf[25] !== 6) {
+        throw new Error(`a ${w}x${h} shot asked for transparency but came back colour type ${buf[25]} ` +
+          '(2 = flattened on white). The background override did not take.');
       }
       return buf;
     };
@@ -185,6 +199,17 @@ async function cdp(port) {
     /* the mail header mark: accent tile at 2x, flattened onto nothing so it
        sits on the deep header band without a white box around it */
     write(`${BRAND}/email-mark.png`, await shoot(tileAccent, 60, 60, true));
+
+    /* The mail header LOCKUP. Mail needs a raster because Outlook draws through
+       Word and cannot render SVG at all, and it needs its own export because the
+       shipped lockup carries 10% dead space either side of the arch (which spans
+       x=20..180 of a 200-wide viewBox). Left-aligned in a header that has an
+       eyebrow under it, that dead space reads as a misindented logo. Cropping
+       the viewBox to the arch bounds is exact and costs nothing — the wordmark
+       is centred at x=100 and ~85px wide, so it stays well inside. 2x. */
+    const emailLockup = lockup('display', 'deep')
+      .replace('viewBox="0 0 200 104"', 'viewBox="20 0 160 104"');
+    write(`${BRAND}/email-lockup.png`, await shoot(emailLockup, 320, 208, true));
 
     /* lockups, at 3x the largest place they are used */
     const lock = (svg, w) => shoot(svg, w, Math.round(w * 0.52), true);
@@ -234,7 +259,8 @@ what separates them. Always three stones or more.
 | Print, embroidery, stamps, one colour | \`kaymen-mark-mono.svg\` |
 | Signature, 140px and up | \`kaymen-lockup.svg\` / \`-white.svg\` |
 | Signature, 56 to 140px | \`kaymen-lockup-text.svg\` / \`-white.svg\` |
-| Email header | \`email-mark.png\` |
+| Email header | \`email-lockup.png\` (cropped, 2x) |
+| Email, where only the icon fits | \`email-mark.png\` |
 
 ## Sizes, because one drawing does not cover the range
 

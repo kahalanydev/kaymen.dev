@@ -106,7 +106,13 @@ const spell = (n) => WORDS[n] || String(n);
    One layout, four slots. Long titles step down a size rather than wrapping to
    three lines and pushing the sub-line off the bottom edge. */
 function card({ eyebrow, stat, statLabel, title, sub, subLead }) {
-  const mark = LOGO.tile({ kind: 'accent' });
+  /* The lockup on deep, not the tile plus a typed wordmark. Inlined rather than
+     linked because the card is rendered from a data: URL with no base to
+     resolve a relative path against — and inline is fine here, unlike in the
+     browser, because this SVG sits in the document and can reach the page's
+     Sora. The 10% dead space each side of the arch is cropped by the negative
+     margin so it lines up with the text below it. */
+  const mark = LOGO.arch({ cut: 'display', ctx: 'deep' });
   const titleSize = title.length > 46 ? 40 : title.length > 34 ? 44 : 50;
 
   return `<!doctype html><html><head><meta charset="utf-8">
@@ -127,12 +133,10 @@ function card({ eyebrow, stat, statLabel, title, sub, subLead }) {
     font-family:Inter, sans-serif; color:#fff;
     padding:56px 72px 46px; display:flex; flex-direction:column;
   }
-  .top{display:flex;align-items:center;gap:14px}
-  .top svg{width:40px;height:40px;display:block;border-radius:11px}
-  .wm{font-family:Sora,sans-serif;font-weight:700;font-size:21px;letter-spacing:-.02em}
-  .wm i{font-style:normal;color:#2bbcb3}
-  .eyebrow{margin-left:auto;font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#2bbcb3}
-  .stat{font-family:Sora,sans-serif;font-weight:800;font-size:122px;line-height:1;letter-spacing:-.055em;color:#2bbcb3;margin-top:34px}
+  .top{display:flex;align-items:flex-start;gap:14px}
+  .top svg{width:172px;height:89px;display:block;margin:-14px 0 0 -17px}
+  .eyebrow{margin-left:auto;font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#2bbcb3;padding-top:6px}
+  .stat{font-family:Sora,sans-serif;font-weight:800;font-size:122px;line-height:1;letter-spacing:-.055em;color:#2bbcb3;margin-top:18px}
   .statLabel{font-size:21px;color:rgba(255,255,255,.62);margin-top:16px}
   .rule{height:1px;background:rgba(255,255,255,.13);margin:30px 0 28px}
   .title{font-family:Sora,sans-serif;font-weight:800;font-size:${titleSize}px;line-height:1.12;letter-spacing:-.035em}
@@ -140,7 +144,7 @@ function card({ eyebrow, stat, statLabel, title, sub, subLead }) {
   .sub b{color:#2bbcb3;font-weight:600}
   .foot{margin-top:auto;font-size:15px;color:rgba(255,255,255,.34)}
 </style></head><body>
-  <div class="top">${mark}<span class="wm">kaymen<i>.</i>dev</span><span class="eyebrow">${esc(eyebrow)}</span></div>
+  <div class="top">${mark}<span class="eyebrow">${esc(eyebrow)}</span></div>
   <div class="stat">${esc(stat)}</div>
   <div class="statLabel">${esc(statLabel)}</div>
   <div class="rule"></div>

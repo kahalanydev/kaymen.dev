@@ -142,18 +142,16 @@ svg{display:block}
     0 0 0 1px rgba(226,228,232,.8),
     inset 0 1px 0 rgba(255,255,255,.92);
 }
+/* The lockup: arch with the name under it, replacing the tile-plus-text mark on
+   2026-08-16. The sidebar is --rail-w (224px) with 9px padding, so this lands at
+   ~169px, inside the display cut's 140px-and-up band. It is a background-image
+   rather than an inline SVG because an SVG loaded as an image cannot reach the
+   page's webfont; the file carries its own embedded Sora. */
 .sidebar-logo{
-  display:flex;align-items:center;gap:12px;height:44px;padding:0 8px;flex:none;
-  position:relative;z-index:2;font-family:var(--display);font-weight:700;
-  font-size:14px;letter-spacing:-.02em;white-space:nowrap;
+  display:block;flex:none;position:relative;z-index:2;
+  height:88px;margin:0 4px 8px;
+  background:url("/assets/brand/kaymen-lockup.svg") no-repeat center/contain;
 }
-.sidebar-logo .mark{
-  width:30px;height:30px;flex:none;border-radius:9px;
-  background-image:url("/assets/mark.svg"),var(--gradient);
-  background-size:76% 76%,auto;background-position:center;background-repeat:no-repeat;
-  box-shadow:0 4px 12px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.45);
-}
-.sidebar-logo .accent{color:var(--accent)}
 .sidebar-label{
   font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
   color:var(--muted);padding:0 8px 8px 50px;margin-top:-8px;position:relative;z-index:2;
@@ -719,19 +717,12 @@ select{font-family:var(--body);color:var(--ink)}
     inset 0 1px 0 rgba(255,255,255,.9);
 }
 .login-logo{
-  display:flex;align-items:center;gap:12px;font-family:var(--display);
-  font-size:17px;font-weight:700;letter-spacing:-.03em;margin-bottom:6px;
+  display:block;width:170px;height:88px;margin:0 0 2px -17px;
+  background:url("/assets/brand/kaymen-lockup.svg") no-repeat left center/contain;
 }
-.login-logo .mark{
-  width:34px;height:34px;flex:none;border-radius:10px;
-  background-image:url("/assets/mark.svg"),var(--gradient);
-  background-size:76% 76%,auto;background-position:center;background-repeat:no-repeat;
-  box-shadow:0 4px 12px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.45);
-}
-.login-logo .accent{color:var(--accent)}
 .login-title{
   font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
-  color:var(--muted);margin-bottom:24px;padding-left:46px;
+  color:var(--muted);margin-bottom:24px;padding-left:0;
 }
 
 .md-rendered{font-size:13.5px;line-height:1.7;color:var(--muted)}
