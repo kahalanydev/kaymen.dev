@@ -148,9 +148,9 @@ svg{display:block}
   font-size:14px;letter-spacing:-.02em;white-space:nowrap;
 }
 .sidebar-logo .mark{
-  width:30px;height:30px;flex:none;border-radius:9px;background:var(--gradient);
-  color:#fff;font-family:var(--display);font-weight:800;font-size:14px;
-  display:flex;align-items:center;justify-content:center;letter-spacing:-.04em;
+  width:30px;height:30px;flex:none;border-radius:9px;
+  background-image:url("/assets/mark.svg"),var(--gradient);
+  background-size:76% 76%,auto;background-position:center;background-repeat:no-repeat;
   box-shadow:0 4px 12px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.45);
 }
 .sidebar-logo .accent{color:var(--accent)}
@@ -723,9 +723,9 @@ select{font-family:var(--body);color:var(--ink)}
   font-size:17px;font-weight:700;letter-spacing:-.03em;margin-bottom:6px;
 }
 .login-logo .mark{
-  width:34px;height:34px;flex:none;border-radius:10px;background:var(--gradient);
-  color:#fff;font-weight:800;font-size:15px;display:flex;align-items:center;
-  justify-content:center;letter-spacing:-.04em;
+  width:34px;height:34px;flex:none;border-radius:10px;
+  background-image:url("/assets/mark.svg"),var(--gradient);
+  background-size:76% 76%,auto;background-position:center;background-repeat:no-repeat;
   box-shadow:0 4px 12px var(--accent-glow),inset 0 1px 0 rgba(255,255,255,.45);
 }
 .login-logo .accent{color:var(--accent)}

@@ -1,9 +1,10 @@
-const CACHE_NAME = 'kd-admin-v1';
+const CACHE_NAME = 'kd-admin-v2';
 const PRECACHE = [
   '/admin/',
   '/admin/styles.css',
   '/admin/app.js',
-  '/favicon.svg'
+  '/favicon.svg',
+  '/assets/mark.svg'
 ];
 
 self.addEventListener('install', e => {

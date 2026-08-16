@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kaymen.dev — the keystone reads as a cup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   Ohav: "the keystone looks to me like a K inside a cup."
+
+   He is right, and it is measurable rather than a matter of taste. The current
+   mark is taper 0.71, aspect 1.13, flat base. A drinking tumbler is taper
+   0.65-0.75, aspect 1.1-1.5, flat base. A real voussoir is taper 0.75-0.85,
+   aspect 0.4-0.7, and its base is CURVED because it sits on the arch's inner
+   ring. The mark is sitting inside the cup's numbers, not the stone's.
+
+   THE TAPER IS NOT THE BUG. That is the surprise. A keystone and a tumbler
+   taper almost identically, so no amount of adjusting the slant fixes this.
+   Two other properties do the discriminating:
+
+     - ASPECT. A cup is taller than it is wide, because you hold it. A voussoir
+       is wider than it is tall, because it is one segment of a ring.
+     - THE BASE. A cup must have a flat bottom or it falls over. Curve the base
+       and the object cannot be a cup any more. This is the cheap, total fix.
+
+   And one compounding problem: the K is INSET inside the outline at 0.78, so it
+   reads as contents. Anything centred inside a closed container is understood
+   as being IN it. Knocking the letter out of the stone removes the reading
+   entirely, because a void is not contents.
+   ============================================================================ */
+:root{
+  --bg:#ffffff; --bg-alt:#f4f5f7; --ink:#1a1b1e; --muted:#5f6368;
+  --accent:#2bbcb3; --accent-dark:#229e96; --accent-soft:rgba(43,188,179,.08);
+  --line:#e2e4e8; --deep:#16303d;
+  --warn:#a8761c; --warn-soft:rgba(168,118,28,.09);
+  --bad:#b0413e; --bad-soft:rgba(176,65,62,.08);
+  --good:#2f7d5f;
+  --display:'Sora',-apple-system,BlinkMacSystemFont,sans-serif;
+  --body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.03em;line-height:1.15;font-weight:700}
+.wrap{max-width:1080px;margin:0 auto;padding:0 26px}
+
+.head{padding:46px 0 8px}
+.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:12px}
+.head h1{font-size:30px;letter-spacing:-.045em}
+.head p{font-size:14.5px;color:var(--muted);margin-top:11px;max-width:70ch;line-height:1.7}
+.head p b{color:var(--ink);font-weight:600}
+
+/* the measured proof */
+.proof{display:grid;grid-template-columns:1fr 1fr;gap:0;margin:26px 0 8px;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.proof>div{padding:20px 22px}
+.proof>div+div{border-left:1px solid var(--line)}
+.proof.bad>div:first-child{background:var(--bad-soft)}
+.proof h4{font-family:var(--body);font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:13px}
+.proof.bad>div:first-child h4{color:var(--bad)}
+.mrow{display:flex;justify-content:space-between;gap:14px;font-size:13px;padding:5px 0;border-bottom:1px dotted var(--line)}
+.mrow:last-child{border-bottom:0}
+.mrow span{color:var(--muted)}
+.mrow b{font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.mrow b.hit{color:var(--bad)}
+.mrow b.ok{color:var(--good)}
+
+h2.rule{font-size:12px;font-family:var(--body);font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  margin:52px 0 4px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+.lede{font-size:13.5px;color:var(--muted);margin:14px 0 22px;max-width:74ch;line-height:1.7}
+.lede b{color:var(--ink);font-weight:600}
+
+/* side-by-side collision */
+.collide{display:flex;align-items:flex-end;gap:34px;flex-wrap:wrap;padding:26px 24px;border:1px solid var(--line);border-radius:16px;background:var(--bg-alt)}
+.collide figure{text-align:center}
+.collide figcaption{font-size:11.5px;color:var(--muted);margin-top:11px;line-height:1.5}
+.collide figcaption b{display:block;color:var(--ink);font-weight:600;font-size:12.5px;margin-bottom:2px}
+
+/* candidates */
+.cands{display:grid;gap:14px}
+.cand{border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:border-color .2s}
+.cand:hover{border-color:#d2d5da}
+.cand.win{border-color:rgba(43,188,179,.45);box-shadow:0 0 0 3px var(--accent-soft)}
+.cand-h{display:flex;align-items:center;gap:15px;padding:15px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.cand-h .id{width:26px;height:26px;border-radius:8px;background:var(--bg-alt);color:var(--muted);
+  font-family:var(--display);font-weight:800;font-size:11.5px;display:flex;align-items:center;justify-content:center;flex:none}
+.cand.win .cand-h .id{background:var(--accent);color:#fff}
+.cand-h h3{font-size:15.5px;letter-spacing:-.03em}
+.cand-h .tag{margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+  padding:4px 10px;border-radius:20px;background:var(--bg-alt);color:var(--muted);white-space:nowrap}
+.cand.win .cand-h .tag{background:var(--accent-soft);color:var(--accent-dark)}
+.cand-b{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:24px;padding:20px}
+.sizes{display:flex;align-items:flex-end;gap:16px;padding:16px 18px;background:var(--bg-alt);border-radius:12px}
+.sizes>div{text-align:center}
+.sizes em{display:block;font-style:normal;font-size:9.5px;color:var(--muted);margin-top:7px;font-variant-numeric:tabular-nums}
+.ondeep{background:var(--deep);border-radius:12px;padding:16px 18px;margin-top:10px;display:flex;align-items:center;gap:14px}
+.ondeep span{font-family:var(--display);font-weight:700;font-size:13px;color:#fff;letter-spacing:-.02em}
+.ondeep span i{font-style:normal;color:var(--accent)}
+.cand-t p{font-size:13px;color:var(--muted);line-height:1.7}
+.cand-t p+p{margin-top:9px}
+.cand-t b{color:var(--ink);font-weight:600}
+.cand-t .cost{color:var(--warn);font-weight:600}
+.nums{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.nums span{font-size:10.5px;font-family:var(--display);font-weight:600;letter-spacing:-.01em;
+  padding:4px 9px;border-radius:6px;background:var(--bg-alt);color:var(--muted);font-variant-numeric:tabular-nums}
+.nums span.ok{background:rgba(47,125,95,.09);color:var(--good)}
+.nums span.hit{background:var(--bad-soft);color:var(--bad)}
+
+.arches{display:flex;gap:38px;flex-wrap:wrap;align-items:flex-end;padding:26px 24px;border:1px solid var(--line);border-radius:16px;background:var(--bg-alt)}
+.arches figure{text-align:center}
+.arches figcaption{font-size:11.5px;color:var(--muted);margin-top:10px}
+.arches figcaption b{display:block;color:var(--ink);font-weight:600;font-size:12.5px}
+
+.verdict{margin:46px 0 70px;padding:24px 26px;border:1px solid rgba(43,188,179,.34);border-radius:16px;background:var(--accent-soft)}
+.verdict h3{font-size:17px;letter-spacing:-.035em;margin-bottom:11px}
+.verdict p{font-size:13.5px;color:var(--muted);line-height:1.75}
+.verdict p+p{margin-top:10px}
+.verdict b{color:var(--ink);font-weight:600}
+@media(max-width:860px){.cand-b{grid-template-columns:1fr}.proof{grid-template-columns:1fr}.proof>div+div{border-left:0;border-top:1px solid var(--line)}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="head">
+    <div class="eyebrow">Logo · direction A · diagnosis and repair</div>
+    <h1>It reads as a cup because its numbers are a cup's numbers</h1>
+    <p>Not a matter of taste. A keystone and a tumbler have <b>almost identical taper</b>, so the slant was never
+      the problem and adjusting it would never have helped. Two other properties do the discriminating, and the
+      current mark is on the wrong side of both.</p>
+  </div>
+
+  <div class="proof bad">
+    <div>
+      <h4>Direction A as drawn</h4>
+      <div class="mrow"><span>Taper (bottom ÷ top)</span><b>0.71</b></div>
+      <div class="mrow"><span>Aspect (height ÷ width)</span><b class="hit">1.13 · taller than wide</b></div>
+      <div class="mrow"><span>Base</span><b class="hit">flat</b></div>
+      <div class="mrow"><span>Letter</span><b class="hit">inset at 0.78</b></div>
+    </div>
+    <div>
+      <h4>What those numbers belong to</h4>
+      <div class="mrow"><span>Tumbler</span><b class="hit">taper .65–.75 · aspect 1.1–1.5 · flat</b></div>
+      <div class="mrow"><span>Voussoir</span><b>taper .75–.85 · aspect 0.4–0.7 · curved</b></div>
+      <div class="mrow"><span>Verdict</span><b class="hit">inside the cup range on both</b></div>
+      <div class="mrow"><span>And</span><b class="hit">contents, not engraving</b></div>
+    </div>
+  </div>
+
+  <h2 class="rule">The collision, drawn</h2>
+  <p class="lede">The mark beside an actual tumbler at the same size. Nothing here is exaggerated. The cup is
+    drawn to standard glassware proportions, and the mark is the shipped path from <b>logo-directions.html</b>.</p>
+  <div class="collide" id="collide"></div>
+
+  <h2 class="rule">Three repairs</h2>
+  <p class="lede">Each keeps the keystone <em>idea</em>, the stone that holds the span, and attacks a different
+    one of the four failing properties. Shown at the sizes the mark actually ships at, because
+    <b>16px is where marks die</b>.</p>
+  <div class="cands" id="cands"></div>
+
+  <h2 class="rule">Does it still read as a keystone?</h2>
+  <p class="lede">The honest test. A keystone only means anything <b>seated in its arch</b>, and the logo is
+    never seen in an arch. If the repair only works with the arch drawn around it, the repair has not worked.</p>
+  <div class="arches" id="arches"></div>
+
+  <div class="verdict">
+    <h3>What I would actually do</h3>
+    <p><b>Take C.</b> It fixes all four properties at once and it is the only one where the cup reading is
+      structurally impossible rather than merely weakened. A shape with no flat base cannot be a vessel, and a
+      letter cut out of a surface cannot be contents. It is also the strongest of the three at 16px, because a
+      knockout letter holds its counters when an inset one closes up.</p>
+    <p><b>But the larger point stands, and it is the one worth deciding.</b> The original write-up flagged this
+      exact risk: <em>"without the story it is a trapezoid with a K in it."</em> Your reaction is that prediction
+      landing, unprompted, from the person who already knows the story. A mark that needs a sentence to work is a
+      bet that you will always be in the room to say it, and on a website you are never in the room.</p>
+    <p>So the real question is not which repair. It is whether <b>direction A is worth repairing at all</b> when D
+      is already live, costs nothing, and nobody has ever had to explain it. I would fix the drawing if you love
+      the idea, and drop it without regret if you only liked it.</p>
+  </div>
+</div>
+
+<script>
+const ACC='#2bbcb3', DEEP='#16303d', WHITE='#ffffff', MUT='#9aa1a8';
+let uid=0;
+
+/* the same bold geometric K used across the logo directions, cap height 18 */
+const KPATH='M8.6 7 H12.2 V14.6 L19.4 7 H24.2 L16.1 15.6 L24.6 25 H19.7 L12.2 16.7 V25 H8.6 Z';
+
+function svg(px,inner){
+  return `<svg width="${px}" height="${px}" viewBox="0 0 32 32" fill="none"
+    xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none">${inner}</svg>`;
+}
+
+/* ---- the shapes ---------------------------------------------------- */
+
+/* A — as drawn today. taper .71, aspect 1.13, flat base, letter inset. */
+function mark0(px,ctx){
+  const stone = ctx==='deep' ? WHITE : DEEP, k = ctx==='deep' ? DEEP : ACC;
+  return svg(px,`
+    <path d="M4.8 3.3 H27.2 L23.9 28.7 H8.1 Z" fill="${stone}"
+          stroke="${stone}" stroke-width="1.5" stroke-linejoin="round"/>
+    <g transform="translate(3.05,3.32) scale(0.78)"><path d="${KPATH}" fill="${k}"/></g>`);
+}
+
+/* a plain tumbler at standard glassware proportions, for the collision test */
+function cup(px){
+  return svg(px,`
+    <path d="M7.6 4.6 H24.4 L21.4 28.4 H10.6 Z" fill="none" stroke="${MUT}"
+          stroke-width="1.6" stroke-linejoin="round"/>
+    <path d="M8.1 9.2 H23.9" stroke="${MUT}" stroke-width="1.2" opacity=".55"/>`);
+}
+
+/* A1 — SQUAT. Only the aspect changes: wider than tall, like a real voussoir. */
+function mark1(px,ctx){
+  const stone = ctx==='deep' ? WHITE : DEEP, k = ctx==='deep' ? DEEP : ACC;
+  return svg(px,`
+    <path d="M3 7.5 H29 L25 24.5 H7 Z" fill="${stone}"
+          stroke="${stone}" stroke-width="1.5" stroke-linejoin="round"/>
+    <g transform="translate(4.93,5.33) scale(0.667)"><path d="${KPATH}" fill="${k}"/></g>`);
+}
+
+/* A2 — CURVED BASE. Only the bottom changes: it cannot stand, so it cannot be a cup. */
+function mark2(px,ctx){
+  const stone = ctx==='deep' ? WHITE : DEEP, k = ctx==='deep' ? DEEP : ACC;
+  return svg(px,`
+    <path d="M4.8 3.3 H27.2 L23.9 28.7 Q16 24.3 8.1 28.7 Z" fill="${stone}"
+          stroke="${stone}" stroke-width="1.5" stroke-linejoin="round"/>
+    <g transform="translate(3.05,2.5) scale(0.78)"><path d="${KPATH}" fill="${k}"/></g>`);
+}
+
+/* A3 — all four at once: squat, curved base, and the K KNOCKED OUT rather than
+   placed inside. A void is not contents, so the vessel reading has nothing to
+   hold. Mask instead of even-odd so the letter path needs no re-authoring. */
+function mark3(px,ctx){
+  const stone = ctx==='deep' ? WHITE : DEEP;
+  const id = 'ko'+(uid++);
+  return svg(px,`
+    <mask id="${id}">
+      <rect width="32" height="32" fill="#fff"/>
+      <g transform="translate(4.93,4.6) scale(0.667)"><path d="${KPATH}" fill="#000"/></g>
+    </mask>
+    <path d="M3 7.5 H29 L25 24.5 Q16 20.9 7 24.5 Z" fill="${stone}"
+          stroke="${stone}" stroke-width="1.4" stroke-linejoin="round" mask="url(#${id})"/>`);
+}
+
+/* the arch test: seat a stone at the apex and see if the shape carries alone */
+function arch(px, stonePath, kx, ky, ks, knock){
+  const id='ka'+(uid++);
+  const letter = knock
+    ? `<mask id="${id}"><rect width="160" height="92" fill="#fff"/>
+         <g transform="translate(${kx},${ky}) scale(${ks})"><path d="${KPATH}" fill="#000"/></g></mask>`
+    : '';
+  return `<svg width="${px*4}" height="${px*2.3}" viewBox="0 0 160 92" fill="none" style="display:block">
+    ${letter}
+    <path d="M24 86 A56 56 0 0 1 136 86 L120 86 A40 40 0 0 0 40 86 Z" fill="${DEEP}" opacity=".15"/>
+    <path d="${stonePath}" fill="${DEEP}" stroke="${DEEP}" stroke-width="1.2" stroke-linejoin="round"
+          ${knock?`mask="url(#${id})"`:''}/>
+    ${knock?'':`<g transform="translate(${kx},${ky}) scale(${ks})"><path d="${KPATH}" fill="${ACC}"/></g>`}
+  </svg>`;
+}
+
+/* ---- render -------------------------------------------------------- */
+
+document.getElementById('collide').innerHTML = `
+  <figure>${mark0(96)}<figcaption><b>Direction A</b>taper .71 · aspect 1.13</figcaption></figure>
+  <figure>${cup(96)}<figcaption><b>A tumbler</b>taper .64 · aspect 1.42</figcaption></figure>
+  <figure style="opacity:.4;font-size:30px;font-family:var(--display);font-weight:800;color:var(--muted);padding-bottom:38px">≈</figure>
+  <figure>${mark3(96)}<figcaption><b>Repair C</b>taper .69 · aspect 0.65</figcaption></figure>`;
+
+const CANDS=[
+  {id:'A', name:'Squat', fn:mark1, tag:'Fixes aspect', win:false,
+   nums:[['taper .69','' ],['aspect 0.65','ok'],['flat base','hit'],['letter inset','hit']],
+   body:`<p><b>One change: it is now wider than it is tall.</b> This is the property that separates the two
+     objects most reliably, because a cup is tall for a reason. You hold it. A voussoir is one segment of a
+     ring, so it is squat.</p>
+     <p>It works, and it is a two-number edit. <span class="cost">Its cost:</span> the flat base survives, so at
+     small sizes it drifts back toward a tray or a plinth, and the K has less height to live in: cap height
+     drops from 19.8 to 12, which is why it is the softest of the three at 16px.</p>`},
+  {id:'B', name:'Curved base', fn:mark2, tag:'Fixes the base', win:false,
+   nums:[['taper .71',''],['aspect 1.13','hit'],['curved base','ok'],['letter inset','hit']],
+   body:`<p><b>One change: the bottom edge arcs up</b>, following the arch's inner ring the way a real voussoir's
+     does. A cup must have a flat bottom or it falls over, so removing the flat bottom removes the object.</p>
+     <p>Cheapest possible fix, one path command, and the most surgical. <span class="cost">Its cost:</span> it
+     is still taller than wide, so it now reads as a <em>bowl</em> or a scoop to some eyes rather than a tumbler.
+     Trading one vessel for another vessel is not a fix.</p>`},
+  {id:'C', name:'Squat, curved, knocked out', fn:mark3, tag:'Fixes all four', win:true,
+   nums:[['taper .69',''],['aspect 0.65','ok'],['curved base','ok'],['letter knocked out','ok']],
+   body:`<p><b>All four properties at once</b>, and the fourth is the one that matters most. The K is cut out of
+     the stone rather than sat inside it, and a hole is not contents. There is no "inside" left for anything to
+     be in, so the cup reading has nothing to attach to.</p>
+     <p>It is also the <b>best of the three at 16px</b>, which is the opposite of what you would expect from the
+     most complicated one: a knocked-out letter keeps its counters open at small sizes, where an inset letter
+     closes up against the taper. <span class="cost">Its cost:</span> it needs a solid background. On a photo or
+     a gradient the knockout shows whatever is behind it, so it needs a filled-plate variant for those cases.</p>`}
+];
+
+document.getElementById('cands').innerHTML = CANDS.map(c=>`
+  <div class="cand${c.win?' win':''}">
+    <div class="cand-h">
+      <span class="id">${c.id}</span><h3>${c.name}</h3><span class="tag">${c.tag}</span>
+    </div>
+    <div class="cand-b">
+      <div>
+        <div class="sizes">
+          ${[64,32,24,16].map(s=>`<div>${c.fn(s)}<em>${s}px</em></div>`).join('')}
+        </div>
+        <div class="ondeep">${c.fn(30,'deep')}<span><i>kaymen</i>.dev</span></div>
+      </div>
+      <div class="cand-t">${c.body}<div class="nums">${
+        c.nums.map(([t,k])=>`<span class="${k}">${t}</span>`).join('')
+      }</div></div>
+    </div>
+  </div>`).join('');
+
+document.getElementById('arches').innerHTML = `
+  <figure>${arch(30,'M69 20 H91 L88.3 40 H71.7 Z',68.55,18.96,0.69,false)}
+    <figcaption><b>A as drawn</b>reads fine, in the arch</figcaption></figure>
+  <figure>${arch(30,'M66 24 H94 L90 40 Q80 36.6 70 40 Z',70.6,25.2,0.62,true)}
+    <figcaption><b>Repair C</b>reads fine, and alone</figcaption></figure>`;
+</script>
+</body>
+</html>

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kaymen.dev · direction A developed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   Direction A, the segmented course, developed into something usable.
+
+   FIRST, A BUG IN THE LAST MOCKUP. Ohav's screenshot showed the wordmark in a
+   serif. The headings on that page were Sora, so the font had loaded; the SVG
+   text was injected by script before the webfont resolved, and SVG text does
+   not always repaint when a font arrives late. Fixed three ways at once, since
+   any one of them alone is a race waiting to happen: the wordmark is styled by
+   CSS class rather than by presentation attribute, the stack falls back to
+   Inter and then to sans-serif rather than to the browser default of serif,
+   and nothing renders until document.fonts.ready resolves.
+
+   SECOND, THE COST I FLAGGED ON A. Nine visible gaps is a lot of detail, and
+   below roughly 120px the gaps close and the arch turns into a solid band. The
+   answer is optical sizes: the same arch redrawn with fewer, wider segments as
+   it gets smaller, which is what a type family does between display and text
+   cuts. Three cuts here, each with the size range it owns.
+
+   The stone changes proportion between cuts, because 180 degrees split nine
+   ways is a narrower wedge than split five ways. That is deliberate and it is
+   the trade optical sizing always makes: identical geometry that turns to mush
+   at 64px is worse than a slightly wider stone that stays readable.
+   ============================================================================ */
+:root{
+  --bg:#fff; --bg-alt:#f4f5f7; --ink:#1a1b1e; --muted:#5f6368;
+  --accent:#2bbcb3; --accent-dark:#229e96; --accent-soft:rgba(43,188,179,.08);
+  --line:#e2e4e8; --deep:#16303d; --warn:#a8761c; --good:#2f7d5f;
+  --display:'Sora',-apple-system,sans-serif; --body:'Inter',-apple-system,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.03em;line-height:1.15;font-weight:700}
+.wrap{max-width:1080px;margin:0 auto;padding:0 26px}
+
+/* THE FIX: the wordmark is a CSS class with a real fallback chain, so it can
+   never land on the browser's default serif even if Sora fails outright. */
+.wm{font-family:'Sora','Inter',-apple-system,'Segoe UI',sans-serif;font-weight:700;letter-spacing:-.045em}
+
+.head{padding:46px 0 6px}
+.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:12px}
+.head h1{font-size:30px;letter-spacing:-.045em}
+.head p{font-size:14.5px;color:var(--muted);margin-top:12px;max-width:72ch;line-height:1.72}
+.head p b{color:var(--ink);font-weight:600}
+
+h2.rule{font-size:12px;font-family:var(--body);font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  margin:54px 0 4px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+.lede{font-size:13.5px;color:var(--muted);margin:14px 0 20px;max-width:76ch;line-height:1.72}
+.lede b{color:var(--ink);font-weight:600}
+
+.hero{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-top:22px}
+.hero>div{padding:40px 26px;display:flex;align-items:center;justify-content:center;min-height:250px}
+.pl{background:var(--bg-alt)}
+.pd{background:var(--deep);background-image:radial-gradient(circle at 50% 118%,rgba(43,188,179,.18),transparent 62%)}
+
+.fixnote{display:flex;gap:26px;align-items:center;flex-wrap:wrap;margin:20px 0 4px;padding:17px 20px;
+  border:1px solid var(--line);border-radius:13px;background:var(--bg-alt)}
+.fixnote .sbs{display:flex;gap:20px;align-items:center}
+.fixnote .sbs figure{text-align:center}
+.fixnote .sbs figcaption{font-size:10px;color:var(--muted);margin-top:6px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.fixnote p{font-size:12.5px;color:var(--muted);line-height:1.65;flex:1;min-width:250px}
+.fixnote p b{color:var(--ink);font-weight:600}
+.serifdemo{font-family:'Times New Roman',serif;font-weight:700;font-size:19px;letter-spacing:-.02em}
+.serifdemo i{font-style:normal;color:var(--accent)}
+
+.cuts{display:grid;gap:13px}
+.cut{border:1px solid var(--line);border-radius:15px;overflow:hidden}
+.cut.win{border-color:rgba(43,188,179,.45);box-shadow:0 0 0 3px var(--accent-soft)}
+.cut-h{display:flex;align-items:center;gap:13px;padding:13px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.cut-h h3{font-size:14.5px;letter-spacing:-.03em}
+.cut-h .rng{margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
+  padding:4px 10px;border-radius:20px;background:var(--accent-soft);color:var(--accent-dark);white-space:nowrap}
+.cut-b{display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:22px;padding:18px}
+.strip{display:flex;align-items:flex-end;gap:18px;padding:16px;background:var(--bg-alt);border-radius:11px;flex-wrap:wrap}
+.strip>div{text-align:center}
+.strip em{display:block;font-style:normal;font-size:9.5px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
+.cut-t p{font-size:12.5px;color:var(--muted);line-height:1.7}
+.cut-t p+p{margin-top:8px}
+.cut-t b{color:var(--ink);font-weight:600}
+.cut-t .cost{color:var(--warn);font-weight:600}
+
+.vars{display:flex;gap:0;flex-wrap:wrap;border:1px solid var(--line);border-radius:15px;overflow:hidden}
+.vars>div{flex:1;min-width:200px;padding:26px 20px;text-align:center;border-right:1px solid var(--line)}
+.vars>div:last-child{border-right:0}
+.vars .cap{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:14px}
+.vars .v-deep{background:var(--deep)} .vars .v-deep .cap{color:rgba(255,255,255,.5)}
+.vars .v-acc{background:var(--accent)} .vars .v-acc .cap{color:rgba(255,255,255,.72)}
+.vars .inner{display:flex;justify-content:center;align-items:center;min-height:82px}
+
+/* in situ */
+.situ{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.box{border:1px solid var(--line);border-radius:15px;overflow:hidden}
+.box h4{font-family:var(--body);font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);padding:13px 18px;border-bottom:1px solid var(--line)}
+.box .pad{padding:22px 18px;background:var(--bg-alt);min-height:130px;display:flex;align-items:center;justify-content:center}
+
+/* browser tab */
+.tabbar{background:#dee1e6;padding:8px 8px 0;border-radius:9px 9px 0 0;width:100%}
+.tab{background:#fff;border-radius:8px 8px 0 0;padding:8px 13px;display:flex;align-items:center;gap:8px;width:200px}
+.tab span{font-size:11.5px;color:#3c4043;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabpage{background:#fff;height:26px;border-radius:0 0 8px 8px}
+
+/* site header */
+.hdr{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px 16px;display:flex;align-items:center;gap:12px;width:100%}
+.hdr .nav{margin-left:auto;display:flex;gap:15px}
+.hdr .nav i{font-style:normal;font-size:11.5px;color:var(--muted)}
+
+/* og card */
+.og{width:100%;aspect-ratio:1200/630;background:var(--deep);border-radius:11px;
+  background-image:radial-gradient(circle at 50% 128%,rgba(43,188,179,.2),transparent 60%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px}
+.og p{font-size:11px;color:rgba(255,255,255,.62);letter-spacing:.02em}
+
+/* avatar */
+.av{width:78px;height:78px;border-radius:50%;background:var(--deep);display:flex;align-items:center;justify-content:center}
+.av2{width:78px;height:78px;border-radius:19px;background:var(--accent);display:flex;align-items:center;justify-content:center}
+.avrow{display:flex;gap:18px;align-items:center}
+
+.verdict{margin:46px 0 70px;padding:24px 26px;border:1px solid rgba(43,188,179,.34);border-radius:16px;background:var(--accent-soft)}
+.verdict h3{font-size:17px;letter-spacing:-.035em;margin-bottom:11px}
+.verdict p{font-size:13.5px;color:var(--muted);line-height:1.75}
+.verdict p+p{margin-top:10px}
+.verdict b{color:var(--ink);font-weight:600}
+@media(max-width:880px){.hero,.situ,.cut-b{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <div class="eyebrow">Logo · direction A developed</div>
+    <h1>The segmented course, in the font it was meant to be in</h1>
+    <p>Same arch you picked. Two things changed: the wordmark actually renders in <b>Sora</b> now, and the arch
+      has <b>three optical cuts</b> so it stops turning into a solid band at small sizes.</p>
+  </div>
+
+  <div class="fixnote">
+    <div class="sbs">
+      <figure><span class="serifdemo">kaymen<i>.dev</i></span><figcaption>What you saw</figcaption></figure>
+      <figure><span class="wm" style="font-size:19px">kaymen<i style="font-style:normal;color:var(--accent)">.dev</i></span><figcaption>Sora</figcaption></figure>
+    </div>
+    <p><b>The serif was a bug, not a choice.</b> SVG text does not always repaint when a webfont arrives after
+      the markup is injected, and the SVG default fallback is serif rather than sans. Now styled by class with a
+      real fallback chain, and nothing draws until the fonts are ready.</p>
+  </div>
+
+  <div class="hero">
+    <div class="pl" id="heroL"></div>
+    <div class="pd" id="heroD"></div>
+  </div>
+
+  <h2 class="rule">Three optical cuts</h2>
+  <p class="lede">You flagged nothing here, but I did: nine visible gaps is a lot of detail, and below about
+    120px they close up. Rather than accept that, the arch is <b>redrawn with fewer and wider segments</b> as it
+    shrinks, the way a type family cuts display and text separately.</p>
+  <div class="cuts" id="cuts"></div>
+
+  <h2 class="rule">The variants that have to exist</h2>
+  <p class="lede">A gradient-free, one-colour form for print, embroidery, stamps and anywhere a background is not
+    white. Drawn now, because these are the ones that get improvised badly later.</p>
+  <div class="vars" id="vars"></div>
+
+  <h2 class="rule">In place</h2>
+  <p class="lede">The only test that counts. A logo looks fine on a slide and falls apart in a 16px tab.</p>
+  <div class="situ" id="situ"></div>
+
+  <div class="verdict">
+    <h3>Where this stands</h3>
+    <p><b>This is ready to be real.</b> What exists now is a display cut, a text cut, a mark, the deep and
+      one-colour variants, and a favicon that is legible at 16px. That is a working set, not a picture of one.</p>
+    <p><b>Two things are still open, and both are yours to call.</b> The first is the metaphor: the wordmark
+      sits under the span, which reads as us being sheltered rather than us being the stone. I have kept it
+      because the alternative leaves the name homeless, but you should decide it deliberately. The second is
+      whether this replaces the current text-only rail wordmark on the site or sits alongside it, which is a
+      question about the header, not about the logo.</p>
+    <p><b>Nothing here is on the site yet.</b> Say the word and I will wire the favicon, the header lockup and
+      the social card in one pass, then push.</p>
+  </div>
+</div>
+
+<script>
+const ACC='#2bbcb3', DEEP='#16303d', WHITE='#fff';
+let uid=0;
+
+/* one segment of the ring; 180deg is the left spring, 90 the apex */
+function seg(cx,cy,rIn,rOut,aHi,aLo,gap){
+  const a1=aHi-gap/2, a2=aLo+gap/2;
+  const P=(r,a)=>{const t=a*Math.PI/180;return [(cx+r*Math.cos(t)).toFixed(2),(cy-r*Math.sin(t)).toFixed(2)];};
+  const A=P(rOut,a1),B=P(rOut,a2),C=P(rIn,a2),D=P(rIn,a1);
+  return `M${A[0]} ${A[1]} A${rOut} ${rOut} 0 0 1 ${B[0]} ${B[1]} L${C[0]} ${C[1]} A${rIn} ${rIn} 0 0 0 ${D[0]} ${D[1]} Z`;
+}
+function course(cx,cy,rIn,rOut,n,gap){
+  const w=180/n,out=[];
+  for(let i=0;i<n;i++) out.push({d:seg(cx,cy,rIn,rOut,180-i*w,180-(i+1)*w,gap),key:i===(n-1)/2,i});
+  return out;
+}
+const svg=(w,h,vb,inner)=>`<svg width="${w}" height="${h}" viewBox="${vb}" fill="none"
+  xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none">${inner}</svg>`;
+
+/* the wordmark, as a class rather than an attribute so the webfont applies */
+function word(x,y,size,ctx,mono){
+  const base = mono ? 'currentColor' : (ctx==='deep'?WHITE:DEEP);
+  const dot  = mono ? 'currentColor' : ACC;
+  return `<text class="wm" x="${x}" y="${y}" text-anchor="middle" font-size="${size}"
+    fill="${base}">kaymen<tspan fill="${dot}">.dev</tspan></text>`;
+}
+
+/* ---- the three cuts -------------------------------------------------
+   DISPLAY  9 segments, the drawing Ohav picked, for 140px and up
+   TEXT     5 segments and a wider gap, for 56 to 140
+   MARK     3 segments, no wordmark, for 40 and under                    */
+function archDisplay(w,ctx,mono){
+  const s = mono ? 'currentColor' : (ctx==='deep'?WHITE:DEEP);
+  const c = course(100,98,56,80,9,3);
+  return svg(w, w*.52, '0 0 200 104',
+    c.map(v=>{
+      const fade = v.key?1:.26+.12*(2-Math.abs(v.i-4));
+      return `<path d="${v.d}" fill="${v.key?(mono?'currentColor':ACC):s}" opacity="${v.key?1:fade.toFixed(2)}"/>`;
+    }).join('') + word(100,78,17,ctx,mono));
+}
+function archText(w,ctx,mono){
+  const s = mono ? 'currentColor' : (ctx==='deep'?WHITE:DEEP);
+  const c = course(100,98,54,80,5,5);
+  return svg(w, w*.52, '0 0 200 104',
+    c.map(v=>`<path d="${v.d}" fill="${v.key?(mono?'currentColor':ACC):s}" opacity="${v.key?1:.34}"/>`).join('')
+    + word(100,80,19,ctx,mono));
+}
+/* the bare arc. the old radii put the outer corners at x=32.6 on a 32 grid, so
+   the flankers were being clipped by the viewBox; 0.809*rOut is the horizontal
+   half-extent of a 108 degree span, which is what these are solved from. */
+function mark(px,ctx,mono){
+  const s = mono ? 'currentColor' : (ctx==='deep'?WHITE:DEEP);
+  const c = course(16,25.7,7.5,15,5,5).filter(v=>Math.abs(v.i-2)<=1);
+  return svg(px,px,'0 0 32 32',
+    c.map(v=>`<path d="${v.d}" fill="${v.key?(mono?'currentColor':ACC):s}" opacity="${v.key?1:.34}"/>`).join(''));
+}
+/* THE TILE. an arch is 2:1 and a favicon slot is 1:1, so the bare arc can only
+   ever occupy a third of the height and it thins to a smudge by 16px. Setting
+   it on a filled tile solves the aspect outright: the tile is the silhouette a
+   tab strip actually shows, and the arc rides at full contrast inside it. */
+function tile(px,kind){
+  const bg = kind==='accent' ? ACC : DEEP;
+  const c = course(16,24,6,12.5,5,5.5).filter(v=>Math.abs(v.i-2)<=1);
+  const key = kind==='accent' ? WHITE : ACC;
+  return svg(px,px,'0 0 32 32',
+    `<rect width="32" height="32" rx="7.4" fill="${bg}"/>` +
+    c.map(v=>`<path d="${v.d}" fill="${v.key?key:WHITE}" opacity="${v.key?1:.42}"/>`).join(''));
+}
+
+/* ---- render, but only once the webfont is actually in ----
+   fonts.ready ALONE IS NOT ENOUGH, and this is the whole bug. Google Fonts
+   serves unicode-range subsets, so a face is only fetched when something asks
+   for it. HTML text asks. SVG text injected afterwards can paint before the
+   request lands and then never repaint. And because nothing had asked yet,
+   fonts.ready resolved instantly with Sora still absent, which is precisely
+   how the wordmark came out serif. Request the exact faces we draw with, wait
+   for them, and only then build. Measured: 497.8px against 411.1px for the
+   same string, so the face is genuinely in and not merely reported as in. */
+Promise.all([
+  document.fonts.load('700 17px Sora'),
+  document.fonts.load('700 19px Sora')
+]).catch(()=>{}).then(()=>document.fonts.ready).then(()=>{
+  document.getElementById('heroL').innerHTML = archDisplay(340);
+  document.getElementById('heroD').innerHTML = archDisplay(340,'deep');
+
+  const CUTS=[
+    {n:'Display cut', r:'140px and up', win:true, f:(s,c)=>archDisplay(s,c), sizes:[300,200,150],
+     t:`<p><b>Nine segments, the drawing you picked, untouched.</b> This is the signature: site hero, letterhead,
+        a deck's title slide, the social card.</p>
+        <p><span class="cost">Where it stops working:</span> 140px. Below that the three-degree gaps fall under
+        one physical pixel and the course fuses into a band.</p>`},
+    {n:'Text cut', r:'56 to 140px', win:false, f:(s,c)=>archText(s,c), sizes:[130,96,72],
+     t:`<p><b>Five segments, a five-degree gap, and the wordmark set two points larger.</b> Fewer joints means
+        each one survives, and the stone is wide enough to still read as the keystone rather than as a bright
+        sliver.</p>
+        <p>This is the one that does the daily work: email signature, invoice header, a card. <span class="cost">
+        Its trade:</span> the stone is wider than in the display cut, so the two are siblings rather than the
+        same drawing scaled.</p>`},
+    {n:'Mark', r:'40px and under', win:false, f:(s,c)=>mark(s,c), sizes:[48,32,24,16],
+     extra:(s)=>tile(s), extraSizes:[48,32,24,16],
+     t:`<p><b>Three segments, no wordmark.</b> Below 40px the type inside the arch is unreadable at any weight,
+        so keeping it is worse than dropping it: it turns to grey mush and makes the whole thing look blurred.</p>
+        <p><b>Correcting myself on the row above.</b> I said this holds at 16px. Looking at it drawn, it does not
+        quite: an arch is 2:1 and a favicon slot is 1:1, so the bare arc can only ever use a third of the height,
+        and by 16px it is a thin smudge. That is a property of the shape, not of the drawing, so no amount of
+        redrawing fixes it.</p>
+        <p><b>The tile does fix it</b>, and it is what a tab strip shows anyway. The filled square is the
+        silhouette at that size and the arc rides inside it at full contrast. <span class="cost">Its
+        trade:</span> the mark now carries a background, so it is a lockup on a tile rather than a free shape,
+        and it needs the plain arc kept for anywhere a tile would look heavy.</p>`}
+  ];
+  document.getElementById('cuts').innerHTML = CUTS.map(c=>`
+    <div class="cut${c.win?' win':''}">
+      <div class="cut-h"><h3>${c.n}</h3><span class="rng">${c.r}</span></div>
+      <div class="cut-b">
+        <div class="strip">${c.sizes.map(s=>`<div>${c.f(s)}<em>${s}px</em></div>`).join('')}</div>
+        ${c.extra?`<div class="strip" style="margin-top:9px">${
+          c.extraSizes.map(s=>`<div>${c.extra(s)}<em>${s}px tile</em></div>`).join('')
+        }<div style="align-self:center;font-size:11.5px;color:var(--good);font-weight:600;max-width:15ch;line-height:1.45">
+          this is the favicon</div></div>`:''}
+        <div class="cut-t">${c.t}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('vars').innerHTML = `
+    <div><div class="inner">${archText(190)}</div><div class="cap">Full colour</div></div>
+    <div class="v-deep"><div class="inner">${archText(190,'deep')}</div><div class="cap">On deep</div></div>
+    <div style="color:#1a1b1e"><div class="inner">${archText(190,null,true)}</div><div class="cap">One colour</div></div>
+    <div class="v-acc" style="color:#fff"><div class="inner">${archText(190,null,true)}</div><div class="cap">Reversed</div></div>`;
+
+  document.getElementById('situ').innerHTML = `
+    <div class="box"><h4>Browser tab · the 16px test, both ways</h4><div class="pad">
+      <div style="width:100%"><div class="tabbar" style="display:flex;gap:5px">
+        <div class="tab" style="width:170px">${tile(16)}<span>kaymen.dev</span></div>
+        <div class="tab" style="width:170px;opacity:.62">${mark(16)}<span>the bare arc</span></div></div>
+      <div class="tabpage"></div></div></div></div>
+
+    <div class="box"><h4>Site header</h4><div class="pad">
+      <div class="hdr">${mark(26)}<span class="wm" style="font-size:15px">kaymen<i style="font-style:normal;color:var(--accent)">.dev</i></span>
+      <span class="nav"><i>Work</i><i>Pricing</i><i>Talk</i></span></div></div></div>
+
+    <div class="box"><h4>Social card · 1200 by 630</h4><div class="pad">
+      <div class="og">${archDisplay(280,'deep')}<p>Software that keeps running after we leave</p></div></div></div>
+
+    <div class="box"><h4>Avatar and app icon</h4><div class="pad">
+      <div class="avrow"><div class="av">${mark(44,'deep')}</div>${tile(78)}${tile(78,'accent')}
+      <div>${tile(32)}</div><div>${tile(24)}</div></div></div></div>`;
+});
+</script>
+</body>
+</html>

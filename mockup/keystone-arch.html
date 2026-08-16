@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kaymen.dev · keystone, flanked, and the arch lockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   Ohav sent the Keystone Aggregates mark and said: "look how this goes over
+   here the keystone is clear."
+
+   It is, and it corrects me. My earlier read said the cup problem was aspect
+   ratio plus the flat base. The Pennsylvania keystone breaks BOTH of those
+   rules. It is taller than it is wide and its bottom is flat, and nobody has
+   ever mistaken it for a cup. So that diagnosis was incomplete.
+
+   What it actually has is SHOULDERS. The sides flare outward below the top
+   edge and only then taper in. No vessel does that: a cup cannot bulge wider
+   below its rim or you could not stack, pour or hold it. One profile change
+   kills the reading permanently, and it costs neither the proportion nor the
+   flat base. That is a better fix than either of mine.
+
+   Two of his three asks follow from that, and one goes further:
+     1. Drop the K. The silhouette alone can carry it.
+     2. Flank it with its neighbours, so it is visibly one stone in a course.
+     3. Build the arch, techy, with the wordmark in the span beneath the stone.
+
+   ON 3, THE HONEST CAVEAT, stated in the verdict: an arch with the wordmark
+   inside it is a LOCKUP, not a mark. It cannot be a favicon. So each arch here
+   is drawn with its reduction beside it, because the reduction is the part
+   that has to survive, and a lockup that has no small form is half a job.
+   ============================================================================ */
+:root{
+  --bg:#ffffff; --bg-alt:#f4f5f7; --ink:#1a1b1e; --muted:#5f6368;
+  --accent:#2bbcb3; --accent-dark:#229e96; --accent-soft:rgba(43,188,179,.08);
+  --line:#e2e4e8; --deep:#16303d; --deep-2:#0e2029;
+  --warn:#a8761c; --good:#2f7d5f; --bad:#b0413e; --bad-soft:rgba(176,65,62,.07);
+  --display:'Sora',-apple-system,sans-serif; --body:'Inter',-apple-system,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.03em;line-height:1.15;font-weight:700}
+.wrap{max-width:1080px;margin:0 auto;padding:0 26px}
+.head{padding:46px 0 6px}
+.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:12px}
+.head h1{font-size:30px;letter-spacing:-.045em}
+.head p{font-size:14.5px;color:var(--muted);margin-top:12px;max-width:72ch;line-height:1.72}
+.head p b{color:var(--ink);font-weight:600}
+
+.correct{margin:24px 0 4px;padding:19px 22px;border:1px solid rgba(176,65,62,.3);border-left:3px solid var(--bad);
+  border-radius:12px;background:var(--bad-soft)}
+.correct h4{font-family:var(--body);font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--bad);margin-bottom:9px}
+.correct p{font-size:13.5px;color:var(--muted);line-height:1.72}
+.correct p+p{margin-top:8px}
+.correct b{color:var(--ink);font-weight:600}
+
+h2.rule{font-size:12px;font-family:var(--body);font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  margin:54px 0 4px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+.lede{font-size:13.5px;color:var(--muted);margin:14px 0 20px;max-width:76ch;line-height:1.72}
+.lede b{color:var(--ink);font-weight:600}
+
+.shelf{display:flex;align-items:flex-end;gap:34px;flex-wrap:wrap;padding:26px 24px;border:1px solid var(--line);border-radius:16px;background:var(--bg-alt)}
+.shelf figure{text-align:center}
+.shelf figcaption{font-size:11.5px;color:var(--muted);margin-top:11px;line-height:1.5}
+.shelf figcaption b{display:block;color:var(--ink);font-weight:600;font-size:12.5px;margin-bottom:2px}
+.shelf .x{font-family:var(--display);font-size:26px;font-weight:800;color:#c9ced4;padding-bottom:40px}
+
+.cand{border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:14px}
+.cand.win{border-color:rgba(43,188,179,.45);box-shadow:0 0 0 3px var(--accent-soft)}
+.cand-h{display:flex;align-items:center;gap:14px;padding:15px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.cand-h .id{width:26px;height:26px;border-radius:8px;background:var(--bg-alt);color:var(--muted);font-family:var(--display);
+  font-weight:800;font-size:11.5px;display:flex;align-items:center;justify-content:center;flex:none}
+.cand.win .cand-h .id{background:var(--accent);color:#fff}
+.cand-h h3{font-size:15.5px;letter-spacing:-.03em}
+.cand-h .tag{margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;padding:4px 10px;
+  border-radius:20px;background:var(--bg-alt);color:var(--muted);white-space:nowrap}
+.cand.win .cand-h .tag{background:var(--accent-soft);color:var(--accent-dark)}
+.cand-b{display:grid;grid-template-columns:minmax(0,330px) minmax(0,1fr);gap:24px;padding:20px}
+.sizes{display:flex;align-items:flex-end;gap:15px;padding:16px 18px;background:var(--bg-alt);border-radius:12px}
+.sizes>div{text-align:center}
+.sizes em{display:block;font-style:normal;font-size:9.5px;color:var(--muted);margin-top:7px;font-variant-numeric:tabular-nums}
+.ondeep{background:var(--deep);border-radius:12px;padding:15px 18px;margin-top:10px;display:flex;align-items:center;gap:13px}
+.ondeep span{font-family:var(--display);font-weight:700;font-size:13.5px;color:#fff;letter-spacing:-.02em}
+.ondeep span i{font-style:normal;color:var(--accent)}
+.cand-t p{font-size:13px;color:var(--muted);line-height:1.72}
+.cand-t p+p{margin-top:9px}
+.cand-t b{color:var(--ink);font-weight:600}
+.cand-t .cost{color:var(--warn);font-weight:600}
+
+/* arch lockups */
+.locks{display:grid;gap:14px}
+.lock{border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.lock.win{border-color:rgba(43,188,179,.45);box-shadow:0 0 0 3px var(--accent-soft)}
+.lock-h{display:flex;align-items:center;gap:14px;padding:15px 20px;border-bottom:1px solid var(--line)}
+.lock-h .id{width:26px;height:26px;border-radius:8px;background:var(--bg-alt);color:var(--muted);font-family:var(--display);
+  font-weight:800;font-size:11.5px;display:flex;align-items:center;justify-content:center;flex:none}
+.lock.win .lock-h .id{background:var(--accent);color:#fff}
+.lock-h h3{font-size:15.5px;letter-spacing:-.03em}
+.lock-h .tag{margin-left:auto;font-size:10px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;padding:4px 10px;
+  border-radius:20px;background:var(--bg-alt);color:var(--muted)}
+.lock.win .lock-h .tag{background:var(--accent-soft);color:var(--accent-dark)}
+.lock-b{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.lock-b>div{padding:26px 24px;display:flex;align-items:center;justify-content:center;min-height:190px}
+.pane-l{background:var(--bg-alt)}
+.pane-d{background:var(--deep);background-image:radial-gradient(circle at 50% 120%,rgba(43,188,179,.16),transparent 62%)}
+.lock-f{display:flex;align-items:center;gap:26px;padding:16px 20px;border-top:1px solid var(--line);flex-wrap:wrap}
+.lock-f .red{display:flex;align-items:flex-end;gap:13px}
+.lock-f .red>div{text-align:center}
+.lock-f .red em{display:block;font-style:normal;font-size:9.5px;color:var(--muted);margin-top:6px}
+.lock-f p{font-size:12.5px;color:var(--muted);line-height:1.65;flex:1;min-width:230px}
+.lock-f p b{color:var(--ink);font-weight:600}
+.lock-f p .cost{color:var(--warn);font-weight:600}
+
+.verdict{margin:48px 0 70px;padding:24px 26px;border:1px solid rgba(43,188,179,.34);border-radius:16px;background:var(--accent-soft)}
+.verdict h3{font-size:17px;letter-spacing:-.035em;margin-bottom:11px}
+.verdict p{font-size:13.5px;color:var(--muted);line-height:1.75}
+.verdict p+p{margin-top:10px}
+.verdict b{color:var(--ink);font-weight:600}
+@media(max-width:880px){.cand-b,.lock-b{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <div class="eyebrow">Logo · after the Keystone Aggregates reference</div>
+    <h1>The reference wins on shoulders, not on proportion</h1>
+    <p>The Pennsylvania keystone is <b>taller than it is wide</b> and has a <b>flat bottom</b>. Those are the two
+      properties I said were causing the cup reading, and it has both, and it still reads instantly as a stone.
+      So the diagnosis needed correcting before drawing anything else.</p>
+  </div>
+
+  <div class="correct">
+    <h4>Correcting my earlier read</h4>
+    <p>What the reference actually has is <b>shoulders</b>. The sides flare outward below the top edge and only
+      then taper in. <b>No vessel can do that.</b> A cup cannot bulge wider below its rim or you could not stack
+      it, pour from it or hold it, so the shape stops being readable as one the moment the flare appears.</p>
+    <p>That is a better fix than either of mine, because it costs nothing: the proportion and the flat base both
+      survive, and the letter can stay inside if you want it. <b>One profile change, permanently.</b></p>
+  </div>
+
+  <h2 class="rule">First, the silhouette</h2>
+  <p class="lede">Same three shapes at the same size. The only difference in the third is where the sides go
+    between the top edge and the waist.</p>
+  <div class="shelf" id="shelf"></div>
+
+  <h2 class="rule">Your two asks, drawn</h2>
+  <p class="lede">Dropping the K, and flanking the stone with its neighbours so it is visibly <b>one stone in a
+    course</b> rather than a shape on its own.</p>
+  <div id="cands"></div>
+
+  <h2 class="rule">The arch lockup</h2>
+  <p class="lede">Wordmark in the span beneath the stone, three ways of reading "techy". Each is shown on light
+    and on deep, and each is shown <b>reduced</b>, because the reduction is the part that has to survive: an arch
+    with type inside it can never be a favicon.</p>
+  <div class="locks" id="locks"></div>
+
+  <div class="verdict">
+    <h3>What I would do</h3>
+    <p><b>Take B as the mark and lockup C as the signature.</b> They are the same object at two sizes, and that
+      is not a figure of speech: B is literally the three centre segments of the ring that C draws, out of the
+      same function at the same radii. The favicon and the letterhead are one drawing, not two that resemble
+      each other. Flanking the stone, your second idea, is what makes the small size legible, so it is doing
+      real work and not decoration.</p>
+    <p><b>A is the strongest shape on this page and it does not belong to that system.</b> The shouldered
+      silhouette is a stylisation, the way the Pennsylvania keystone is, rather than a segment of an actual
+      ring, so it cannot be lifted out of the arch: the centre stone of a real arch has no shoulders. Shoulders
+      and neighbours are two different answers to the same problem. Either is fine on its own. Using both is
+      what I would avoid, because then the stone has two shapes and nothing is the mark.</p>
+    <p><b>One thing to decide, because it is a real question and not a nitpick.</b> Putting <em>kaymen.dev</em>
+      under the arch reads as us being the thing sheltered by it. The metaphor you liked runs the other way: we
+      are the stone, and the client's business is what stays standing underneath. It is a stronger idea and it is
+      also harder to use, because the wordmark has to go somewhere. C keeps the name under the span and puts the
+      accent on the stone, which is the closest compromise. Worth knowing you are making that trade.</p>
+    <p><b>And the caveat that outlives all of this:</b> an arch lockup is a signature, not a system. You still
+      need the small mark, the deep-background variant and a one-colour version for anywhere that will not take
+      a gradient. Those are drawn here rather than promised, which is why the reduction strip sits under every
+      lockup.</p>
+  </div>
+</div>
+
+<script>
+const ACC='#2bbcb3', ACCD='#229e96', DEEP='#16303d', WHITE='#ffffff', MUT='#a6adb4';
+let uid=0;
+const KPATH='M8.6 7 H12.2 V14.6 L19.4 7 H24.2 L16.1 15.6 L24.6 25 H19.7 L12.2 16.7 V25 H8.6 Z';
+const svg=(px,inner,vb='0 0 32 32',h)=>`<svg width="${px}" height="${h||px}" viewBox="${vb}" fill="none"
+  xmlns="http://www.w3.org/2000/svg" style="display:block;flex:none">${inner}</svg>`;
+
+/* ---------- silhouettes ---------- */
+/* the old trapezoid: no flare, so nothing stops the vessel reading */
+const FLAT='M4.8 3.3 H27.2 L23.9 28.7 H8.1 Z';
+/* SHOULDERED. top edge narrow, sides flare OUT to the waist at y=11, then taper
+   in to the base. the flare is the entire fix. */
+const STONE='M11.4 4.4 H20.6 L26.6 11 L22.6 27.6 H9.4 L5.4 11 Z';
+
+function cup(px){return svg(px,`
+  <path d="M7.6 4.6 H24.4 L21.4 28.4 H10.6 Z" fill="none" stroke="${MUT}" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M8.1 9.2 H23.9" stroke="${MUT}" stroke-width="1.2" opacity=".55"/>`);}
+
+function plain(px,d,ctx){
+  const c = ctx==='deep' ? WHITE : DEEP;
+  return svg(px,`<path d="${d}" fill="${c}" stroke="${c}" stroke-width="1.3" stroke-linejoin="round"/>`);
+}
+function withK(px,ctx){
+  const s = ctx==='deep' ? WHITE : DEEP, k = ctx==='deep' ? DEEP : ACC;
+  return svg(px,`<path d="${STONE}" fill="${s}" stroke="${s}" stroke-width="1.3" stroke-linejoin="round"/>
+    <g transform="translate(2.21,3.69) scale(0.83)"><path d="${KPATH}" fill="${k}"/></g>`);
+}
+
+/* ---------- voussoir maths ----------
+   one segment of the ring between rIn and rOut, spanning [aLo,aHi] degrees,
+   measured from the springing line: 180 is the left spring, 90 the apex.
+   sweep 1 going down in angle (left to right over the top), 0 coming back. */
+function seg(cx,cy,rIn,rOut,aHi,aLo,gap){
+  const a1=aHi-gap/2, a2=aLo+gap/2;
+  const P=(r,a)=>{const t=a*Math.PI/180;return [(cx+r*Math.cos(t)).toFixed(2),(cy-r*Math.sin(t)).toFixed(2)];};
+  const A=P(rOut,a1),B=P(rOut,a2),C=P(rIn,a2),D=P(rIn,a1);
+  return `M${A[0]} ${A[1]} A${rOut} ${rOut} 0 0 1 ${B[0]} ${B[1]} L${C[0]} ${C[1]} A${rIn} ${rIn} 0 0 0 ${D[0]} ${D[1]} Z`;
+}
+/* n segments across the half circle, indexed left to right; the middle one is
+   the keystone, which is why n must be odd */
+function course(cx,cy,rIn,rOut,n,gap){
+  const w=180/n, out=[];
+  for(let i=0;i<n;i++) out.push({d:seg(cx,cy,rIn,rOut,180-i*w,180-(i+1)*w,gap), key:i===(n-1)/2, i});
+  return out;
+}
+
+/* ---------- flanked mark: three stones, keystone centre ---------- */
+function flanked(px,ctx,letter){
+  const s = ctx==='deep' ? WHITE : DEEP, k = ctx==='deep' ? DEEP : ACC;
+  const c = course(16,37,15,30,9,2.6).filter(v=>Math.abs(v.i-4)<=1);
+  const id='fk'+(uid++);
+  const mask = letter ? `<mask id="${id}"><rect width="32" height="32" fill="#fff"/>
+      <g transform="translate(9.55,10.2) scale(0.42)"><path d="${KPATH}" fill="#000"/></g></mask>` : '';
+  return svg(px, mask + c.map(v=>
+    `<path d="${v.d}" fill="${v.key?s:s}" opacity="${v.key?1:.32}"
+       ${v.key&&letter?`mask="url(#${id})"`:''}/>`).join(''));
+}
+
+/* ---------- the arch lockups ---------- */
+/* T1 segmented: discrete blocks, gaps you can see, keystone in accent */
+function archA(w,ctx){
+  const s = ctx==='deep' ? WHITE : DEEP, tx = ctx==='deep' ? WHITE : DEEP;
+  const c = course(100,98,56,80,9,3);
+  return svg(w, c.map(v=>{
+    const fade = v.key ? 1 : .26 + .12*(2-Math.abs(v.i-4));
+    return `<path d="${v.d}" fill="${v.key?ACC:s}" opacity="${v.key?1:fade.toFixed(2)}"/>`;
+  }).join('') + `
+    <text x="100" y="78" text-anchor="middle" font-family="Sora" font-weight="700" font-size="17"
+      letter-spacing="-0.6" fill="${tx}">kaymen<tspan fill="${ACC}">.dev</tspan></text>`,
+    '0 0 200 104', w*.52);
+}
+/* T2 circuit: one thin band, nodes at every joint, keystone solid */
+function archB(w,ctx){
+  const s = ctx==='deep' ? WHITE : DEEP, tx = ctx==='deep' ? WHITE : DEEP;
+  const c = course(100,98,58,78,9,0);
+  const node=(a,r)=>{const t=a*Math.PI/180;return `<circle cx="${(100+r*Math.cos(t)).toFixed(2)}" cy="${(98-r*Math.sin(t)).toFixed(2)}" r="2.6" fill="${ACC}"/>`;};
+  return svg(w,
+    `<path d="M22 98 A78 78 0 0 1 178 98 L158 98 A58 58 0 0 0 42 98 Z" fill="none" stroke="${s}" stroke-width="1.6" opacity=".45"/>`
+    + `<path d="${c[4].d}" fill="${ACC}"/>`
+    + [180,160,140,120,60,40,20,0].map(a=>node(a,68)).join('')
+    + `<text x="100" y="78" text-anchor="middle" font-family="Sora" font-weight="700" font-size="17"
+        letter-spacing="-0.6" fill="${tx}">kaymen<tspan fill="${ACC}">.dev</tspan></text>`,
+    '0 0 200 104', w*.52);
+}
+/* T3 load arc: the course reads as a filling progress ring, brightest at the
+   stone, and the wordmark sits on the springing line rather than floating */
+function archC(w,ctx){
+  const s = ctx==='deep' ? WHITE : DEEP, tx = ctx==='deep' ? WHITE : DEEP;
+  const gid='g'+(uid++);
+  const c = course(100,98,57,80,11,2.6);
+  return svg(w,
+    `<defs><linearGradient id="${gid}" x1="0" y1="1" x2="0" y2="0">
+       <stop offset="0" stop-color="${s}" stop-opacity=".18"/>
+       <stop offset="1" stop-color="${ACC}" stop-opacity=".95"/></linearGradient></defs>`
+    + c.map(v=>`<path d="${v.d}" fill="${v.key?ACC:`url(#${gid})`}"/>`).join('')
+    + `<path d="M18 100.6 H182" stroke="${s}" stroke-width="1.4" opacity=".28"/>`
+    + `<text x="100" y="82" text-anchor="middle" font-family="Sora" font-weight="700" font-size="18"
+        letter-spacing="-0.7" fill="${tx}">kaymen<tspan fill="${ACC}">.dev</tspan></text>`,
+    '0 0 200 108', w*.54);
+}
+
+/* ---------- render ---------- */
+document.getElementById('shelf').innerHTML = `
+  <figure>${plain(96,FLAT)}<figcaption><b>What I had</b>no flare, so: cup</figcaption></figure>
+  <figure>${cup(96)}<figcaption><b>A tumbler</b>for comparison</figcaption></figure>
+  <div class="x">vs</div>
+  <figure>${plain(96,STONE)}<figcaption><b>Shouldered</b>flare at the waist, so: stone</figcaption></figure>
+  <figure>${withK(96)}<figcaption><b>Shouldered, with K</b>the letter still fits</figcaption></figure>`;
+
+const CANDS=[
+  {id:'A', name:'Shouldered stone, no letter', tag:'Your first ask', win:false,
+   fn:(px,ctx)=>plain(px,STONE,ctx),
+   body:`<p><b>The K is gone and the shape carries it.</b> This is the cleanest thing on the page and the
+     strongest at 16px by a distance, because there is one silhouette and no interior detail to lose.</p>
+     <p><span class="cost">Its cost:</span> it no longer says <em>K</em>, so it leans entirely on being paired
+     with the wordmark. That is normal for a mark of this kind, but it means the mark alone is not identifying
+     until people have seen the pair enough times to learn it.</p>`},
+  {id:'B', name:'Flanked by its course', tag:'Your second ask', win:true,
+   fn:(px,ctx)=>flanked(px,ctx,false),
+   body:`<p><b>Two neighbours, dropped back in weight, and the reading is settled.</b> The stone is now visibly
+     one unit in a course rather than a shape on its own, which is exactly what you said: it is hard to see it
+     as a keystone when there is nothing for it to be the key of.</p>
+     <p>The neighbours are drawn from the same ring as the arch below, so this mark is the literal centre of
+     that lockup rather than a separate drawing. <span class="cost">Its cost:</span> three shapes instead of
+     one. At 16px the flankers are down to a few pixels, which is why they are set at 32 per cent rather than
+     full strength: at that weight they read as context and never compete with the stone.</p>`},
+  {id:'C', name:'Flanked, letter knocked out', tag:'If you want the K kept', win:false,
+   fn:(px,ctx)=>flanked(px,ctx,true),
+   body:`<p>The same mark with the K cut out of the centre stone. <b>Keeps the initial without putting anything
+     inside a container</b>, which was the other half of the cup problem.</p>
+     <p><span class="cost">Its cost:</span> this is the first one that genuinely struggles at 16px. The stone is
+     only about nine pixels wide there and the K's counters close up. If you want the letter kept, this needs a
+     separate simplified drawing for small sizes rather than the same file scaled down.</p>`}
+];
+
+document.getElementById('cands').innerHTML = CANDS.map(c=>`
+  <div class="cand${c.win?' win':''}">
+    <div class="cand-h"><span class="id">${c.id}</span><h3>${c.name}</h3><span class="tag">${c.tag}</span></div>
+    <div class="cand-b">
+      <div>
+        <div class="sizes">${[64,32,24,16].map(s=>`<div>${c.fn(s)}<em>${s}px</em></div>`).join('')}</div>
+        <div class="ondeep">${c.fn(30,'deep')}<span><i>kaymen</i>.dev</span></div>
+      </div>
+      <div class="cand-t">${c.body}</div>
+    </div>
+  </div>`).join('');
+
+const LOCKS=[
+  {id:'A', name:'Segmented course', tag:'Techy · built from blocks', fn:archA, win:false,
+   note:`<b>The arch is assembled, and you can see the joints.</b> Reads as something constructed rather than
+     drawn, and the accent lands only on the stone. <span class="cost">Its cost:</span> nine visible gaps is a
+     lot of detail, and below about 120px wide the gaps close and it turns into a solid band.`},
+  {id:'B', name:'Circuit band', tag:'Techy · nodes and traces', fn:archB, win:false,
+   note:`<b>Thin band, nodes at the joints, solid keystone.</b> The most obviously futuristic of the three and
+     the lightest on the page. <span class="cost">Its cost:</span> it is a circuit diagram, and circuit
+     diagrams are the single most used visual in this industry. It is distinctive against builders, not against
+     software companies.`},
+  {id:'C', name:'Load arc', tag:'Techy · without the clichés', fn:archC, win:true,
+   note:`<b>The course brightens as it climbs, the way a progress ring fills, and peaks at the stone.</b> Techy
+     by behaviour rather than by iconography, so it borrows nothing from circuits or hexagons. The wordmark
+     sits on the springing line, which gives the whole thing a floor. <span class="cost">Its cost:</span> the
+     gradient needs a flat fallback for one-colour printing and embroidery.`}
+];
+
+document.getElementById('locks').innerHTML = LOCKS.map(l=>`
+  <div class="lock${l.win?' win':''}">
+    <div class="lock-h"><span class="id">${l.id}</span><h3>${l.name}</h3><span class="tag">${l.tag}</span></div>
+    <div class="lock-b">
+      <div class="pane-l">${l.fn(300)}</div>
+      <div class="pane-d">${l.fn(300,'deep')}</div>
+    </div>
+    <div class="lock-f">
+      <div class="red">
+        ${[150,96,64].map(s=>`<div>${l.fn(s)}<em>${s}px</em></div>`).join('')}
+        <div>${flanked(24)}<em>24px mark</em></div>
+      </div>
+      <p>${l.note}</p>
+    </div>
+  </div>`).join('');
+</script>
+</body>
+</html>

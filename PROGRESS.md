@@ -1766,3 +1766,70 @@ Stated on screen as the honest weakness: **days-with-a-commit is a proxy, not a 
 20-minute fix and a 10-hour day both count as one, so it reads low on thinking-heavy work.
 
 Still needed from Ohav: the three comparison day rates, sourced.
+
+## 2026-08-16 — The mark: a keystone, not a letter in a box
+
+The site had a letter K in a rounded square, and `favicon.svg` was still the
+pre-redesign one: a blue-to-purple gradient on near-black, four months after the
+palette moved to teal on `--deep`. Every tab and every share carried the old
+brand.
+
+**What the mark is now.** A segmented arch with the keystone in the accent, the
+wordmark in the span beneath it. The logic is the retainer argument as a shape:
+you own the building, we are the stone that keeps it standing.
+
+**The trap, written down because it cost two attempts.** A lone tapered block
+reads as a cup, and Ohav said so unprompted on the first draft. Taper is not
+what separates the two objects: a drinking tumbler and a real voussoir taper
+within a few per cent of each other. It is context. Flanked by its neighbours
+the wedge is one stone in a course; alone it is glassware. So the mark is
+**always three stones or more, never one**.
+
+The icon needed a second correction of the same kind. Three stones over empty
+space read as wings at 192px, which the 24px previews had hidden. Carrying the
+course through the full 180 degrees and dropping two piers to a floor makes it
+a doorway, which nothing turns it back into, and a doorway is roughly square so
+it fills an icon slot instead of hovering in the top third. **Seven segments,
+not nine**: at 16px nine blur into a smooth band and the keystone stops being
+distinguishable from its neighbours.
+
+**Optical cuts, because one drawing does not survive the range.** Display is
+nine segments for 140px and up; below that the three-degree gaps fall under one
+physical pixel and the course fuses into a band. Text is five segments and a
+wider gap for 56 to 140. The gateway is 40 and under. They are siblings, not one
+drawing scaled, and that is deliberate.
+
+**One bug worth remembering.** The wordmark rendered in Times on Ohav's screen
+while the headings around it were Sora. Google Fonts serves unicode-range
+subsets, so a face is only fetched when something asks for it; HTML text asks,
+SVG text injected by script afterwards can paint before the request lands and
+never repaint. `document.fonts.ready` did not help because nothing had asked
+yet, so it resolved instantly with the font still absent. The fix is to request
+the exact faces, wait, and only then draw, plus a fallback chain: SVG's default
+fallback is serif, not sans, so a missed webfont does not degrade quietly here.
+
+### Landed
+
+- `content/logo.js` — the single source. Every path is generated from `seg` and
+  `course`; there are no hand-written path strings and there should never be.
+  `course()` throws on an even segment count, because a course with no middle
+  stone is an arch that has already fallen down.
+- `scripts/build-icons.js` — writes `favicon.svg`, `assets/mark.svg` and the
+  three PNGs by driving installed Chrome over CDP with Node's built-in
+  WebSocket. No new dependency, and it verifies the PNG signature rather than
+  committing an empty file.
+- **`apple-touch-icon` was a no-op.** Both admin and portal pointed it at
+  `favicon.svg`; iOS ignores SVG there and screenshots the page instead. Now a
+  real 180px PNG, and the manifests carry 192/512 plus a maskable.
+- The K is gone from all nine places it was drawn. The tile keeps its gradient
+  and the arch rides on top as a second background layer, so the change is one
+  line per rule rather than markup in nine files.
+- OG cards regenerated with the new mark, and their copy de-dashed. The dead
+  `work-claude-code-desk.png` is deleted.
+
+### Open
+
+- The wordmark sits **under** the span, which reads as us being sheltered rather
+  than us being the stone. The metaphor runs the other way. Kept because the
+  alternative leaves the name homeless; Ohav's call.
+- `assets/og/README.md` still documents the generator's old design note.
