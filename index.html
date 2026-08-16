@@ -166,43 +166,50 @@
     <div class="wrap">
       <div class="prose rv">
         <p class="eyebrow">Pricing</p>
-        <h2 class="sec">Published, because you will ask anyway</h2>
-        <p class="sec-sub">Every build ends in a plan, priced into the contract.</p>
+        <h2 class="sec">Roughly what are we talking about?</h2>
+        <p class="sec-sub">Tick what sounds like you. The number moves as you go.</p>
       </div>
 
-      <div class="plans rv">
-        <div class="plan">
-          <div class="pn">Simple Site</div>
-          <div class="pp">$2,500</div>
-          <div class="pu">to build · about 2 weeks</div>
-          <p class="pb">Loads fast, reads well, and is yours. Site Care at $200/mo keeps it patched and online.</p>
-          <a href="#talk" class="pick" data-track="plan-simple-site">Start with this</a>
+      <div class="nb rv">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 11v5.5M12 7.6v.5"/></svg>
+        <p><b>This is an estimate, not a quote. You are not paying for anything and nothing is booked.</b> It exists so you can see the shape of it before we talk. The real number comes out of that conversation, and it can go down as easily as up.</p>
+      </div>
+
+      <!-- The estimate builder. Options and prices live in script.js so there is
+           one source of truth for them; this is only the shell it renders into. -->
+      <div class="est rv">
+        <div>
+          <div class="step">
+            <h3>1 · What are you replacing?</h3>
+            <div id="estBases"></div>
+          </div>
+
+          <div class="pilot">
+            <b>Not sure which of these you are?</b>
+            <p><span>$750, one week.</span> A written plan and a working prototype of the single thing that matters most, enough to know whether the rest is worth building. <em>Credited in full against the build</em> if you go ahead.</p>
+          </div>
+
+          <div class="step" id="estAddonStep">
+            <h3>2 · What else does it need?</h3>
+            <div id="estAddons"></div>
+          </div>
         </div>
-        <div class="plan">
-          <div class="pn">Keep Running</div>
-          <div class="pp">$600<small>/mo</small></div>
-          <div class="pu">maintenance only</div>
-          <p class="pb">It already exists. Updates, patches, verified backups, and someone who answers when it breaks.</p>
-          <a href="#talk" class="pick" data-track="plan-keep-running">Start with this</a>
-        </div>
-        <div class="plan f">
-          <span class="flag">Most common</span>
-          <div class="pn">Run &amp; Improve</div>
-          <div class="pp">$1,800<small>/mo</small></div>
-          <div class="pu">maintenance + development</div>
-          <p class="pb">Kept alive and moved forward every month. Hours roll over. Most live systems need exactly this.</p>
-          <a href="#talk" class="pick" data-track="plan-run-improve">Start with this</a>
-        </div>
-        <div class="plan">
-          <div class="pn">Product Partner</div>
-          <div class="pp">$4,500+<small>/mo</small></div>
-          <div class="pu">$4,500 to $6,500 / month</div>
-          <p class="pb">We are the product team. Roadmap, releases, on-call, and the architecture that goes with it.</p>
-          <a href="#talk" class="pick" data-track="plan-product-partner">Start with this</a>
+
+        <div class="tot">
+          <span class="lbl" id="estLbl">Starting around</span>
+          <div class="big" id="estTotal"></div>
+          <div class="then">
+            <div class="m" id="estMonthly"></div>
+            <p id="estPlan"></p>
+          </div>
+          <div class="picked" id="estPicked"></div>
+          <div class="flip" id="estFlip" hidden></div>
+          <a href="#talk" class="btn btn-primary" data-track="estimate-talk">Talk it through →</a>
+          <p class="free"><b>No cost, no commitment.</b> A conversation, and a straight answer about whether this is worth building at all.</p>
         </div>
       </div>
 
-      <p class="fine rv">Overflow is $165/hr. Nonprofits get 25% off, publicly and without asking. Not sure which? Sometimes the answer is none of them yet.</p>
+      <p class="fine rv">Overflow beyond the monthly is $125/hr. Nonprofits get 25% off, publicly and without asking. Sometimes the answer is that you should not build anything yet, and we will say so.</p>
     </div>
   </section>
 
