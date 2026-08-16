@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kaymen.dev — build your estimate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   kaymen.dev — the estimate builder
+
+   Ohav's design, and it solves three problems the flat ladder could not:
+
+   1. ONE LADDER FOR BOTH ENDS. A 3-seat brokerage and a 4-campus network use the
+      same control and arrive at different numbers, because the number is built
+      from what they tick rather than picked from a menu somebody else wrote.
+   2. NO PUBLISHED CEILING. The concern was real: print "$8,000 cap" and a client
+      with a $5,000 budget assumes you are coming for the eight. Here the floor
+      is published and the total is a consequence of scope, which is the truth.
+   3. IT QUALIFIES BEFORE THE CALL. What they tick IS the brief. You walk in
+      knowing whether it is a spreadsheet or a platform.
+
+   THE DISCLAIMER IS NOT FINE PRINT. Ohav was explicit: it must be unmissable
+   that nothing is owed and nothing is booked. It is stated at the top, restated
+   beside the number, and the button says "talk it through", not "buy".
+
+   PRICES: the base tiers and the monthlies are the revised lower ladder — a
+   small business on Monday plus spreadsheets has to be able to say yes. The
+   add-on increments are derived from measured build effort in content/stats.js
+   (58 days multi-campus, 35 Torah Tracker, 26 ledger, 18 MSP, 10 bilingual) at
+   $125/hr — but they are INCREMENTS over a base, not whole projects, and they
+   are the part most likely to need Ohav's judgement.
+
+   ONE THING TO WATCH, stated in the note below the mockup: at the top end this
+   deliberately under-quotes against measured effort. That is why crossing the
+   partnership threshold flips the recommendation to "no build fee, 12 months"
+   rather than quoting a number nobody can deliver at.
+   ============================================================================ */
+:root{
+  --bg:#ffffff; --bg-alt:#f4f5f7; --ink:#1a1b1e; --muted:#5f6368;
+  --accent:#2bbcb3; --accent-dark:#229e96;
+  --accent-soft:rgba(43,188,179,.08); --accent-glow:rgba(43,188,179,.18);
+  --line:#e2e4e8; --warn:#a8761c; --warn-soft:rgba(168,118,28,.09);
+  --display:'Sora',-apple-system,BlinkMacSystemFont,sans-serif;
+  --body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --w-page:1120px; --ease:cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.03em;line-height:1.15;font-weight:700}
+a{color:inherit}
+.wrap{max-width:var(--w-page);margin:0 auto;padding:0 26px}
+
+/* mockup chrome */
+.mk-top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--line)}
+.mk-top .wrap{display:flex;align-items:center;gap:14px;height:60px;flex-wrap:wrap}
+.mk-brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.02em}
+.mk-mark{width:28px;height:28px;border-radius:9px;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;background:linear-gradient(150deg,var(--accent) 0%,var(--accent-dark) 100%)}
+.mk-note{padding:38px 0 4px}
+.mk-eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:11px}
+.mk-note h2{font-size:27px;letter-spacing:-.04em}
+.mk-note h2 small{display:block;font-family:var(--body);font-size:13.5px;font-weight:400;color:var(--muted);letter-spacing:0;margin-top:8px}
+.mk-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:22px}
+.mk-col h5{font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-family:var(--body);margin-bottom:7px}
+.mk-col p{font-size:13px;color:var(--muted);line-height:1.65}
+.mk-col p b{color:var(--ink);font-weight:600}
+.mk-col.cost h5{color:var(--warn)}
+.frame{margin:24px 0 56px;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 26px 60px -30px rgba(22,48,61,.22)}
+.frame-bar{display:flex;align-items:center;gap:7px;padding:11px 16px;background:var(--bg-alt);border-bottom:1px solid var(--line)}
+.frame-bar i{width:10px;height:10px;border-radius:50%;background:#d7dae0;display:block}
+.frame-bar em{margin-left:12px;font-style:normal;font-size:11.5px;color:var(--muted)}
+.screen{background:var(--bg);padding:46px 0}
+
+/* section */
+.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:var(--accent-dark)}
+.sec{font-size:31px;letter-spacing:-.045em;margin-top:11px}
+.sec-sub{font-size:14.5px;color:var(--muted);margin-top:10px;max-width:64ch;line-height:1.7}
+.sec-sub b{color:var(--ink);font-weight:600}
+
+/* THE DISCLAIMER — deliberately loud, not fine print */
+.nb{
+  display:flex;align-items:flex-start;gap:13px;margin-top:22px;padding:15px 18px;
+  border:1px solid rgba(43,188,179,.34);border-radius:14px;background:var(--accent-soft);
+  max-width:72ch;
+}
+.nb svg{width:18px;height:18px;flex:none;margin-top:1px;stroke:var(--accent-dark);stroke-width:1.8;fill:none}
+.nb p{font-size:13px;line-height:1.6;color:var(--muted)}
+.nb b{color:var(--ink);font-weight:600}
+
+.build{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:34px;margin-top:30px;align-items:start}
+.step{margin-bottom:26px}
+.step h3{
+  font-family:var(--body);font-size:10.5px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:11px;
+}
+.opt{
+  display:flex;align-items:flex-start;gap:13px;padding:13px 16px;border:1px solid var(--line);
+  border-radius:13px;cursor:pointer;margin-bottom:7px;transition:all .2s var(--ease);
+}
+.opt:hover{border-color:#d7dae0;background:rgba(244,245,247,.5)}
+.opt.on{border-color:rgba(43,188,179,.5);background:var(--accent-soft)}
+.opt input{margin-top:3px;accent-color:var(--accent);flex:none}
+.opt .t{flex:1;min-width:0}
+.opt .t b{display:block;font-size:13.5px;font-weight:600;letter-spacing:-.01em}
+.opt .t span{display:block;font-size:12px;color:var(--muted);margin-top:2px;line-height:1.5}
+.opt .p{
+  font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:-.02em;
+  color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;
+}
+.opt.on .p{color:var(--accent-dark)}
+
+/* the running total */
+.tot{position:sticky;top:80px;border:1px solid var(--line);border-radius:18px;padding:24px 26px;background:#fff}
+.tot .lbl{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.tot .big{
+  font-family:var(--display);font-size:38px;font-weight:800;letter-spacing:-.05em;
+  line-height:1.05;margin-top:6px;font-variant-numeric:tabular-nums;
+}
+.tot .big small{font-family:var(--body);font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0}
+.tot .then{margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.tot .then .m{font-family:var(--display);font-size:23px;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.tot .then .m span{font-family:var(--body);font-size:12.5px;font-weight:500;color:var(--muted);letter-spacing:0}
+.tot .then p{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.55}
+.tot .picked{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:grid;gap:5px}
+.tot .picked div{display:grid;grid-template-columns:1fr auto;gap:10px;font-size:11.5px;color:var(--muted)}
+.tot .picked div b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;width:100%;
+  padding:13px 20px;border-radius:12px;background:var(--accent);color:#fff;
+  font-family:var(--body);font-size:14px;font-weight:600;
+  box-shadow:0 4px 16px var(--accent-glow);transition:all .25s var(--ease);
+}
+.btn:hover{background:var(--accent-dark);transform:translateY(-1px)}
+.tot .free{font-size:11.5px;color:var(--muted);text-align:center;margin-top:11px;line-height:1.5}
+.tot .free b{color:var(--ink);font-weight:600}
+
+/* the partnership flip, once the build gets big enough that a fixed price stops
+   being honest */
+.flip{
+  margin-top:16px;padding:15px 17px;border-radius:14px;background:var(--bg-alt);
+  border:1px solid var(--line);
+}
+.flip b{display:block;font-family:var(--display);font-size:13.5px;font-weight:700;letter-spacing:-.02em;margin-bottom:5px}
+.flip p{font-size:12px;color:var(--muted);line-height:1.6}
+.flip p em{font-style:normal;color:var(--accent-dark);font-weight:600}
+
+@media (max-width:900px){
+  .mk-cols{grid-template-columns:1fr}
+  .build{grid-template-columns:1fr}
+  .tot{position:static}
+  .sec{font-size:25px}
+}
+</style>
+</head>
+<body>
+
+<div class="mk-top">
+  <div class="wrap">
+    <span class="mk-brand"><span class="mk-mark">K</span> kaymen.dev</span>
+    <span style="font-size:12px;color:var(--muted)">the estimate builder — one ladder, both ends of the market</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="mk-note">
+    <p class="mk-eyebrow">Sixth pass · new section</p>
+    <h2>Build your estimate <small>the client assembles the ladder; the number is a consequence of scope</small></h2>
+    <div class="mk-cols">
+      <div class="mk-col">
+        <h5>Why this beats a fixed ladder</h5>
+        <p>A 3-seat brokerage and a 4-campus network use the <b>same control</b> and arrive at different numbers, because the number is built from what they tick rather than picked off a menu somebody else wrote. It also means <b>what they tick is the brief</b> — you walk into the call already knowing whether it is a spreadsheet or a platform.</p>
+      </div>
+      <div class="mk-col">
+        <h5>It publishes a floor, never a ceiling</h5>
+        <p>Your concern was right: print a cap and a client with a $5,000 budget assumes you are coming for the eight. Here <b>only the "from" is published</b> and the total is a consequence of scope. Nobody is anchored to a number that was never about them.</p>
+      </div>
+      <div class="mk-col cost">
+        <h5>What it costs</h5>
+        <p>It <b>under-quotes at the top end</b> — the multi-campus platform measures at ~406 hours, far past what these add-ons total. That is why crossing the threshold flips to <b>no build fee, twelve months</b> instead of quoting a number you cannot deliver at. And a configurator invites <b>anchoring on the low number</b> before scope is understood, so the wording has to keep saying estimate.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="frame">
+  <div class="frame-bar"><i></i><i></i><i></i><em><b>kaymen.dev</b>/#price</em></div>
+  <div class="screen">
+    <div class="wrap">
+      <p class="eyebrow">Pricing</p>
+      <h2 class="sec">Roughly what are we talking about?</h2>
+      <p class="sec-sub">Tick what sounds like you. The number moves as you go, so you can see the shape of it before anyone picks up a phone.</p>
+
+      <div class="nb">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.2"/><path d="M12 11v5.5M12 7.6v.5"/></svg>
+        <p><b>This is an estimate, not a quote. You are not paying for anything and nothing is booked.</b> It exists so you can see roughly what you are looking at before we talk — and so that when we do talk, we are both starting from the same picture. The real number comes out of that conversation, and it can go down as easily as up.</p>
+      </div>
+
+      <div class="build">
+        <div>
+          <div class="step">
+            <h3>1 · What are you replacing?</h3>
+            <div id="bases"></div>
+          </div>
+          <div class="step">
+            <h3>2 · What else does it need?</h3>
+            <div id="addons"></div>
+          </div>
+        </div>
+
+        <div class="tot">
+          <span class="lbl">Starting around</span>
+          <div class="big" id="total">$6,500<small> to build</small></div>
+
+          <div class="then">
+            <div class="m" id="monthly">$450<span>/month after</span></div>
+            <p id="monthlyWhat"></p>
+          </div>
+
+          <div class="picked" id="picked"></div>
+          <div class="flip" id="flip" hidden></div>
+
+          <a href="#talk" class="btn">Talk it through →</a>
+          <p class="free"><b>No cost, no commitment.</b> A conversation, and a straight answer about whether this is even worth building.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------------------------------------------------------------------
+   THE LADDER. Base tiers and monthlies are the revised lower ones — a small
+   business on Monday plus spreadsheets has to be able to say yes. The add-on
+   increments are derived from measured build effort at $125/hr but they are
+   INCREMENTS, not whole projects, and they are the numbers most likely to need
+   Ohav's judgement.
+--------------------------------------------------------------------------- */
+var BASES = [
+  { id:'tool',     from: 2500,  mo: 200,
+    name:'A spreadsheet, or one manual step',
+    note:'One job, done properly. A form, a tracker, a thing you currently do by hand every week.',
+    plan:'Site Care — patched, backed up, monitored, and we answer.' },
+  { id:'stack',    from: 6500,  mo: 450,
+    name:'Monday, Airtable, Excel — and the glue between them',
+    note:'You have the tools. What you do not have is one place where the answer lives.',
+    plan:'Keep Running — the above, plus the small changes as they come up.' },
+  { id:'platform', from: 15000, mo: 1200,
+    name:'Several systems, and the integrations between them',
+    note:'More than one team, more than one tool, and reporting that has to cross all of it.',
+    plan:'Run &amp; Improve — 10 hours of development a month, rolling over one month.' }
+];
+
+var ADDONS = [
+  { id:'mobile',  add: 5000, mo: 300, name:'An app in the App Store and Google Play',
+    note:'Native, in both stores, updated over the air. Apple and Google force SDK bumps — an unmaintained app dies in about 18 months.' },
+  { id:'connect', add: 2500, mo: 0,   name:'Connect to something you already run',
+    note:'A CRM, a PSA, QuickBooks, a bank feed. Per system connected.' },
+  { id:'portal',  add: 2500, mo: 0,   name:'Logins for your own customers',
+    note:'They see their own data and nothing else. Their questions stop arriving by email.' },
+  { id:'tenant',  add: 3500, mo: 300, name:'More than one location, brand or tenant',
+    note:'Separate data, one platform, and reporting that crosses all of them.' },
+  { id:'migrate', add: 1500, mo: 0,   name:'Bring your existing data across',
+    note:'The spreadsheets, the old system, the history. Reconciled, not just imported.' },
+  { id:'lang',    add: 1500, mo: 0,   name:'A second language',
+    note:'Including right-to-left, which is a layout problem rather than a translation one.' },
+  { id:'sso',     add: 2500, mo: 500, name:'SSO, audit trail, compliance',
+    note:'Single sign-on, an immutable log of who did what, and the paperwork that goes with it.' }
+];
+
+var PARTNER_AT = 15000;   // above this a fixed build price stops being honest
+
+var money = function (n) { return '$' + Math.round(n).toLocaleString('en-US'); };
+var base = 'stack';
+var picked = {};
+
+function row(o, type) {
+  var on = type === 'base' ? base === o.id : !!picked[o.id];
+  return '<label class="opt' + (on ? ' on' : '') + '">' +
+    '<input type="' + (type === 'base' ? 'radio" name="base' : 'checkbox') + '" value="' + o.id + '"' + (on ? ' checked' : '') + '>' +
+    '<span class="t"><b>' + o.name + '</b><span>' + o.note + '</span></span>' +
+    '<span class="p">' + (type === 'base' ? 'from ' + money(o.from) : '+' + money(o.add)) + '</span>' +
+    '</label>';
+}
+
+function render() {
+  document.getElementById('bases').innerHTML = BASES.map(function (b) { return row(b, 'base'); }).join('');
+  document.getElementById('addons').innerHTML = ADDONS.map(function (a) { return row(a, 'add'); }).join('');
+
+  document.querySelectorAll('#bases input').forEach(function (i) {
+    i.addEventListener('change', function () { base = i.value; render(); });
+  });
+  document.querySelectorAll('#addons input').forEach(function (i) {
+    i.addEventListener('change', function () { picked[i.value] = i.checked; render(); });
+  });
+
+  var b = BASES.find(function (x) { return x.id === base; });
+  var chosen = ADDONS.filter(function (a) { return picked[a.id]; });
+  var build = b.from + chosen.reduce(function (s, a) { return s + a.add; }, 0);
+  var monthly = b.mo + chosen.reduce(function (s, a) { return s + a.mo; }, 0);
+
+  document.getElementById('total').innerHTML = money(build) + '<small> to build</small>';
+  document.getElementById('monthly').innerHTML = money(monthly) + '<span>/month after</span>';
+  document.getElementById('monthlyWhat').innerHTML = b.plan +
+    (chosen.filter(function (a) { return a.mo; }).length ? ' Plus the pieces that need looking after.' : '');
+
+  document.getElementById('picked').innerHTML =
+    '<div><span>' + b.name.replace(/ —.*/, '') + '</span><b>' + money(b.from) + '</b></div>' +
+    chosen.map(function (a) { return '<div><span>' + a.name + '</span><b>+' + money(a.add) + '</b></div>'; }).join('');
+
+  var flip = document.getElementById('flip');
+  if (build >= PARTNER_AT) {
+    flip.hidden = false;
+    flip.innerHTML = '<b>At this size, most people take the partnership instead</b>' +
+      '<p><em>No build fee at all</em> — you commit to twelve months at $3,500/mo and we start Monday. ' +
+      'It works out lower than the number above in year one, and you are not writing a large cheque before anything exists.</p>';
+  } else {
+    flip.hidden = true;
+  }
+}
+render();
+</script>
+</body>
+</html>
