@@ -166,33 +166,58 @@ function fontFace(b64) {
 /* opts.bare returns the drawing without the <svg> wrapper, so tileLockup can
    place the identical geometry inside its own coordinate space rather than a
    re-derived copy of it. */
+/* Explicit spans per stone rather than a uniform division, because the two at
+   the springing are half-length. Whatever the spans fall short of 180 is split
+   evenly at both ends, so the course stays centred on the apex and the keystone
+   stays the middle stone. */
+function customCourse(cx, cy, rIn, rOut, spans, gap) {
+  const total = spans.reduce((a, b) => a + b, 0);
+  let a = 180 - (180 - total) / 2;
+  return spans.map((w, i) => {
+    const d = seg(cx, cy, rIn, rOut, a, a - w, gap);
+    a -= w;
+    return { d, key: i === (spans.length - 1) / 2, i };
+  });
+}
+
+/* Option D, to the pixel. Three things, and they are all Ohav's:
+
+   1. FLAT, NOT RAMPED. The previous ramp ran 0.30 to 0.54, which made the two
+      stones beside the keystone almost as heavy as the keystone itself. He had
+      only asked for the outermost bricks to be less faded and I raised the
+      whole ramp, which flattened the one stone the mark exists to point at.
+      Every flanker is now the same 0.32: the keystone is the only thing
+      carrying weight, and a real course is one stone cut the same way anyway.
+
+   2. HALF-LENGTH SPRINGING STONES. Lightens the base so the arch does not sit
+      on two heavy feet.
+
+   3. THE WORDMARK NO LONGER TOUCHES. It genuinely did: at cap height the word
+      measured 50.1 units against an opening of 48.3. Worth recording that
+      shortening the end stones does NOT fix this, which is not obvious and cost
+      a measurement to find out. The collision is with the SECOND stone, where
+      the inner curve is still coming down steeply, so only changing the type
+      clears it. At 16 and y=85 the word is 47.0 against an opening of 50.4. */
+const SPANS = {
+  display: [10, 20, 20, 20, 20, 20, 20, 20, 10],
+  text: [18, 36, 36, 36, 18],
+};
+
 function arch(opts = {}) {
   const cut = opts.cut || 'display';
   const ctx = opts.ctx;
   const px = opts.px;
   const ink = ctx === 'deep' ? WHITE : DEEP;
   const display = cut === 'display';
-  const c = display ? course(100, 98, 56, 80, 9, 3) : course(100, 98, 54, 80, 5, 5);
-  const mid = (c.length - 1) / 2;
+  const c = display
+    ? customCourse(100, 98, 56, 80, SPANS.display, 3)
+    : customCourse(100, 98, 54, 80, SPANS.text, 5);
   const size = px ? ` width="${px}" height="${r2(px * 0.52)}"` : '';
-  /* The springing stones used to bottom out at 0.02, which is invisible. The
-     arch appeared to stop halfway down and the course looked like it was
-     dissolving rather than resting on something. The ramp still falls away from
-     the keystone, because the keystone has to stay the brightest thing in the
-     mark, but it now floors at 0.30 where a stone is still a stone. */
-  const stones = c.map((v) => {
-    if (v.key) return `<path d="${v.d}" fill="${ACCENT}"/>`;
-    const o = display ? r2(0.30 + 0.08 * (4 - Math.abs(v.i - mid))) : 0.42;
-    return `<path d="${v.d}" fill="${ink}" opacity="${o}"/>`;
-  }).join('');
-  const fs = display ? 17 : 19;
-  /* Sat at 78, which put the wordmark near the middle of the opening and read
-     as floating. 82 drops it into the lower third without letting the descender
-     of the y crowd the springing line, which is what 85 did. Checked rather
-     than eyeballed: the layout box of the text overlaps the inner arc at every
-     one of these, because it measures full font ascent, but the ink does not.
-     The corner letters are a k and a v, and neither reaches its own box. */
-  const y = display ? 82 : 84;
+  const stones = c.map((v) => v.key
+    ? `<path d="${v.d}" fill="${ACCENT}"/>`
+    : `<path d="${v.d}" fill="${ink}" opacity="0.32"/>`).join('');
+  const fs = display ? 16 : 18;
+  const y = display ? 85 : 86;
   const face = opts.embedFont && !opts.bare ? fontFace(opts.embedFont) : '';
   const body = `${stones}` +
          `<text x="100" y="${y}" text-anchor="middle" font-family="${WM_STACK}" font-weight="700" ` +
@@ -208,10 +233,17 @@ function arch(opts = {}) {
 
    Done by transforming the real lockup into the tile's coordinate space instead
    of re-deriving it at 32 units, so "pixel perfect against the logo" is a
-   property of the code rather than a thing to check by eye. The lockup's arch
-   occupies x 20..180 and y 18..98 in its own 200x104 space, which is 160 by 80;
-   scaling that to 30 units wide puts it 15 tall, and an arch is 2:1 so those
-   empty bands above and below are the shape, not a mistake in the fitting. */
+   property of the code rather than a thing to check by eye.
+
+   CONTENT is the lockup's real ink bounds and has to be recomputed whenever the
+   drawing changes, or the tile silently goes off centre. Halving the springing
+   stones stopped the course at 10 degrees rather than 0, which pulled both the
+   width and the height in; leaving the old 20..180 by 18..98 box in place would
+   have hung the arch high in the tile with a dead band underneath. Derived, not
+   guessed: x is 100 +/- 80*cos(10deg), the top is the apex at 98-80, and the
+   bottom is the descender of the y rather than any stone. */
+const CONTENT = { x0: 21.2, x1: 178.8, y0: 18, y1: 88.5 };
+
 function tileLockup(opts = {}) {
   const kind = opts.kind || 'deep';
   const px = opts.px;
@@ -220,9 +252,9 @@ function tileLockup(opts = {}) {
   const rx = opts.radius == null ? 7.4 : opts.radius;
   /* 26 of 32 units, not 30. At 30 the springing stones touched the tile edge,
      which reads as a crop rather than as a logo with a margin. */
-  const s = 26 / 160;
-  const tx = r2(3 - 20 * s);
-  const ty = r2((32 - 80 * s) / 2 - 18 * s);
+  const s = 26 / (CONTENT.x1 - CONTENT.x0);
+  const tx = r2((32 - 26) / 2 - CONTENT.x0 * s);
+  const ty = r2((32 - (CONTENT.y1 - CONTENT.y0) * s) / 2 - CONTENT.y0 * s);
   /* Always the on-deep ink: the tile supplies a dark ground either way, and the
      accent tile is dark enough that white masonry is still the readable choice. */
   const inner = arch({ cut: 'display', ctx: 'deep', embedFont: opts.embedFont, bare: true });
