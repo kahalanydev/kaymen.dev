@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kaymen.dev — "vs hiring someone" directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   kaymen.dev — three directions for a "what this saves you" block on /#price
+
+   Palette, faces and measure lifted verbatim from styles.css. Nothing in the
+   LOCKED set (HANDOFF-REDESIGN-2026-08-15.md §1) is re-opened.
+
+   EVERY kaymen.dev figure here is the real published one from index.html:
+   $2,500 build · $600/mo · $1,800/mo · $4,500–6,500/mo · $165/hr overflow.
+
+   EVERY hire-side figure is a PLACEHOLDER, marked in amber. They are wired to
+   one number — SALARY, in the script at the bottom — so you can set the anchor
+   once and watch all three directions move. Nothing here ships until that
+   number is real and sourced; see the note in direction A.
+   ============================================================================ */
+:root{
+  --bg:#ffffff; --bg-alt:#f4f5f7; --ink:#1a1b1e; --muted:#5f6368;
+  --accent:#2bbcb3; --accent-dark:#229e96;
+  --accent-soft:rgba(43,188,179,.08); --accent-glow:rgba(43,188,179,.18);
+  --line:#e2e4e8; --deep:#16303d;
+  --warn:#a8761c; --warn-soft:rgba(168,118,28,.09);
+  --display:'Sora',-apple-system,BlinkMacSystemFont,sans-serif;
+  --body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --w-page:1120px; --w-prose:760px;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);background:var(--bg);color:var(--ink);line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.03em;line-height:1.15;font-weight:700}
+a{color:inherit}
+.wrap{max-width:var(--w-page);margin:0 auto;padding:0 26px}
+
+/* ---- mockup chrome, same language as mockup/back-office.html ---- */
+.mk-top{
+  position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);
+  backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid var(--line);
+}
+.mk-top .wrap{display:flex;align-items:center;gap:16px;height:62px;flex-wrap:wrap}
+.mk-brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:-.02em}
+.mk-mark{
+  width:28px;height:28px;border-radius:9px;color:#fff;font-weight:800;font-size:13px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(150deg,var(--accent) 0%,var(--accent-dark) 100%);
+}
+.mk-tabs{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.mk-tab{
+  font-family:var(--body);font-size:12.5px;font-weight:600;padding:7px 14px;border-radius:10px;
+  border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;transition:all .2s var(--ease);
+}
+.mk-tab:hover{color:var(--ink);border-color:#d7dae0}
+.mk-tab.on{background:var(--accent-soft);color:var(--accent-dark);border-color:rgba(43,188,179,.32)}
+.mk-note{padding:44px 0 10px}
+.mk-eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:12px}
+.mk-note h2{font-size:29px;letter-spacing:-.04em}
+.mk-note h2 small{display:block;font-family:var(--body);font-size:14px;font-weight:400;color:var(--muted);letter-spacing:0;margin-top:9px}
+.mk-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:26px}
+.mk-col h5{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-family:var(--body);margin-bottom:8px}
+.mk-col p{font-size:13.5px;color:var(--muted);line-height:1.7}
+.mk-col p b{color:var(--ink);font-weight:600}
+.mk-col.cost h5{color:var(--warn)}
+.frame{
+  margin:26px 0 60px;border:1px solid var(--line);border-radius:20px;overflow:hidden;
+  box-shadow:0 26px 60px -30px rgba(22,48,61,.22);
+}
+.frame-bar{display:flex;align-items:center;gap:7px;padding:11px 16px;background:var(--bg-alt);border-bottom:1px solid var(--line)}
+.frame-bar i{width:10px;height:10px;border-radius:50%;background:#d7dae0;display:block}
+.frame-bar em{margin-left:12px;font-style:normal;font-size:11.5px;color:var(--muted)}
+.screen{background:var(--bg);padding:52px 0}
+.mk-panel{display:none}
+.mk-panel.on{display:block}
+
+/* ---- shared section language, matching the real /#price ---- */
+.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;color:var(--accent-dark)}
+.sec{font-size:32px;letter-spacing:-.045em;margin-top:12px}
+.sec-sub{font-size:15.5px;color:var(--muted);margin-top:12px;max-width:56ch;line-height:1.7}
+.fine{font-size:12.5px;color:var(--muted);margin-top:22px;line-height:1.7;max-width:70ch}
+.ph{
+  background:var(--warn-soft);color:var(--warn);border-radius:5px;padding:0 4px;
+  font-weight:700;box-decoration-break:clone;
+}
+.legend{
+  display:inline-flex;align-items:center;gap:8px;font-size:11.5px;color:var(--warn);
+  background:var(--warn-soft);border-radius:9px;padding:7px 12px;margin-top:20px;line-height:1.5;
+}
+
+/* =============================================== A — THE ARITHMETIC */
+.ar{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:30px;margin-top:34px;align-items:start}
+.ar-col{border:1px solid var(--line);border-radius:18px;padding:24px 26px;background:#fff}
+.ar-col.them{background:linear-gradient(180deg,var(--warn-soft) 0%,rgba(255,255,255,0) 60%)}
+.ar-col.us{border-color:rgba(43,188,179,.4);background:linear-gradient(180deg,var(--accent-soft) 0%,rgba(255,255,255,0) 60%)}
+.ar-h{font-size:16px;letter-spacing:-.025em}
+.ar-sub{font-size:12px;color:var(--muted);margin-top:5px}
+.ar-rows{margin-top:18px}
+.ar-r{display:grid;grid-template-columns:1fr auto;gap:14px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted)}
+.ar-r:last-of-type{border-bottom:0}
+.ar-r b{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600}
+.ar-r .q{font-size:11px;display:block;color:var(--muted);font-weight:400;margin-top:2px}
+.ar-tot{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:baseline;margin-top:16px;padding-top:15px;border-top:1.5px solid var(--ink)}
+.ar-tot span{font-size:12px;color:var(--muted);letter-spacing:.02em}
+.ar-tot b{font-family:var(--display);font-size:27px;font-weight:800;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.ar-tot b small{font-family:var(--body);font-size:12px;font-weight:600;color:var(--muted);letter-spacing:0}
+.ar-note{font-size:12px;color:var(--muted);margin-top:15px;line-height:1.65}
+.delta{
+  margin-top:26px;padding:22px 26px;border:1px solid var(--line);border-radius:18px;
+  display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;
+}
+/* > b, not b — the concession sentence inside the span has its own bold, and an
+   unscoped selector blew it up to 34px */
+.delta > b{font-family:var(--display);font-size:34px;font-weight:800;letter-spacing:-.05em;color:var(--accent-dark);font-variant-numeric:tabular-nums;flex:none}
+.delta span{font-size:13.5px;color:var(--muted);max-width:52ch;line-height:1.65;flex:1;min-width:260px}
+.delta span b{font-weight:600}
+
+/* =============================================== B — WHAT YOU ARE BUYING */
+.cmp{width:100%;border-collapse:collapse;margin-top:34px;font-size:13.5px}
+.cmp th{
+  text-align:left;font-family:var(--body);font-size:10px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);padding:0 16px 12px 0;border-bottom:1px solid var(--line);
+}
+.cmp th.us{color:var(--accent-dark)}
+.cmp td{padding:15px 16px 15px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--muted);line-height:1.6}
+.cmp td:first-child{color:var(--ink);font-weight:600;width:210px}
+.cmp tr:last-child td{border-bottom:0}
+.cmp .win{color:var(--ink)}
+.cmp .win::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-right:9px;vertical-align:middle}
+.cmp .lose::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--warn);margin-right:9px;vertical-align:middle}
+.cmp tr.flip td:first-child{color:var(--warn)}
+
+/* =============================================== C — THE BREAK-EVEN */
+.be{margin-top:34px;border:1px solid var(--line);border-radius:20px;padding:30px 32px}
+.be-q{font-size:13px;color:var(--muted);margin-bottom:10px}
+.be-slider{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:22px 0 8px}
+.be-slider input{flex:1;min-width:240px;accent-color:var(--accent)}
+.be-slider .val{font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;min-width:118px}
+.be-bar{position:relative;height:44px;margin:24px 0 10px}
+.be-bar .track{position:absolute;inset:0;border-radius:12px;background:var(--bg-alt);overflow:hidden}
+/* the fill marks the BREAK-EVEN, not the slider value — it is the fixed thing
+   the reader is being shown. A separate pin says where they currently are. */
+.be-bar .fill{position:absolute;top:0;bottom:0;left:0;background:var(--accent-soft);border-right:2px solid var(--accent)}
+.be-bar .pin{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--ink);border-radius:2px;transition:left .12s linear}
+.be-bar .pin::after{
+  content:"";position:absolute;top:-4px;left:-4px;width:10px;height:10px;
+  border-radius:50%;background:var(--ink);
+}
+.be-bar .lbl{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;padding:0 14px}
+.be-bar .lbl.l{left:0;color:var(--accent-dark)}
+.be-bar .lbl.r{right:0;color:var(--warn)}
+.be-verdict{font-size:17px;line-height:1.6;margin-top:20px;letter-spacing:-.015em}
+.be-verdict b{color:var(--accent-dark)}
+.be-verdict.hire b{color:var(--warn)}
+.be-rows{display:grid;grid-template-columns:1fr 1fr;gap:0 30px;margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
+.be-row{display:grid;grid-template-columns:1fr auto;gap:12px;padding:7px 0;font-size:13px;color:var(--muted);border-bottom:1px solid var(--line)}
+.be-row b{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600}
+
+@media (max-width:900px){
+  .mk-cols,.ar,.be-rows{grid-template-columns:1fr}
+  .sec{font-size:25px}
+  .cmp td:first-child{width:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="mk-top">
+  <div class="wrap">
+    <span class="mk-brand"><span class="mk-mark">K</span> kaymen.dev</span>
+    <span style="font-size:12px;color:var(--muted)">“vs hiring someone” — three directions</span>
+    <div class="mk-tabs">
+      <button class="mk-tab on" data-go="a">A · The arithmetic</button>
+      <button class="mk-tab" data-go="b">B · What you're buying</button>
+      <button class="mk-tab" data-go="c">C · The break-even</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================== A — THE ARITHMETIC -->
+<section class="mk-panel on" id="p-a">
+  <div class="wrap">
+    <div class="mk-note">
+      <p class="mk-eyebrow">Direction 1 of 3</p>
+      <h2>The arithmetic <small>show the sum, let them check it</small></h2>
+      <div class="mk-cols">
+        <div class="mk-col">
+          <h5>The premise</h5>
+          <p>The comparison people make in their head is <b>“$1,800/mo vs a salary”</b>, and they make it wrong, because a salary is not what an employee costs. So do the sum in public: base, payroll tax, benefits, equipment, recruiting amortised, and the months before anyone is productive. It sits directly under the plans, where the objection actually forms.</p>
+        </div>
+        <div class="mk-col">
+          <h5>What changes</h5>
+          <p>One new block on <code>/#price</code>, after <code>.plans</code> and before the <code>.fine</code> line. No new page, no new nav item. All the kaymen.dev figures already exist in <code>index.html</code>; only the hire side is new, and it is <b>six numbers</b>.</p>
+        </div>
+        <div class="mk-col cost">
+          <h5>What it costs</h5>
+          <p>It <b>invites a spreadsheet fight</b>. Anyone who has hired will have their own multiplier and will argue with yours, which turns a page about trust into a page about assumptions. And it anchors on price at the exact moment the site was winning on evidence. It also dates: salaries move, and a stale figure is worse than none.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-bar"><i></i><i></i><i></i><em><b>kaymen.dev</b>/#price — below the four plans</em></div>
+    <div class="screen">
+      <div class="wrap">
+        <p class="eyebrow">The comparison you are already making</p>
+        <h2 class="sec">What a developer actually costs</h2>
+        <p class="sec-sub">Not the salary. The salary is about two thirds of it. Here is the whole sum, so you can put your own numbers in and check ours.</p>
+
+        <div class="ar">
+          <div class="ar-col them">
+            <div class="ar-h">One mid-level developer, in-house</div>
+            <div class="ar-sub">Full-time, first year</div>
+            <div class="ar-rows">
+              <div class="ar-r"><span>Base salary</span><b class="ph" data-f="salary">$95,000</b></div>
+              <div class="ar-r"><span>Payroll tax &amp; insurance<span class="q">employer side, ~11%</span></span><b class="ph" data-f="tax">$10,450</b></div>
+              <div class="ar-r"><span>Health, PTO, holidays<span class="q">15 days PTO + 9 holidays</span></span><b class="ph" data-f="ben">$14,250</b></div>
+              <div class="ar-r"><span>Laptop, licences, tooling</span><b class="ph" data-f="kit">$4,200</b></div>
+              <div class="ar-r"><span>Recruiting<span class="q">agency or your own time</span></span><b class="ph" data-f="rec">$12,000</b></div>
+              <div class="ar-r"><span>Ramp-up<span class="q">~2 months before useful output</span></span><b class="ph" data-f="ramp">$18,750</b></div>
+            </div>
+            <div class="ar-tot"><span>FIRST-YEAR COST</span><b class="ph" data-f="them">$154,650</b></div>
+            <p class="ar-note">Every figure above is a <b>placeholder</b>. They move together from one salary number — nothing here ships until that number is real and cited.</p>
+          </div>
+
+          <div class="ar-col us">
+            <div class="ar-h">Run &amp; Improve</div>
+            <div class="ar-sub">The plan most live systems are on</div>
+            <div class="ar-rows">
+              <div class="ar-r"><span>Monthly</span><b>$1,800</b></div>
+              <div class="ar-r"><span>Payroll tax, benefits, PTO</span><b>$0</b></div>
+              <div class="ar-r"><span>Equipment and licences</span><b>$0</b></div>
+              <div class="ar-r"><span>Recruiting</span><b>$0</b></div>
+              <div class="ar-r"><span>Ramp-up<span class="q">we already know the system — we built it</span></span><b>$0</b></div>
+              <div class="ar-r"><span>Overflow, if a month runs long</span><b>$165/hr</b></div>
+            </div>
+            <div class="ar-tot"><span>FIRST-YEAR COST</span><b>$21,600</b></div>
+            <p class="ar-note">Cancel with 30 days' notice. The code, the repo and the server are yours the whole time — that is the <a href="#" style="color:var(--accent-dark);font-weight:600">No hostages</a> section, not a promise made here.</p>
+          </div>
+        </div>
+
+        <div class="delta">
+          <b class="ph" data-f="delta">$133,050</b>
+          <span>less in the first year — and the honest part: <b style="color:var(--ink)">if you genuinely need forty hours a week, every week, hire someone.</b> We will tell you that on the call. This comparison is for the systems that need real attention a few days a month, which is most of them.</span>
+        </div>
+
+        <p class="fine">Sources for every hire-side figure go here, dated. Nonprofits get 25% off, publicly and without asking.</p>
+        <div class="legend">⚠ Amber = placeholder. One salary number drives all six; set it and they all move.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================ B — WHAT YOU ARE BUYING -->
+<section class="mk-panel" id="p-b">
+  <div class="wrap">
+    <div class="mk-note">
+      <p class="mk-eyebrow">Direction 2 of 3</p>
+      <h2>What you're actually buying <small>cost is one row, not the argument</small></h2>
+      <div class="mk-cols">
+        <div class="mk-col">
+          <h5>The premise</h5>
+          <p>Money is the <b>easiest</b> thing to compare and the least useful. The real differences are continuity when someone is away, breadth of stack, how long before anything ships, and what happens the day they resign. Put cost in the table as one row among seven — and <b>concede two rows outright</b>, because a comparison that wins every line is read as marketing.</p>
+        </div>
+        <div class="mk-col">
+          <h5>What changes</h5>
+          <p>A seven-row table under the plans. No arithmetic to defend, no salary figure to keep current, nothing that goes stale. It is also the only direction that needs <b>zero new data</b> — every claim is about how you already work.</p>
+        </div>
+        <div class="mk-col cost">
+          <h5>What it costs</h5>
+          <p>It <b>does not answer the question asked</b>. Someone who came to compare prices leaves without a number, and “it depends” reads as evasion to a buyer who has a budget line to fill. It is also the least quotable — nobody forwards a table.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-bar"><i></i><i></i><i></i><em><b>kaymen.dev</b>/#price — below the four plans</em></div>
+    <div class="screen">
+      <div class="wrap">
+        <p class="eyebrow">Us or a hire</p>
+        <h2 class="sec">The parts that are not the price</h2>
+        <p class="sec-sub">Two of these go against us. They are still here, because a comparison that wins every row is an advert.</p>
+
+        <table class="cmp">
+          <thead><tr><th></th><th class="us">Run &amp; Improve</th><th>One developer, in-house</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Cost, first year</td>
+              <td class="win"><b>$21,600</b> — all in</td>
+              <td class="lose"><span class="ph">~$155k</span> loaded, not the salary figure</td>
+            </tr>
+            <tr>
+              <td>Time to first change shipped</td>
+              <td class="win">Days. We built it.</td>
+              <td class="lose">Two to four months, hiring included</td>
+            </tr>
+            <tr>
+              <td>Somebody is off sick</td>
+              <td class="win">Work continues</td>
+              <td class="lose">Work stops</td>
+            </tr>
+            <tr>
+              <td>Breadth of stack</td>
+              <td class="win">Whatever the system needs</td>
+              <td class="lose">Whatever they know</td>
+            </tr>
+            <tr>
+              <td>They leave</td>
+              <td class="win">Handover is contractual, code is already yours</td>
+              <td class="lose">The knowledge leaves with them</td>
+            </tr>
+            <tr class="flip">
+              <td>Full-time capacity</td>
+              <td>Days a month, not weeks. Overflow at $165/hr.</td>
+              <td class="win">Forty hours a week, every week</td>
+            </tr>
+            <tr class="flip">
+              <td>Sitting in your standups</td>
+              <td>We are not in the room every morning</td>
+              <td class="win">They are your team</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="fine">If the bottom two rows are the ones that matter to you, hire someone — and we will help you scope the role. That is a real answer, not a hedge.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================================================== C — THE BREAK-EVEN -->
+<section class="mk-panel" id="p-c">
+  <div class="wrap">
+    <div class="mk-note">
+      <p class="mk-eyebrow">Direction 3 of 3</p>
+      <h2>The break-even <small>including the part where you should not hire us</small></h2>
+      <div class="mk-cols">
+        <div class="mk-col">
+          <h5>The premise</h5>
+          <p>There is a real number of hours per month above which hiring is cheaper, and <b>saying it out loud is the most persuasive thing on the page</b> — because it is the only version where the reader can see you are not just selling. Drag the slider, get a straight answer, sometimes “hire someone”. It is <code>No hostages</code> applied to pricing.</p>
+        </div>
+        <div class="mk-col">
+          <h5>What changes</h5>
+          <p>One interactive block, about 40 lines of JS, no dependency. Same six hire-side numbers as direction A but they stay <b>behind</b> the slider instead of sitting in a table to be argued with — which quietly solves A's spreadsheet-fight problem.</p>
+        </div>
+        <div class="mk-col cost">
+          <h5>What it costs</h5>
+          <p>It <b>tells some visitors to leave</b>, and it will. It also needs the same figures A needs, so it is not less exposed to going stale — only less obviously. And an interactive widget on a page that is otherwise deliberately calm is the loudest thing on the site.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <div class="frame-bar"><i></i><i></i><i></i><em><b>kaymen.dev</b>/#price — below the four plans</em></div>
+    <div class="screen">
+      <div class="wrap">
+        <p class="eyebrow">The honest version</p>
+        <h2 class="sec">At some point you should just hire someone</h2>
+        <p class="sec-sub">Here is where that point is. Move the slider to how much attention your system actually needs in a month.</p>
+
+        <div class="be">
+          <p class="be-q">Hours of real development work you need, per month</p>
+          <div class="be-slider">
+            <input type="range" id="hrs" min="2" max="140" value="14" step="1">
+            <span class="val" id="hrsVal">14 hrs</span>
+          </div>
+          <div class="be-bar">
+            <div class="track"><div class="fill" id="fill"></div><span class="pin" id="pin"></span></div>
+            <span class="lbl l">Use us</span>
+            <span class="lbl r">Hire someone</span>
+          </div>
+          <p class="be-verdict" id="verdict"></p>
+          <div class="be-rows">
+            <div class="be-row"><span>Run &amp; Improve, plus overflow</span><b id="usCost">$1,800</b></div>
+            <div class="be-row"><span>A developer, loaded, pro-rated</span><b class="ph" id="themCost">$12,888</b></div>
+          </div>
+          <p class="fine">Break-even lands at <b id="beHrs" class="ph">around 78 hours a month</b> — roughly half a full-time person. Below it we are cheaper and faster to start. Above it, you want somebody in the room.</p>
+        </div>
+
+        <div class="legend">⚠ Amber = placeholder, driven by the same one salary number as direction A.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ----------------------------------------------------------------------------
+   ONE input. Set SALARY to the real, sourced figure for the market you are
+   selling into and every placeholder in all three directions follows.
+   The multipliers are the conventional ones and are stated on screen so a
+   reader can disagree with them explicitly rather than suspect them.
+---------------------------------------------------------------------------- */
+var SALARY   = 95000;   // <-- the only number to change
+var TAX_PCT  = 0.11;    // employer payroll tax + insurance
+var BEN_PCT  = 0.15;    // health, PTO, holidays
+var KIT      = 4200;    // laptop, licences, tooling
+var RECRUIT  = 12000;   // agency fee or your own time
+var RAMP_MO  = 2;       // months before useful output
+
+var US_MONTH = 1800, US_HOURLY = 165, US_INCLUDED = 10; // real, from index.html
+
+var tax = SALARY * TAX_PCT, ben = SALARY * BEN_PCT;
+var ramp = (SALARY + tax + ben) / 12 * RAMP_MO;
+var themYear = SALARY + tax + ben + KIT + RECRUIT + ramp;
+var usYear = US_MONTH * 12;
+var money = function (n) { return '$' + Math.round(n).toLocaleString('en-US'); };
+
+var fields = { salary: SALARY, tax: tax, ben: ben, kit: KIT, rec: RECRUIT, ramp: ramp,
+               them: themYear, delta: themYear - usYear };
+Object.keys(fields).forEach(function (k) {
+  document.querySelectorAll('[data-f="' + k + '"]').forEach(function (el) { el.textContent = money(fields[k]); });
+});
+
+/* steady-state monthly cost of an employee — year one's recruiting and ramp are
+   one-offs, so the break-even uses the ongoing number, which is the fair one */
+var themMonth = (SALARY + tax + ben + KIT) / 12;
+var themHourly = themMonth / 160;
+
+function usCostFor(h) { return US_MONTH + Math.max(0, h - US_INCLUDED) * US_HOURLY; }
+var breakEven = 2;
+for (var h = 2; h <= 400; h++) { if (usCostFor(h) > themMonth) { breakEven = h; break; } }
+
+var hrs = document.getElementById('hrs');
+function paint() {
+  var h = +hrs.value;
+  var us = usCostFor(h);
+  document.getElementById('hrsVal').textContent = h + ' hrs';
+  document.getElementById('usCost').textContent = money(us);
+  document.getElementById('themCost').textContent = money(themMonth);
+  document.getElementById('fill').style.width = Math.min(100, (breakEven / 140) * 100) + '%';
+  document.getElementById('pin').style.left = Math.min(100, (h / 140) * 100) + '%';
+  document.getElementById('beHrs').textContent = 'around ' + breakEven + ' hours a month';
+  var v = document.getElementById('verdict');
+  if (us < themMonth) {
+    v.className = 'be-verdict';
+    v.innerHTML = 'At ' + h + ' hours a month, we cost <b>' + money(themMonth - us) + ' less</b> — and you can start this week.';
+  } else {
+    v.className = 'be-verdict hire';
+    v.innerHTML = 'At ' + h + ' hours a month, <b>hire someone.</b> You are past the point where we are the cheaper answer, and we would rather say so.';
+  }
+}
+hrs.addEventListener('input', paint);
+paint();
+
+document.querySelectorAll('.mk-tab').forEach(function (t) {
+  t.addEventListener('click', function () {
+    document.querySelectorAll('.mk-tab').forEach(function (x) { x.classList.remove('on'); });
+    document.querySelectorAll('.mk-panel').forEach(function (x) { x.classList.remove('on'); });
+    t.classList.add('on');
+    document.getElementById('p-' + t.dataset.go).classList.add('on');
+    window.scrollTo(0, 0);
+  });
+});
+</script>
+</body>
+</html>

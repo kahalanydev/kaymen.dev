@@ -44,6 +44,30 @@
      only width it ever has. Hover-to-collapse was dropped deliberately. */
   --rail-w:224px;
   --rail-gap:40px;   /* clearance between the rail and the content column */
+  --rail-off:clamp(26px,3.4vw,68px);   /* minimum clearance from the screen edge */
+  --page-pr:clamp(36px,4vw,80px);
+  --wrap-pad:22px;
+  --page-pl:calc(var(--rail-off) + var(--rail-w) + var(--rail-gap));
+
+  /* --- where the text actually starts, and therefore where the rail belongs ---
+     The rail used to be pinned at --rail-off while .wrap auto-centres inside the
+     padded column, so the gap grew on the content side only: near-centred at
+     1440px, ~97px too far left at 1920px. Deriving the rail's left from the same
+     expression as the text edge is the whole fix.
+
+     100vw includes the scrollbar, so this formula lands a few px off on Windows;
+     script.js measures the real text edge and overwrites --text-left on load and
+     on resize. This is the no-JS fallback, and it is close enough to look right. */
+  --text-left:calc(
+    var(--page-pl)
+    + max(0px, (100vw - var(--page-pl) - var(--page-pr) - var(--w-page)) / 2)
+    + var(--wrap-pad)
+  );
+
+  /* dead centre reads as "parked". A small lift puts the rail where the eye
+     already is. One number — raise or lower it here, nowhere else. */
+  --rail-lift:clamp(0px,5.5vh,58px);
+
   --ease:cubic-bezier(.4,0,.2,1);
   --spring:cubic-bezier(.34,1.4,.64,1);
 
@@ -97,7 +121,7 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.03em;line-height:1.1;fon
    page — it floats over it.                                               */
 .rail{
   position:fixed;
-  top:50%;
+  top:calc(50% - var(--rail-lift));
   transform:translateY(-50%);
   z-index:80;
   width:var(--rail-w);
@@ -120,8 +144,11 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.03em;line-height:1.1;fon
     inset 0 -1px 0 rgba(22,48,61,.04);
 }
 /* held well off the screen edge — it should read as floating, not docked */
-.rail.left{left:clamp(26px,3.4vw,68px)}
-.rail.right{right:clamp(26px,3.4vw,68px)}
+/* midway between the screen edge and the text edge — but never nearer the edge
+   than --rail-off, which is what holds the layout together below ~1300px where
+   .wrap fills the column and there is no slack to centre in */
+.rail.left{left:max(var(--rail-off),calc((var(--text-left) - var(--rail-w)) / 2))}
+.rail.right{right:max(var(--rail-off),calc((var(--text-left) - var(--rail-w)) / 2))}
 /* specular catch across the top — the light-catching bit */
 .rail::before{
   content:"";position:absolute;inset:0;border-radius:26px;pointer-events:none;
@@ -216,12 +243,12 @@ h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.03em;line-height:1.1;fon
    rail-offset + rail-width + gap or it slides underneath at ~1440px. */
 @media (min-width:900px){
   .page{
-    padding-left:calc(clamp(26px,3.4vw,68px) + var(--rail-w) + var(--rail-gap));
-    padding-right:clamp(36px,4vw,80px);
+    padding-left:var(--page-pl);
+    padding-right:var(--page-pr);
   }
   body.rail-right .page{
-    padding-left:clamp(36px,4vw,80px);
-    padding-right:calc(clamp(26px,3.4vw,68px) + var(--rail-w) + var(--rail-gap));
+    padding-left:var(--page-pr);
+    padding-right:var(--page-pl);
   }
 }
 .wrap{max-width:var(--w-page);margin:0 auto;padding:0 22px}

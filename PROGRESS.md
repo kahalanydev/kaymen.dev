@@ -1652,3 +1652,77 @@ errors, no exceptions.
   deliberately not ported; writing CSS for something that does not exist is how the admin carried an
   unused `.c-k` rule for a day.
 - Ohav's main-site rail tweaks. Cause diagnosed, fix not written. Handoff §6.
+
+---
+
+## 2026-08-16 — Rail geometry: centred in the gutter, lifted off dead centre
+
+### Centred in the gutter
+
+The rail was pinned at `clamp(26px,3.4vw,68px)` while `.wrap` auto-centres inside the padded
+column, so the gap grew on the content side only — near-centred at 1440px, ~97px too far left at
+1920px. The fix is to derive the rail's `left` from the same expression as the text edge:
+
+```css
+--page-pl:calc(var(--rail-off) + var(--rail-w) + var(--rail-gap));
+--text-left:calc(var(--page-pl) + max(0px,(100vw - var(--page-pl) - var(--page-pr) - var(--w-page))/2) + var(--wrap-pad));
+.rail.left{left:max(var(--rail-off),calc((var(--text-left) - var(--rail-w)) / 2))}
+```
+
+`100vw` includes the scrollbar, which put it about 4px out on Windows — and "exactly between" was
+the ask. So `script.js` measures the real `.wrap` edge (via `documentElement.clientWidth`, which
+excludes the scrollbar) and overwrites `--text-left` on load and on resize. The CSS formula stays as
+the no-JS fallback.
+
+**Measured, not asserted** — edge→rail vs rail→text, over CDP:
+
+| Width | edge→rail | rail→text | off by |
+|---|---|---|---|
+| 1280 | 53px | 53px | 0 |
+| 1440 | 56px | 55px | 1 |
+| 1680 | 103px | 102px | 1 |
+| 1920 | 162px | 162px | 0 |
+| 2560 | 322px | 322px | 0 |
+
+Admin and portal got the same rule with a fixed `--text-left`, because `.main` there is
+left-aligned with a max-width rather than auto-centred. It moved them 3px — so the horizontal
+complaint was always a marketing-site problem, and now all three share one expression.
+
+### Lifted off dead centre
+
+`--rail-lift:clamp(0px,5.5vh,58px)` on `top:calc(50% - var(--rail-lift))`, in all three
+stylesheets. Dead centre reads as parked. **It is one number** — raise or lower that token and
+nothing else changes.
+
+Checked at 430px and 860px: rail hidden, tabbar shown, no horizontal scroll, no console errors.
+
+### Files
+
+| File | Change |
+|------|--------|
+| `styles.css` | `--rail-off --page-pl --page-pr --wrap-pad --text-left --rail-lift`; rail left/top; `.page` padding now uses the tokens |
+| `script.js` | `syncRailGutter()` — measures the real text edge, rAF-throttled on resize |
+| `admin/styles.css`, `portal/styles.css` | same two tokens, fixed `--text-left` |
+
+---
+
+## 2026-08-16 — "vs hiring someone": three directions, not a decision
+
+Ohav asked whether the site should carry a price comparison against hiring a dedicated programmer.
+That is a *should we, and how* question, so it is a mockup with three directions and their costs
+written out, not a shipped section: **`mockup/price-comparison.html`**.
+
+- **A — The arithmetic.** The full loaded cost of a hire built up in public (base, payroll tax,
+  benefits, kit, recruiting, ramp) next to `$1,800/mo`. Costs: invites a spreadsheet fight, anchors
+  on price where the site was winning on evidence, and dates badly.
+- **B — What you're actually buying.** A seven-row table where cost is one row, and **two rows are
+  conceded outright** — full-time capacity and being in your standups. Needs no new data and never
+  goes stale. Costs: does not answer the question that was asked.
+- **C — The break-even.** A slider that answers straight, including *"at this many hours, hire
+  someone."* Most on-brand with `No hostages`, and it keeps the hire-side figures behind the
+  interaction instead of in a table to be argued with. Costs: it tells some visitors to leave.
+
+**Every kaymen.dev figure in the mockup is the real published one** from `index.html`. **Every
+hire-side figure is a placeholder, marked in amber**, and all of them derive from a single `SALARY`
+constant at the bottom of the file — set that one number to something real and sourced and all
+three directions move together. Nothing here should ship until it is.

@@ -177,4 +177,30 @@
   }
   window.addEventListener('load', parkLozenge);
   parkLozenge();
+
+  /* ---- the rail sits exactly midway between the screen edge and the text ---
+     styles.css derives --text-left from 100vw, which is close but includes the
+     scrollbar — about 4px out on Windows, and "exactly between" was the ask. So
+     measure the real text edge and hand it back. documentElement.clientWidth,
+     not innerWidth: the former excludes the scrollbar, which is the whole point.
+     If there is no .wrap on the page the CSS fallback stands. */
+  var railFrame = 0;
+  function syncRailGutter() {
+    railFrame = 0;
+    var wrap = document.querySelector('.page .wrap') || document.querySelector('.wrap');
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    if (!rect.width) return;
+    var pad = parseFloat(getComputedStyle(wrap).paddingLeft) || 0;
+    var edge = document.body.classList.contains('rail-right')
+      ? document.documentElement.clientWidth - rect.right + pad
+      : rect.left + pad;
+    document.documentElement.style.setProperty('--text-left', Math.round(edge) + 'px');
+  }
+  function queueRailGutter() {
+    if (!railFrame) railFrame = requestAnimationFrame(syncRailGutter);
+  }
+  window.addEventListener('resize', queueRailGutter);
+  window.addEventListener('load', syncRailGutter);
+  syncRailGutter();
 })();

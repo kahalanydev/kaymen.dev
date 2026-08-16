@@ -355,16 +355,18 @@ document, and the window will not go below 500px wide (use CDP's
 - **The portal's rail has no Milestones item**, where the mockup's has one. Milestones live on the
   overview timeline and there is no separate page. Either build one or leave the rail at five.
   Left at five.
-- **Ohav's main-site rail tweaks are still queued** and were called "the number one design tweak I
-  need" before the back-office work was prioritised. Three parts, none started:
-  1. Centre the rail in the gutter — it should sit exactly midway between the screen edge and the
-     text. **Cause is diagnosed:** at wide viewports `.wrap` auto-centres inside the padded column
-     but the rail stays pinned at `clamp(26px,3.4vw,68px)`, so the gap grows on the content side
-     only. At 1440px it is already near-centred; at 1920px it is ~94px too far left. The fix is to
-     derive the rail's `left` from the same expression as the text edge:
-     `left: calc((var(--text-left) - var(--rail-w)) / 2)`.
-  2. Move it up a little — a `--rail-lift` token on `top:calc(50% - var(--rail-lift))`.
-  3. **Mobile: a collapsed dot rail.** Closed by default showing one dot per section with the
+- **Ohav's main-site rail tweaks — parts 1 and 2 are DONE (2026-08-16), part 3 is not:**
+  1. ~~Centre the rail in the gutter.~~ **Done.** `--text-left` now derives the text edge and
+     `.rail.left{left:max(var(--rail-off),calc((var(--text-left) - var(--rail-w))/2))}` centres in
+     it. The CSS formula uses `100vw`, which includes the scrollbar, so `script.js` measures the
+     real `.wrap` edge and overwrites `--text-left` on load and resize; the CSS is the no-JS
+     fallback. Measured: 0–1px off at 1280/1440/1680/1920/2560. Admin and portal use the same rule
+     with a fixed `--text-left`, because `.main` there is left-aligned rather than auto-centred —
+     it moved them 3px, so the horizontal complaint was always a marketing-site problem.
+  2. ~~Move it up a little.~~ **Done.** `--rail-lift:clamp(0px,5.5vh,58px)` on
+     `top:calc(50% - var(--rail-lift))`, in all three stylesheets. **It is one number** — if Ohav
+     wants more or less lift, change that token and nothing else.
+  3. **Mobile: a collapsed dot rail.** Still not started. Closed by default showing one dot per section with the
      current section marked; tapping opens the full labelled rail. This *replaces* the bottom
      tabbar on the main site. Note it contradicts `HANDOFF-REDESIGN-2026-08-15.md` §1's "below
      900px it becomes a bottom glass tabbar" — Ohav asked for it directly, so it is an amendment,

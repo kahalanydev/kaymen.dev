@@ -64,7 +64,12 @@
   --w-page:1120px;
   --rail-w:224px;
   --rail-gap:32px;
-  --rail-off:26px;
+  --rail-off:26px;   /* minimum clearance from the screen edge */
+  /* .main is left-aligned with a max-width here, so the text edge is a fixed
+     expression rather than the viewport-dependent one the marketing site needs */
+  --text-left:calc(var(--rail-off) + var(--rail-w) + var(--rail-gap));
+  /* dead centre reads as parked. One number — raise or lower it here. */
+  --rail-lift:clamp(0px,5.5vh,58px);
   --ease:cubic-bezier(.4,0,.2,1);
   --spring:cubic-bezier(.34,1.4,.64,1);
 
@@ -110,7 +115,8 @@ svg{display:block}
    Recipe lifted from ../styles.css. LOCKED: always 224px, always labelled.
    Hover-to-collapse is not reintroduced here either.                       */
 .sidebar{
-  position:fixed;top:50%;left:var(--rail-off);transform:translateY(-50%);
+  position:fixed;top:calc(50% - var(--rail-lift));transform:translateY(-50%);
+  left:max(var(--rail-off),calc((var(--text-left) - var(--rail-w)) / 2));
   z-index:80;width:var(--rail-w);padding:10px 9px;border-radius:26px;
   display:flex;flex-direction:column;gap:2px;overflow:hidden;
   background:rgba(255,255,255,.55);
