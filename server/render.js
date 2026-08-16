@@ -97,7 +97,7 @@ function rail(active = 'work') {
   <div class="rail-prog" aria-hidden="true"><i id="prog"></i></div>
 
   <a href="/#start" class="rail-brand">
-    <span class="mark">K</span>
+    <span class="mark"></span>
     <span class="rail-wordmark"><b>kaymen</b><span>.</span>dev</span>
   </a>
 

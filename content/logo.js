@@ -143,6 +143,18 @@ function markBare(opts = {}) {
    different voice. */
 const WM_STACK = "Sora, Inter, -apple-system, 'Segoe UI', sans-serif";
 
+/* A STANDALONE SVG CANNOT REACH A WEBFONT, which makes font-family alone a lie
+   in any file handed to somebody else. Opened directly, dropped in an <img>, or
+   rasterised by a tool, the lockup renders in whatever the machine happens to
+   have, so it looked correct here and would have arrived wrong everywhere else.
+   Caught by measuring: the string came out the same width under "Sora" as under
+   a deliberately invented font name.
+
+   Passing `embedFont` (the woff2 as base64) writes an @font-face into the file
+   so it carries its own typeface and renders identically everywhere. Sora is
+   OFL, so redistributing it this way is allowed; the licence ships beside it in
+   assets/brand/fonts. Costs about 20KB, which is the correct trade for a file
+   whose whole job is to look the same on someone else's computer. */
 function arch(opts = {}) {
   const cut = opts.cut || 'display';
   const ctx = opts.ctx;
@@ -159,7 +171,11 @@ function arch(opts = {}) {
   }).join('');
   const fs = display ? 17 : 19;
   const y = display ? 78 : 80;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 104"${size}>${stones}` +
+  const face = opts.embedFont
+    ? `<defs><style>@font-face{font-family:'Sora';font-style:normal;font-weight:700;` +
+      `src:url(data:font/woff2;base64,${opts.embedFont}) format('woff2')}</style></defs>`
+    : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 104"${size}>${face}${stones}` +
          `<text x="100" y="${y}" text-anchor="middle" font-family="${WM_STACK}" font-weight="700" ` +
          `font-size="${fs}" letter-spacing="-0.6" fill="${ink}">kaymen<tspan fill="${ACCENT}">.dev</tspan></text></svg>`;
 }

@@ -165,7 +165,13 @@ function emailWrapper(innerHtml, opts) {
       <tr><td style="background:${C.deep};padding:${o.eyebrow ? '26px 32px 24px' : '22px 32px 20px'}">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr>
           <td width="41" style="padding-right:11px">
-            <div style="width:30px;height:30px;border-radius:9px;background:${C.accent};color:#ffffff;font-family:${F_DISPLAY};font-weight:800;font-size:14px;text-align:center;line-height:30px">K</div>
+            <!-- A hosted PNG, not the inline SVG the site uses: Outlook renders through Word,
+                 which does not draw SVG at all, and a CSS background-image is stripped by
+                 Gmail. Served at 2x and scaled down so it stays sharp on retina. If images
+                 are blocked the alt text carries the name, which is why it reads as the
+                 brand rather than as "logo". -->
+            <img src="https://kaymen.dev/assets/brand/email-mark.png" width="30" height="30" alt="kaymen.dev"
+                 style="display:block;width:30px;height:30px;border:0;border-radius:9px;outline:none;text-decoration:none">
           </td>
           <td style="font-family:${F_DISPLAY};font-size:15px;font-weight:700;color:#ffffff;letter-spacing:-.02em">kaymen<span style="color:${C.accent}">.</span>dev</td>
           ${o.flag ? `<td align="right" style="font-family:${F_BODY};font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:${flagColor}">${esc(o.flag)}</td>` : ''}
