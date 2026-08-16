@@ -312,35 +312,45 @@
     /* GROW — a woken node throws a new one into the emptiest space it can find.
        The candidate search is what makes the mesh spread evenly instead of
        bunching, and the parent link is what keeps the graph connected. */
+    /* GROW — sample the WHOLE canvas, then attach to the nearest node.
+
+       The previous version picked a random parent and threw outward from it.
+       Once the area near the source filled, almost every random parent was an
+       interior one, so candidates landed in occupied space and were rejected;
+       the frontier crept out one hop at a time and the node budget was spent
+       on the middle long before it reached an edge. The mesh sat clustered
+       around the source no matter how many nodes it was allowed.
+
+       Sampling the canvas uniformly inverts that: every part of the hero is
+       equally likely to be tried, so it fills outward as readily as inward.
+       Attaching to the nearest existing node is what keeps the graph connected,
+       and the reach cap is what stops a point in an empty corner attaching by
+       an absurdly long edge — it simply waits until the frontier gets closer. */
+    var REACH = 250;
     function grow() {
       if (nodes.length >= MAX_NODES) return;
-      var live = nodes.filter(function (n) { return n.act > 0.5 && !n.dying; });
-      if (!live.length) return;
-
-      var bestParent = null, bestPos = null, bestGap = MIN_GAP;
-      for (var i = 0; i < 14; i++) {
-        var p = live[(Math.random() * live.length) | 0];
-        var a = Math.random() * Math.PI * 2;
-        var d = (p.source ? SOURCE_R + 66 : 84) + Math.random() * 108;
-        var x = p.x + Math.cos(a) * d, y = p.y + Math.sin(a) * d;
-        if (x < 44 || x > w - 44 || y < 44 || y > h - 44) continue;
-        var near = 1e9;
+      var best = null, bestGap = MIN_GAP;
+      for (var i = 0; i < 18; i++) {
+        var x = 44 + Math.random() * (w - 88);
+        var y = 44 + Math.random() * (h - 88);
+        var near = 1e9, parent = null;
         for (var j = 0; j < nodes.length; j++) {
-          var dd = Math.hypot(nodes[j].x - x, nodes[j].y - y);
-          if (dd < near) near = dd;
+          if (nodes[j].dying) continue;
+          var d = Math.hypot(nodes[j].x - x, nodes[j].y - y);
+          if (d < near) { near = d; parent = nodes[j]; }
         }
-        if (near > bestGap) { bestGap = near; bestParent = p; bestPos = { x: x, y: y }; }
+        if (!parent || near > REACH) continue;   /* nothing close enough to join */
+        if (near > bestGap) { bestGap = near; best = { x: x, y: y, p: parent }; }
       }
-      if (!bestParent) return;
-
+      if (!best) return;
       var n = {
-        x: bestPos.x, y: bestPos.y, r: 2.4 + Math.random() * 2.0,
+        x: best.x, y: best.y, r: 2.4 + Math.random() * 2.0,
         act: 0, born: tick, dying: 0, source: false,
         ph: Math.random() * 6.28, sp: 0.3 + Math.random() * 0.6, ox: 0, oy: 0,
       };
       nodes.push(n);
-      var e = link(bestParent, n);
-      if (e) fire(e, bestParent);
+      var e = link(best.p, n);
+      if (e) fire(e, best.p);
     }
 
     /* WEAVE — sideways links between nodes that already exist. Safe for
