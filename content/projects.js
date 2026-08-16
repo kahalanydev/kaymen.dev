@@ -87,6 +87,7 @@ const PRACTICE_AREAS = [
 const CASE_STUDIES = [
   {
     slug: 'multi-campus-engagement-platform',
+    pricing: { tier: 'platform', addons: ['tenant', 'connect', 'mobile'] },
     area: 'platforms',
     name: 'Multi-campus engagement platform',
     client: { real: 'Thrive / OLAMI', named: false },
@@ -146,6 +147,7 @@ const CASE_STUDIES = [
 
   {
     slug: 'community-lending-ledger',
+    pricing: { tier: 'stack', addons: ['connect', 'migrate'] },
     area: 'platforms',
     name: 'Community lending ledger',
     client: { real: 'Passaic Clifton Gemach', named: false },
@@ -202,6 +204,7 @@ const CASE_STUDIES = [
 
   {
     slug: 'msp-time-compliance-portal',
+    pricing: { tier: 'stack', addons: ['connect'] },
     area: 'integrations',
     name: 'MSP time-compliance portal',
     client: { real: 'Autotask tech-metrics / CIS', named: false },
@@ -259,6 +262,7 @@ const CASE_STUDIES = [
 
   {
     slug: 'bilingual-booking-platform',
+    pricing: { tier: 'stack', addons: ['lang'] },
     area: 'apps',
     name: 'Bilingual therapeutic-riding booking platform',
     client: { real: 'Horse & Harmony', named: false },
@@ -314,6 +318,7 @@ const CASE_STUDIES = [
 
   {
     slug: 'torah-tracker',
+    pricing: { tier: 'stack', addons: ['mobile'] },
     area: 'apps',
     name: 'Torah Tracker',
     client: { real: 'Torah Tracker', named: true },

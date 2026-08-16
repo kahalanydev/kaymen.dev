@@ -755,6 +755,32 @@ footer{padding:36px 0 46px;border-top:1px solid var(--line);margin-top:80px}
   border:1px solid var(--line);border-radius:100px;padding:5px 11px;
 }
 
+/* ------------------------------------------------- what this shape of work costs
+   Sits after Outcome and before the long write-up: by then the reader believes
+   the work, and cost is the next question they were going to ask anyway. It
+   quotes the same ladder as /#price, from content/pricing.js, so the two pages
+   cannot drift apart. */
+.case-cost{margin-top:34px;padding:26px 28px;border:1px solid var(--line);border-radius:18px;background:#fff}
+.case-cost h2{font-size:15px;font-weight:700;margin-bottom:12px}
+.cc-days{font-size:13.5px;color:var(--muted);line-height:1.6;max-width:60ch}
+.cc-days b{color:var(--ink);font-weight:600}
+.cc-rows{display:grid;gap:1px;margin-top:20px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+@media (min-width:640px){.cc-rows{grid-template-columns:1fr 1fr}}
+.cc-row{background:#fff;padding:16px 18px;display:flex;flex-direction:column;gap:7px}
+.cc-row.cc-us{background:var(--accent-soft)}
+.cc-who{
+  font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
+}
+.cc-us .cc-who{color:var(--accent-dark)}
+.cc-fig b{
+  display:block;font-family:var(--display);font-size:21px;font-weight:800;
+  letter-spacing:-.04em;line-height:1.15;font-variant-numeric:tabular-nums;
+}
+.cc-us .cc-fig b{color:var(--accent-dark)}
+.cc-fig span{display:block;font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+.cc-fine{font-size:11.5px;color:var(--muted);margin-top:16px;line-height:1.6;max-width:72ch}
+.cc-fine a{color:var(--accent-dark);font-weight:600}
+
 /* the long write-up, collapsed by default */
 .case-longform{margin-top:34px;border:1px solid var(--line);border-radius:18px;background:#fff;overflow:hidden}
 .case-longform summary{

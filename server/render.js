@@ -23,6 +23,7 @@ const {
 } = require('../content/projects');
 const { demoFor } = require('../content/demos');
 const STATS = require('../content/stats');
+const PRICING = require('../content/pricing');
 
 const SITE = 'https://kaymen.dev';
 
@@ -217,6 +218,60 @@ ${demos ? '    <script src="/assets/demos.js"></script>\n' : ''}    <script src=
    a crawler sees, and so there is no way to render a chart the data does not
    support.
    -------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+   The cost block on a case study.
+
+   It quotes the SAME ladder the pricing page does, by asking content/pricing.js
+   for the tier and add-ons the case study is tagged with. That is the whole
+   point: a case study that priced itself independently would drift from /#price
+   within a month, and a site that disagrees with itself about money is worse
+   than one that says nothing.
+
+   The days are real and generated (content/stats.js, from git history). The
+   comparison is a RANGE, because a day carrying a commit is not a timesheet and
+   nobody knows whether an agency bills six hours or eight. A range says so; a
+   single figure would fake a precision we do not have.
+
+   Renders nothing for a project with no `pricing` field, which is how our own
+   internal tooling stays out of it.
+   --------------------------------------------------------------------------- */
+const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
+
+function caseCost(s) {
+  if (!s.pricing) return '';
+  const q = PRICING.quote(s.pricing.tier, s.pricing.addons);
+  if (!q) return '';
+
+  const fleet = STATS.FLEET.find((f) => f.slug === s.slug);
+  const days = fleet ? fleet.days.reduce((a, b) => a + b, 0) : 0;
+  if (!days) return '';
+
+  const [lo, hi] = PRICING.COMPARE.hoursPerDay;
+  const cmpLo = days * lo * PRICING.COMPARE.hourly;
+  const cmpHi = days * hi * PRICING.COMPARE.hourly;
+
+  const ours = q.partnership
+    ? `<b>No build fee</b><span>then ${money(PRICING.PARTNER.monthly)}/month on a ${PRICING.PARTNER.months}-month partnership</span>`
+    : `<b>From ${money(q.build)}</b><span>to build, then ${money(q.monthly)}/month</span>`;
+
+  return `
+      <section class="case-cost">
+        <h2>What something like this costs</h2>
+        <p class="cc-days">It took <b>${days} working days</b>, counted out of the repository rather than estimated afterwards.</p>
+        <div class="cc-rows">
+          <div class="cc-row cc-us">
+            <span class="cc-who">With us</span>
+            <span class="cc-fig">${ours}</span>
+          </div>
+          <div class="cc-row">
+            <span class="cc-who">At ${esc(PRICING.COMPARE.label)}</span>
+            <span class="cc-fig"><b>${money(cmpLo)} to ${money(cmpHi)}</b><span>the same ${days} days at $${PRICING.COMPARE.hourly}/hr, billed at ${lo} to ${hi} hours a day</span></span>
+          </div>
+        </div>
+        <p class="cc-fine">A rate comparison, not a bill. Our figure is the published ladder from <a href="/#price">the pricing page</a>, for the closest match to this shape of work. Working days regenerate from the repository on every deploy.</p>
+      </section>`;
+}
 
 const MONTH_LABEL = (key) => {
   const [y, m] = key.split('-');
@@ -496,6 +551,8 @@ function caseStudyPage(slug) {
           ${s.stack.map((t) => `<span>${esc(t)}</span>`).join('')}
         </div>
       </section>
+
+      ${caseCost(s)}
 
       <details class="case-longform">
         <summary>
