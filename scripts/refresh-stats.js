@@ -41,6 +41,7 @@ const MONTHS = 12;
    board can never drift apart. A project with no local repo is simply absent
    from the sparklines rather than being given invented numbers. */
 const PROJECT_REPOS = {
+  'mortgage-broker-client-portal': 'Clients/Bridgemtg',
   'multi-campus-engagement-platform': 'Clients/Thrive/platform',
   'community-lending-ledger': 'Clients/PassaicCliftonGemach',
   'msp-time-compliance-portal': 'Personal/Autotask - tech metrics',
@@ -51,6 +52,7 @@ const PROJECT_REPOS = {
 /* Short labels for the hero panel — the full case-study names are too long for
    a 386px column. The board below uses the real names. */
 const SHORT_NAMES = {
+  'mortgage-broker-client-portal': 'Broker portal',
   'multi-campus-engagement-platform': 'Multi-campus platform',
   'community-lending-ledger': 'Community ledger',
   'msp-time-compliance-portal': 'MSP compliance portal',

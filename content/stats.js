@@ -17,6 +17,20 @@ const MONTHS = ["2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","202
 /** Active days per month per system: distinct days carrying at least one commit. */
 const FLEET = [
   {
+    "slug": "mortgage-broker-client-portal",
+    "name": "Broker portal",
+    "kind": "Platform",
+    "days": [
+      0,
+      0,
+      2,
+      4,
+      1,
+      0,
+      6
+    ]
+  },
+  {
     "slug": "multi-campus-engagement-platform",
     "name": "Multi-campus platform",
     "kind": "Platform",
@@ -27,7 +41,7 @@ const FLEET = [
       0,
       19,
       29,
-      10
+      11
     ]
   },
   {
@@ -45,6 +59,20 @@ const FLEET = [
     ]
   },
   {
+    "slug": "torah-tracker",
+    "name": "Torah Tracker",
+    "kind": "App",
+    "days": [
+      1,
+      14,
+      13,
+      1,
+      1,
+      0,
+      5
+    ]
+  },
+  {
     "slug": "msp-time-compliance-portal",
     "name": "MSP compliance portal",
     "kind": "Integration",
@@ -55,7 +83,7 @@ const FLEET = [
       0,
       6,
       8,
-      4
+      5
     ]
   },
   {
@@ -71,25 +99,11 @@ const FLEET = [
       2,
       0
     ]
-  },
-  {
-    "slug": "torah-tracker",
-    "name": "Torah Tracker",
-    "kind": "App",
-    "days": [
-      1,
-      14,
-      13,
-      1,
-      1,
-      0,
-      5
-    ]
   }
 ];
 
 /** Where most months actually land, as an interquartile range of active months. */
-const TYPICAL = {"low":2,"high":10};
+const TYPICAL = {"low":2,"high":11};
 
 /** Production (non-staging) applications running on our Coolify. */
 const LIVE = {
@@ -138,7 +152,7 @@ const BAND = [
     "note": "Shipped, reviewed, and updated over the air."
   },
   {
-    "value": "1,827",
+    "value": "1,924",
     "label": "commits in the last 12 months",
     "note": "Across the six systems on the board below."
   },

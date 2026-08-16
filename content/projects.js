@@ -91,7 +91,15 @@ const PRACTICE_AREAS = [
 const CASE_STUDIES = [
   {
     slug: 'mortgage-broker-client-portal',
-    pricing: { tier: 'platform', addons: ['portal', 'migrate'] },
+    /* 'stack', not 'platform'. The platform rung is "several systems, several
+       teams, and the reporting across all of it", which does not describe a
+       two-to-three-seat brokerage. The tag also has to survive arithmetic: this
+       was 13 working days, so a $19,000 platform quote implies $183-244/hr,
+       well above our own $125/hr overflow, and it tipped past PARTNER_AT into
+       the 12-month partnership — which put "year one $42,000" next to an agency
+       figure of $15,600-20,800 and made us look twice the price. At 'stack' it
+       is $10,500, or $101-135/hr, which brackets $125. */
+    pricing: { tier: 'stack', addons: ['portal', 'migrate'] },
     area: 'platforms',
     name: 'Mortgage broker and client portal',
     client: { real: 'BridgeMortgage', named: true },
