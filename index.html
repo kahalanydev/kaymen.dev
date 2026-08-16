@@ -51,7 +51,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9.1 9a3 3 0 1 1 4.2 2.7c-.8.4-1.3 1.1-1.3 2v.4"/><circle cx="12" cy="17.5" r=".8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="9.2"/></svg><span>What you need</span>
     </a>
     <a href="#running" class="rail-link" data-sec="running" data-track="nav-running">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h4l2.5-6 4 13L16 12h5"/></svg><span>Still running</span>
+      <!-- "What we run", not "Still running" — see RAIL_ITEMS in server/render.js
+           for why, and change it there in the same commit or the sub-pages get a
+           different rail from the homepage. -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h4l2.5-6 4 13L16 12h5"/></svg><span>What we run</span>
     </a>
     <a href="#work" class="rail-link" data-sec="work" data-track="nav-work">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2.5" y="6.5" width="19" height="13.5" rx="2.2"/><path d="M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/></svg><span>The work</span>

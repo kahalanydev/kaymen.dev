@@ -67,7 +67,14 @@ const RAIL_ITEMS = [
     label: 'What you need',
     icon: '<path d="M9.1 9a3 3 0 1 1 4.2 2.7c-.8.4-1.3 1.1-1.3 2v.4"/><circle cx="12" cy="17.5" r=".8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="9.2"/>',
   },
-  { sec: 'running', label: 'Still running', icon: '<path d="M3 12h4l2.5-6 4 13L16 12h5"/>' },
+  /* "Still running" until 2026-08-16. "Still" presupposes that software stopping
+     is the normal outcome, so it read as relief rather than confidence — and it
+     promised a track record the board underneath cannot show, because every row
+     on it says LIVE SINCE 2026. "What we run" is present tense, needs no
+     duration to be true, and answers the abandonment fear in #terms positively:
+     this is our standing job, not a thing that happens to have survived. Mirrors
+     "What you need" above it. index.html carries the same item — change both. */
+  { sec: 'running', label: 'What we run', icon: '<path d="M3 12h4l2.5-6 4 13L16 12h5"/>' },
   {
     sec: 'work',
     label: 'The work',
@@ -366,7 +373,7 @@ function fleetPanel() {
  * Shot strip. THREE, and it stays three — one row. It briefly ran to six (the
  * client back ends plus predictable/kartov/davenen) and that was wrong twice
  * over: it doubled a strip already too small to read on a phone, and it diluted
- * the section's claim. "Still running" is proved by a business doing its work on
+ * the section's claim. "What we run" is proved by a business doing its work on
  * one of these, not by a product we made for ourselves. Naming is settled per
  * project by `client.named` in content/projects.js, not by this file.
  *
@@ -430,7 +437,7 @@ function runningBoard() {
     <div class="wrap">
       <div class="prose rv">
         <p class="eyebrow">The proof</p>
-        <h2 class="sec">Systems still running</h2>
+        <h2 class="sec">What we run</h2>
         <p class="sec-sub">Not a gallery of finished things. The fleet currently under maintenance.</p>
       </div>
 
