@@ -1,5 +1,5 @@
 /* ============================================================================
-   GENERATED FILE — do not edit by hand.
+   GENERATED FILE. Do not edit by hand.
 
    Written by scripts/refresh-stats.js on 2026-08-16.
    Sources: git history of each project repo, and the Coolify API on
@@ -14,7 +14,7 @@ const GENERATED_AT = "2026-08-16";
 /** Month buckets for the sparklines, oldest first. */
 const MONTHS = ["2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08"];
 
-/** Active days per month per system — distinct days carrying at least one commit. */
+/** Active days per month per system: distinct days carrying at least one commit. */
 const FLEET = [
   {
     "slug": "multi-campus-engagement-platform",

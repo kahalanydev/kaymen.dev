@@ -49,11 +49,11 @@ const PRACTICE_AREAS = [
     label: 'Integrations',
     title: 'Business systems & integrations',
     promise:
-      'The connective work most shops decline — two-way syncs, financial reconciliation, and APIs that were never designed for the question being asked.',
+      'The connective work most shops decline: two-way syncs, financial reconciliation, and APIs that were never designed for the question being asked.',
     detail:
-      'Every one of these started as "can it just talk to X." X is usually Salesforce, QuickBooks, a PSA, a payment or shipping provider, or a calendar — and the honest answer is that the integration is the project. Rate limits, pagination ceilings, records that exist on one side and not the other, and a reconciliation story for when the two disagree.',
+      'Every one of these started as "can it just talk to X." X is usually Salesforce, QuickBooks, a PSA, a payment or shipping provider, or a calendar. And the honest answer is that the integration is the project. Rate limits, pagination ceilings, records that exist on one side and not the other, and a reconciliation story for when the two disagree.',
     proof: [
-      'Two-way Salesforce sync — bridge objects, flow deploys via Metadata API',
+      'Two-way Salesforce sync: bridge objects, flow deploys via Metadata API',
       'Accounting reconciliation against a live book',
       'Delta-sync ingestion pipelines that survive API timeouts',
     ],
@@ -92,7 +92,7 @@ const CASE_STUDIES = [
     client: { real: 'Thrive / OLAMI', named: false },
     tagline: 'Four campuses, one database, isolation that had to be provably real.',
     summary:
-      'A network of campus organisations ran on a 135,000-line WordPress plugin — one install per campus, student records duplicated across sites, no shared reporting, and a Salesforce org nobody trusted. We replaced it with a single multi-tenant platform.',
+      'A network of campus organisations ran on a 135,000-line WordPress plugin. One install per campus, student records duplicated across sites, no shared reporting, and a Salesforce org nobody trusted. We replaced it with a single multi-tenant platform.',
     year: '2026',
     status: 'Live in production',
     scale: [
@@ -101,23 +101,23 @@ const CASE_STUDIES = [
       { value: '2×/day', label: 'Salesforce sync, zero duplicates' },
     ],
     problem: [
-      'Each campus ran its own copy of a large WordPress plugin. The same student could exist three times across three installs with three different histories, and there was no way to answer a question across the network — headcount, attendance, engagement — without exporting three spreadsheets and reconciling them by hand.',
+      'Each campus ran its own copy of a large WordPress plugin. The same student could exist three times across three installs with three different histories, and there was no way to answer a question across the network. Headcount, attendance, engagement: without exporting three spreadsheets and reconciling them by hand.',
       'The parent organisation treated Salesforce as the system of record, but the data reaching it came from manual weekly CSV exports. By the time anyone looked, it was stale and partly wrong.',
     ],
     problemShort: [
-      "One WordPress install per campus — the same student existing three times with three histories.",
+      "One WordPress install per campus: the same student existing three times with three histories.",
       "No way to answer any question across the network without exporting three spreadsheets.",
       "Salesforce was the system of record, fed by manual weekly CSVs that were stale on arrival.",
     ],
     constraints: [
-      'Real student PII across every campus — the isolation story had to be provable, not asserted.',
+      'Real student PII across every campus: the isolation story had to be provable, not asserted.',
       'The old system stayed live throughout. There was no maintenance window and no cutover weekend.',
       'A native mobile app was already in the App Store with installed users. It had to keep working, on the same binary, while the backend underneath it changed completely.',
       'Salesforce had to stay in sync in both directions, without creating duplicate contacts in an org with an active duplicate-detection rule.',
     ],
     built: [
       'A single Laravel + Filament platform on one Postgres database, with per-campus tenancy enforced by row-level security.',
-      'A per-campus admin panel, plus a cross-campus HQ panel for the parent organisation — the same data, two scopes, one permission model.',
+      'A per-campus admin panel, plus a cross-campus HQ panel for the parent organisation. The same data, two scopes, one permission model.',
       'A drag-and-drop public site builder so each campus runs its own public-facing site out of the same platform.',
       'Two-way Salesforce sync built on bridge objects, with flow deployment via the Metadata API.',
       'A read-only AI admin assistant, walled off from writes at the database layer.',
@@ -127,12 +127,12 @@ const CASE_STUDIES = [
       title: 'Row-level security that silently did nothing',
       body: [
         'Tenant isolation was designed on Postgres row-level security: every tenant table gets a policy, the request sets the current organisation, the database refuses to return anyone else\'s rows. Policies were in place. The tests passed. And one campus could still have read another\'s students.',
-        'The managed Postgres had provisioned the application\'s database user as the cluster\'s **bootstrap superuser**. Superusers bypass row-level security unconditionally — `FORCE ROW LEVEL SECURITY` does not apply to them. And the bootstrap user cannot be demoted; Postgres refuses. So the entire isolation layer was inert, and nothing about the running application looked wrong.',
+        'The managed Postgres had provisioned the application\'s database user as the cluster\'s **bootstrap superuser**. Superusers bypass row-level security unconditionally. `FORCE ROW LEVEL SECURITY` does not apply to them. And the bootstrap user cannot be demoted; Postgres refuses. So the entire isolation layer was inert, and nothing about the running application looked wrong.',
         'The fix was a separate non-superuser role, with ownership of every table and sequence in the schema reassigned to it, and the application moved onto it. `current_user` is now asserted on boot, because a future deploy that quietly reverts the credential would turn tenant isolation back off without a single error.',
-        'Then the same property bit from the other direction. A migration backfilling a new column looped over an existing table and wrote nothing — it ran under row-level security with no bypass active, so the read returned zero rows and the loop did nothing, successfully. 152 student records went blank and the migration reported success. Anything crossing tenants now has to say so explicitly.',
+        'Then the same property bit from the other direction. A migration backfilling a new column looped over an existing table and wrote nothing. It ran under row-level security with no bypass active, so the read returned zero rows and the loop did nothing, successfully. 152 student records went blank and the migration reported success. Anything crossing tenants now has to say so explicitly.',
       ],
       lesson:
-        'A security control that fails open is worse than one you never built, because it also buys you confidence. Both bugs here were silent successes — the check that catches them is asserting the precondition at runtime, not testing the behaviour once.',
+        'A security control that fails open is worse than one you never built, because it also buys you confidence. Both bugs here were silent successes: the check that catches them is asserting the precondition at runtime, not testing the behaviour once.',
     },
     outcome: [
       'Four campuses live on one platform; the legacy plugin retired.',
@@ -151,7 +151,7 @@ const CASE_STUDIES = [
     client: { real: 'Passaic Clifton Gemach', named: false },
     tagline: 'A $1.58M interest-free loan fund whose headline number was wrong by $47,383.',
     summary:
-      'An interest-free community loan fund ran on spreadsheets, contracts in Google Drive, and a bookkeeping tool with no transaction export. We built the ledger — and in the process found that the number everyone quoted was measuring the wrong side of the balance sheet.',
+      'An interest-free community loan fund ran on spreadsheets, contracts in Google Drive, and a bookkeeping tool with no transaction export. We built the ledger, and in the process found that the number everyone quoted was measuring the wrong side of the balance sheet.',
     year: '2026',
     status: 'Live in production',
     scale: [
@@ -164,12 +164,12 @@ const CASE_STUDIES = [
       'Loan contracts lived as PDFs in Google Drive, disconnected from any record of the loan itself, and guarantor details existed only inside those documents.',
     ],
     problemShort: [
-      "A fund capitalised two ways — donated money, and money owed back to 44 lenders.",
+      "A fund capitalised two ways: donated money, and money owed back to 44 lenders.",
       "Loan contracts sat as PDFs in Drive, disconnected from any record of the loan.",
       "The headline fund figure had drifted $47,383 from what the bank actually held.",
     ],
     constraints: [
-      'The books had zero journal entries and zero recorded transactions — four years of bank fees, write-offs and running costs had simply never been entered anywhere.',
+      'The books had zero journal entries and zero recorded transactions. Four years of bank fees, write-offs and running costs had simply never been entered anywhere.',
       'The bookkeeping tool in use has no scheduled export and no per-transaction API, so expenses could not be pulled in and netted off.',
       'The administrators are not technical. Anything requiring a reconciliation ritual would not get done.',
     ],
@@ -183,18 +183,18 @@ const CASE_STUDIES = [
       title: 'The headline number was measuring the wrong side',
       body: [
         'Total Fund Size was computed from money that went **in**: donations plus what was still owed to lenders. That figure can only ever rise. Four years of bank fees, write-offs and running costs had left the fund without ever coming off the total.',
-        'So the dashboard read **$1,633,917.56** while the gemach actually held **$1,586,533.86**, and the $47,383.70 between them sat on the page labelled "unexplained difference" — visible to everyone, explicable by no one.',
+        'So the dashboard read **$1,633,917.56** while the gemach actually held **$1,586,533.86**, and the $47,383.70 between them sat on the page labelled "unexplained difference". Visible to everyone, explicable by no one.',
         'The instinct is to find the missing expenses and subtract them. That was impossible: there is no expense record to find, and building one retroactively across four years would have been an invention, not a reconstruction.',
-        'The fix was to change which side the number is counted from. Fund size is now **what is held** — out on loan, plus cash in the bank, minus grants still to be distributed. That needs no expense record to be correct, because money that has left the bank is already absent from it. Money-in is kept as its own separate figure, since "who do we owe" is a genuinely different question from "what do we have", and the gap between them is now reported plainly as what has been spent.',
-        'Two consequences were accepted deliberately. A lender\'s share of the fund rose, because the denominator got smaller — and that is the more truthful number. And the fund is allowed to go negative rather than being clamped at zero: a fund over-committed to causes should say so on its own dashboard.',
+        'The fix was to change which side the number is counted from. Fund size is now **what is held**: out on loan, plus cash in the bank, minus grants still to be distributed. That needs no expense record to be correct, because money that has left the bank is already absent from it. Money-in is kept as its own separate figure, since "who do we owe" is a genuinely different question from "what do we have", and the gap between them is now reported plainly as what has been spent.',
+        'Two consequences were accepted deliberately. A lender\'s share of the fund rose, because the denominator got smaller. And that is the more truthful number. And the fund is allowed to go negative rather than being clamped at zero: a fund over-committed to causes should say so on its own dashboard.',
       ],
       lesson:
-        'Not every wrong number is a bug. This one was an accounting definition that had quietly stopped matching reality, and the correct fix changed what the system claims to measure — which is a decision to take with the client, not a patch to ship quietly.',
+        'Not every wrong number is a bug. This one was an accounting definition that had quietly stopped matching reality, and the correct fix changed what the system claims to measure. Which is a decision to take with the client, not a patch to ship quietly.',
     },
     outcome: [
       'The headline figure reconciles to the bank balance with no unexplained remainder.',
       'Lender statements now show a share of what the fund actually holds.',
-      'The growth chart was relabelled rather than redrawn — it charts money in, which is a real series, instead of being forced onto a basis the underlying data cannot support.',
+      'The growth chart was relabelled rather than redrawn. It charts money in, which is a real series, instead of being forced onto a basis the underlying data cannot support.',
     ],
     stack: ['PHP', 'MySQL', 'Google Drive API', 'Docker', 'Coolify'],
     shots: [],
@@ -222,16 +222,16 @@ const CASE_STUDIES = [
     problemShort: [
       "Engineers were not consistently logging time, and billable hours were leaking.",
       "The PSA holds the data but cannot express the question: who has not logged, for how long.",
-      "Roughly 243,000 lifetime tickets — any query broad enough to be useful times out.",
+      "Roughly 243,000 lifetime tickets: any query broad enough to be useful times out.",
     ],
     constraints: [
-      'The account holds roughly 243,000 tickets across its lifetime. Any unbounded query against that history times out server-side — there is no "just fetch it all" path.',
-      'Refresh had to feel live — minutes, not a nightly batch — because the whole point is catching a gap while it is still today\'s problem.',
+      'The account holds roughly 243,000 tickets across its lifetime. Any unbounded query against that history times out server-side. There is no "just fetch it all" path.',
+      'Refresh had to feel live. Minutes, not a nightly batch, because the point is catching a gap while it is still today\'s problem.',
       'Compliance thresholds are per-person and depend on whether someone is an engineer, management, or excluded entirely. The API has no such concept.',
     ],
     built: [
       'A Python ingestion service doing bounded historical backfill plus continuous delta sync on last-activity, with per-entity sync state so an interrupted run resumes rather than restarts.',
-      'A FastAPI portal with a colour-coded compliance dashboard — hours logged against target, days with zero entries, tickets worked with no time recorded, last-entry timestamp per engineer.',
+      'A FastAPI portal with a colour-coded compliance dashboard. Hours logged against target, days with zero entries, tickets worked with no time recorded, last-entry timestamp per engineer.',
       'Per-engineer drill-down: daily time chart, customers worked, time by billing code, ticket classifications, full ticket list.',
       'Roster classification as a self-serve screen, with every metric downstream obeying it.',
       'A settings screen holding API credentials and sync interval, so a rotated secret is a form submission rather than a redeploy.',
@@ -239,13 +239,13 @@ const CASE_STUDIES = [
     hardPart: {
       title: 'Designing around an API that cannot answer the question',
       body: [
-        'The naive shape — pull everything, compute locally — dies immediately. An all-time ticket query against 243,000 records times out server-side and returns nothing at all, so there is no partial result to work with and no error that tells you the shape of the problem.',
+        'The obvious approach is to pull everything and compute locally. It dies immediately. An all-time ticket query against 243,000 records times out server-side and returns nothing at all, so there is no partial result to work with and no error that tells you the shape of the problem.',
         'The ingestion was rebuilt as two distinct mechanisms with different jobs. A bounded backfill fetches history from a fixed start date, which makes the initial load a known, finite, resumable amount of work. On top of that, a delta sync polls on last-activity and keeps the window fresh. Sync state is tracked per entity, so extending the history horizon later means clearing one row rather than re-running the whole import.',
-        'The second problem was subtler and mattered more. The metric leadership actually wanted — *is this person compliant* — depends on a roster classification the PSA does not model. The obvious approach is a hard-coded list of engineer IDs. That list is wrong the first time somebody joins, and being silently wrong is exactly the failure this portal exists to prevent.',
+        'The second problem was subtler and mattered more. The metric leadership actually wanted, *is this person compliant*, depends on a roster classification the PSA does not model. The obvious approach is a hard-coded list of engineer IDs. That list is wrong the first time somebody joins, and being silently wrong is exactly the failure this portal exists to prevent.',
         'So classification became a first-class, editable concept in the product, and every metric derives from it. Roster curation is self-serve; it stopped being an engineering dependency and stopped being a source of quiet drift.',
       ],
       lesson:
-        'When an API cannot answer your question, the fix is usually not a cleverer query — it is accepting that you now own a synchronisation problem, and building the state tracking that makes it resumable.',
+        'When an API cannot answer your question, the fix is usually not a cleverer query. It is accepting that you now own a synchronisation problem, and building the state tracking that makes it resumable.',
     },
     outcome: [
       'Full history backfilled in around 70 seconds; 20,920 tickets and 5,216 time entries in continuous sync.',
@@ -264,7 +264,7 @@ const CASE_STUDIES = [
     client: { real: 'Horse & Harmony', named: false },
     tagline: 'The booking calendar rendered perfectly, and it was empty.',
     summary:
-      'A therapeutic horse-riding practice took bookings by phone and WhatsApp. We built a bilingual Hebrew/English booking site with a self-service admin — and hit a failure mode that produces no error at all.',
+      'A therapeutic horse-riding practice took bookings by phone and WhatsApp. We built a bilingual Hebrew/English booking site with a self-service admin, then hit a failure mode that produces no error at all.',
     year: '2026',
     status: 'Live in production',
     scale: [
@@ -274,16 +274,16 @@ const CASE_STUDIES = [
     ],
     problem: [
       'Every booking went through a phone call or a WhatsApp message, which meant double-bookings, no record, and an owner doing scheduling admin instead of running sessions.',
-      'The practice operates in Hebrew, with English-speaking clients too — so the site is genuinely bilingual and right-to-left, not an English site with a translation bolted on.',
+      'The practice operates in Hebrew, with English-speaking clients too, so the site is genuinely bilingual and right-to-left, not an English site with a translation bolted on.',
     ],
     problemShort: [
       "Every booking ran through a phone call or a WhatsApp message.",
-      "Hebrew-first with English, fully right-to-left — not a translation layer.",
+      "Hebrew-first with English, fully right-to-left. Not a translation layer.",
       "A non-technical owner: anything needing a mental model of the data would go unused.",
     ],
     constraints: [
       'The owner is not technical. An admin panel requiring a mental model of the data would go unused, and the system would quietly revert to WhatsApp.',
-      'Bookings must never auto-confirm — a slot is held on submission, but a human decides.',
+      'Bookings must never auto-confirm: a slot is held on submission, but a human decides.',
       'Session types have different durations, and the schedule is defined by recurring templates rather than by hand-entered slots.',
     ],
     built: [
@@ -296,12 +296,12 @@ const CASE_STUDIES = [
       title: 'A failure mode with no error state',
       body: [
         'Bookable slots are generated ahead of time from recurring templates into a rolling window. Generation ran at deploy, which is fine on day one and wrong forever after: the window advanced, generation did not, and the horizon quietly ran dry.',
-        'The result is the worst kind of outage. The site was up. The API returned 200. The calendar rendered correctly. It simply had nothing in it — and a correctly-rendered empty calendar is indistinguishable, to every monitor you would think to set up, from a correctly-rendered calendar on a quiet week.',
+        'The result is the worst kind of outage. The site was up. The API returned 200. The calendar rendered correctly. It simply had nothing in it, and a correctly-rendered empty calendar is indistinguishable, to every monitor you would think to set up, from a correctly-rendered calendar on a quiet week.',
         'No exception was thrown, no request failed, and no alert existed that could have fired, because nothing was in an error state. The only signal was the absence of bookings, which looks exactly like ordinary quiet.',
-        'The fix is two parts, and the second matters more than the first. A daily job now keeps the horizon extended. And the health check was inverted to treat an empty forward window as a failure rather than a valid response — the system now has to prove it has availability, instead of being trusted because it did not crash.',
+        'The fix is two parts, and the second matters more than the first. A daily job now keeps the horizon extended. And the health check was inverted to treat an empty forward window as a failure rather than a valid response. The system now has to prove it has availability, instead of being trusted because it did not crash.',
       ],
       lesson:
-        'Uptime monitoring answers "did it respond." It does not answer "did it respond with anything." For anything generated on a horizon — slots, schedules, forecasts, rotations — the emptiness itself has to be the alert.',
+        'Uptime monitoring answers "did it respond." It does not answer "did it respond with anything." For anything generated on a horizon. Slots, schedules, forecasts, rotations: the emptiness itself has to be the alert.',
     },
     outcome: [
       'Bookings run through the site, with the owner confirming rather than coordinating.',
@@ -321,26 +321,26 @@ const CASE_STUDIES = [
     liveUrl: 'https://torahtracker.app',
     tagline: 'A rewrite shipped to an installed base, without reaching zero users.',
     summary:
-      'A learning-tracker app that started as a PWA and was rewritten in React Native for the App Store and Google Play. The interesting part was not the rewrite — it was delivering updates to people who already had the old build installed.',
+      'A learning-tracker app that started as a PWA and was rewritten in React Native for the App Store and Google Play. The interesting part was not the rewrite: it was delivering updates to people who already had the old build installed.',
     year: '2026',
-    status: 'Live — App Store & Google Play',
+    status: 'Live: App Store & Google Play',
     scale: [
       { value: 'iOS + Android', label: 'native, in both stores' },
       { value: 'OTA', label: 'updates without a store round-trip' },
       { value: '0', label: 'users a mismatched update reaches' },
     ],
     problem: [
-      'The original product was a progressive web app. It worked, but it could not do the things that make a daily-habit app stick on a phone — reliable notifications, a home-screen presence people trust, and offline behaviour that survives a commute.',
+      'The original product was a progressive web app. It worked, but it could not do the things that make a daily-habit app stick on a phone. Reliable notifications, a home-screen presence people trust, and offline behaviour that survives a commute.',
       'Rewriting it native meant taking on the entire release-engineering problem that a web app simply does not have.',
     ],
     problemShort: [
       "A progressive web app that could not do reliable notifications or real offline.",
-      "Real users already on the old build — a rewrite that stranded them is a downgrade.",
+      "Real users already on the old build: a rewrite that stranded them is a downgrade.",
       "Store review on every fix is not a viable loop for a small team.",
     ],
     constraints: [
       'Real users on the existing build. A rewrite that stranded them would have been a downgrade dressed as a launch.',
-      'Over-the-air updates were essential — waiting on store review for every fix is not a viable loop for a small team.',
+      'Over-the-air updates were essential: waiting on store review for every fix is not a viable loop for a small team.',
       'Android notification delivery is not uniform. Some vendors defer background work aggressively enough to make a reminder app useless by default.',
     ],
     built: [
@@ -352,9 +352,9 @@ const CASE_STUDIES = [
     hardPart: {
       title: 'The update that publishes successfully to nobody',
       body: [
-        'Expo over-the-air updates are matched to a **runtime version**. A device only accepts an update published to the runtime its installed binary was built with. That is the correct design — it is what stops JavaScript expecting a native module the installed app does not contain.',
+        'Expo over-the-air updates are matched to a **runtime version**. A device only accepts an update published to the runtime its installed binary was built with. That is the correct design: it is what stops JavaScript expecting a native module the installed app does not contain.',
         'It also means a version bump in the wrong place is a silent, total delivery failure. The app config had been moved to 2.1.0 while the build in the store was 2.0.1. A publish from that state completes without warning, reports success, and lands on a runtime that no installed device has. Every user stays on the old code, indefinitely, and the dashboard says the update shipped.',
-        'There is a matching trap one layer down: adding a native module in JavaScript without shipping a binary that contains it produces an update that installs and then crashes on the code path that needs it — a break introduced by the delivery mechanism itself.',
+        'There is a matching trap one layer down: adding a native module in JavaScript without shipping a binary that contains it produces an update that installs and then crashes on the code path that needs it. A break introduced by the delivery mechanism itself.',
         'Both are now procedural rather than remembered. Runtime version is verified against the shipped build before any publish, native-module changes are pinned to a matching binary release, and a type check gates the publish so a broken bundle cannot reach the channel in the first place.',
       ],
       lesson:
@@ -377,9 +377,9 @@ const CASE_STUDIES = [
     own: true,
     tagline: 'The internal tool the rest of this portfolio is built in.',
     summary:
-      'A desktop and mobile interface for running AI coding sessions across every project on one machine — built because the alternative was a wall of terminals, and kept because it is now the delivery environment for everything else here.',
+      'A desktop and mobile interface for running AI coding sessions across every project on one machine. Built because the alternative was a wall of terminals, and kept because it is now the delivery environment for everything else here.',
     year: '2026',
-    status: 'Live — desktop app + installable PWA',
+    status: 'Live: desktop app + installable PWA',
     scale: [
       { value: '25+', label: 'projects driven from one interface' },
       { value: 'Desktop + PWA', label: 'same session, either device' },
@@ -395,22 +395,22 @@ const CASE_STUDIES = [
       "A run that stalls while you are elsewhere costs the whole gap until you look.",
     ],
     constraints: [
-      'It had to work off the machine — the phone client is not a demo, it is how sessions get checked from outside the office.',
+      'It had to work off the machine: the phone client is not a demo, it is how sessions get checked from outside the office.',
       'Streaming output is heavy. Naive rendering of a live token stream will pin a CPU and make the interface worse than the terminal it replaced.',
       'The desktop app is packaged. Deployment is not "save the file."',
     ],
     built: [
       'An Electron desktop app and an installable PWA sharing one server, so a session started on the desktop is readable from a phone.',
       'A headless server that starts at boot as a scheduled task before login, which the desktop app attaches to rather than spawning its own.',
-      'Web push on session state changes — waiting, done, or errored — so a stalled run announces itself.',
+      'Web push when a session changes state: waiting, done, or errored. A stalled run announces itself.',
       'Local voice transcription for dictated input.',
-      'Progressive streaming, markdown rendering moved to a Web Worker, batched git status, and scroll coalescing — the difference between usable and unusable on a long session.',
+      'Progressive streaming, markdown rendering moved to a Web Worker, batched git status, and scroll coalescing. The difference between usable and unusable on a long session.',
     ],
     hardPart: {
       title: 'The identifier you need is not where the event is',
       body: [
-        'The task panel — the thing that shows how much of a long run is done — sat at 0 of N for the entire session and then jumped to complete at the end. Useless precisely when progress information is worth having.',
-        'The cause was an ordering assumption. Task creation is announced as a tool call, but the real task identifier is only assigned in the tool **result**. Every subsequent update carried that real id, matched nothing in a panel keyed on the announcement, and was silently dropped. Nothing errored — updates simply landed against keys that did not exist yet.',
+        'The task panel shows how much of a long run is done. It sat at 0 of N for the entire session, then jumped to complete at the end. Useless precisely when progress information is worth having.',
+        'The cause was an ordering assumption. Task creation is announced as a tool call, but the real task identifier is only assigned in the tool **result**. Every subsequent update carried that real id, matched nothing in a panel keyed on the announcement, and was silently dropped. Nothing errored: updates simply landed against keys that did not exist yet.',
         'The fix threads the tool-use id through from the server so the result can be tied back to the call that produced it, and re-keys the panel when the real identifier arrives. Both clients had to agree on this, since they share a stream.',
         'The deployment trap is worth naming too, because it wastes an hour every time it is forgotten: the desktop app ships as a packaged archive, so editing source changes nothing until the archive is extracted, patched and repacked. A change that appears to do nothing is usually a change that was never actually deployed.',
       ],
@@ -442,7 +442,7 @@ const MORE_WORK = [
   { name: 'Warehouse operations assistant', area: 'integrations', note: 'Natural-language interface over 3PL operations', own: false },
   { name: 'Mortgage client portal', area: 'platforms', note: 'Application intake, document vault, broker pipeline', own: false },
   { name: 'Campus site builder', area: 'platforms', note: 'Drag-and-drop public sites, multi-tenant', own: false },
-  { name: 'Client project portal', area: 'platforms', note: 'Milestones, tickets and plan approval — this site runs it', own: true, url: '/portal' },
+  { name: 'Client project portal', area: 'platforms', note: 'Milestones, tickets and plan approval: this site runs it', own: true, url: '/portal' },
   { name: 'Investment firm site', area: 'apps', note: 'Marketing site and content platform', own: false },
   { name: 'Advocacy campaign platform', area: 'apps', note: 'Hebrew-first campaign site with media pipeline', own: false },
 ];
@@ -452,7 +452,7 @@ const MORE_WORK = [
    --------------------------------------------------------------------------- */
 
 const EVIDENCE = [
-  { value: '20+', label: 'apps in production', note: 'Not prototypes — deployed, in use, maintained.' },
+  { value: '20+', label: 'apps in production', note: 'Not prototypes: deployed, in use, maintained.' },
   { value: '4', label: 'apps in the App Store & Play', note: 'Shipped, reviewed, and updated over the air.' },
   { value: '12+', label: 'live platforms', note: 'Self-hosted on infrastructure we run ourselves.' },
   { value: '1', label: 'team, end to end', note: 'Architecture, build, deploy and the 3am page.' },

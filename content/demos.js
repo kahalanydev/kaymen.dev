@@ -7,7 +7,7 @@
    study content it belongs to.
 
    Every value shown is SYNTHETIC. No client name, no real record, no real
-   person — the demos illustrate a mechanism, they do not display data.
+   person. The demos illustrate a mechanism, they do not display data.
    ============================================================================ */
 
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -17,7 +17,7 @@ const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ESC[c])
 function shell({ id, kicker, title, body, caption }) {
   return `<figure class="demo" data-demo="${esc(id)}">
     <figcaption class="demo-head">
-        <span class="demo-tag">Interactive — try it</span>
+        <span class="demo-tag">Interactive. Try it</span>
         <h3 class="demo-title">${esc(title)}</h3>
         ${kicker ? `<p class="demo-kicker">${esc(kicker)}</p>` : ''}
     </figcaption>
@@ -45,7 +45,7 @@ const rls = shell({
     <div class="demo-console">
         <div class="demo-console-bar">
             <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
-            <span class="demo-console-title">psql — request scoped to Campus A</span>
+            <span class="demo-console-title">psql. Request scoped to Campus A</span>
         </div>
         <pre class="demo-sql"><span class="c">-- policy: students.org_id = current_setting('app.current_org_id')</span>
 <span class="c">-- table has ENABLE + FORCE ROW LEVEL SECURITY</span>
@@ -60,7 +60,7 @@ const rls = shell({
 
     <div class="demo-verdict" data-out="verdict"></div>`,
   caption:
-    'The managed Postgres made the app’s user the cluster’s bootstrap superuser, and superusers bypass row-level security unconditionally — <code>FORCE ROW LEVEL SECURITY</code> does not apply to them. Every policy was correct. Nothing errored. Isolation was simply off. The bootstrap user cannot be demoted, so the fix was a second role owning every table.',
+    'The managed Postgres made the app’s user the cluster’s bootstrap superuser, and superusers bypass row-level security unconditionally. <code>FORCE ROW LEVEL SECURITY</code> does not apply to them. Every policy was correct. Nothing errored. Isolation was simply off. The bootstrap user cannot be demoted, so the fix was a second role owning every table.',
 });
 
 /* --- 2. Fund size counted from the wrong side ------------------------------- */
@@ -86,7 +86,7 @@ const fund = shell({
         <div class="demo-gap" data-out="gap"></div>
     </div>`,
   caption:
-    'Counting from money-in produces a figure that can only ever rise. Four years of bank fees, write-offs and running costs had never come off it — and could not be netted off, because the books hold zero recorded transactions. Counting what is <em>held</em> needs no expense record to be correct: money that left the bank is already absent from it.',
+    'Counting from money-in produces a figure that can only ever rise. Four years of bank fees, write-offs and running costs had never come off it, and could not be netted off, because the books hold zero recorded transactions. Counting what is <em>held</em> needs no expense record to be correct: money that left the bank is already absent from it.',
 });
 
 /* --- 3. A horizon that runs dry with no error ------------------------------- */
@@ -114,17 +114,17 @@ const horizon = shell({
     <div class="demo-checks">
         <label class="demo-check">
             <input type="checkbox" data-fix="alert">
-            <span><em>Detect it</em> — treat an empty forward window as a health-check failure</span>
+            <span><em>Detect it</em>. Treat an empty forward window as a health-check failure</span>
         </label>
         <label class="demo-check">
             <input type="checkbox" data-fix="job">
-            <span><em>Fix it</em> — run the horizon job daily instead of once at deploy</span>
+            <span><em>Fix it</em>. Run the horizon job daily instead of once at deploy</span>
         </label>
     </div>
 
     <div class="demo-verdict" data-out="verdict"></div>`,
   caption:
-    'The site was up, the API returned 200, and the calendar rendered correctly — with nothing in it. A correctly-rendered empty calendar is indistinguishable from a quiet week to every monitor you would think to set up. Uptime checks answer <em>did it respond</em>, never <em>did it respond with anything</em>.',
+    'The site was up, the API returned 200, and the calendar rendered correctly, with nothing in it. A correctly-rendered empty calendar is indistinguishable from a quiet week to every monitor you would think to set up. Uptime checks answer <em>did it respond</em>, never <em>did it respond with anything</em>.',
 });
 
 /* --- 4. An OTA update that publishes to nobody ------------------------------ */
@@ -163,7 +163,7 @@ const ota = shell({
         <span class="demo-reach-value" data-out="reach">0%</span>
     </div>`,
   caption:
-    'The publish succeeds either way. It reports success, exits zero, and appears in the dashboard — it has simply landed on a runtime no installed device has. “Did it publish” and “did it arrive” are different questions, and only one of them is answered for you.',
+    'The publish succeeds either way. It reports success, exits zero, and appears in the dashboard. It has simply landed on a runtime no installed device has. “Did it publish” and “did it arrive” are different questions, and only one of them is answered for you.',
 });
 
 /* --- 5. An API that cannot answer the question ----------------------------- */
@@ -171,7 +171,7 @@ const ota = shell({
 const ingest = shell({
   id: 'ingest',
   title: 'Ask for more history. Get nothing at all.',
-  kicker: 'Roughly 243,000 tickets exist. The failure is not slowness — it is a total loss.',
+  kicker: 'Roughly 243,000 tickets exist. The failure is not slowness. It is a total loss.',
   body: `
     <div class="demo-switch wide" role="group" aria-label="Ingestion strategy">
         <button type="button" data-mode="naive" aria-pressed="true">
@@ -196,7 +196,7 @@ const ingest = shell({
     <div class="demo-progress"><span data-out="bar"></span></div>
     <div class="demo-verdict" data-out="verdict"></div>`,
   caption:
-    'An unbounded query times out server-side and returns <em>nothing</em> — no partial result, no cursor, no clue about the shape of the problem. The fix is not a cleverer query. It is accepting that you now own a synchronisation problem, and building the per-entity state that makes it resumable.',
+    'An unbounded query times out server-side and returns <em>nothing</em>. No partial result, no cursor, no clue about the shape of the problem. The fix is not a cleverer query. It is accepting that you now own a synchronisation problem, and building the per-entity state that makes it resumable.',
 });
 
 /* --- 6. Updates keyed on an id that does not exist yet ---------------------- */
@@ -230,7 +230,7 @@ const taskid = shell({
         </div>
     </div>`,
   caption:
-    'Nothing errors. Updates arrive carrying the real id and land against keys that do not exist yet, so they are silently discarded and the panel reports 0 of 5 until the turn ends. When updates go missing without erroring, the bug is almost always a key that has not been created — not a message that never arrived.',
+    'Nothing errors. Updates arrive carrying the real id and land against keys that do not exist yet, so they are silently discarded and the panel reports 0 of 5 until the turn ends. When updates go missing without erroring, the bug is almost always a key that has not been created, not a message that never arrived.',
 });
 
 /* --------------------------------------------------------------------------- */

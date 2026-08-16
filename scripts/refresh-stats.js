@@ -232,7 +232,7 @@ function storeApps() {
 
   const generatedAt = today.toISOString().slice(0, 10);
   const out = `/* ============================================================================
-   GENERATED FILE — do not edit by hand.
+   GENERATED FILE. Do not edit by hand.
 
    Written by scripts/refresh-stats.js on ${generatedAt}.
    Sources: git history of each project repo, and the Coolify API on
@@ -247,7 +247,7 @@ const GENERATED_AT = ${JSON.stringify(generatedAt)};
 /** Month buckets for the sparklines, oldest first. */
 const MONTHS = ${JSON.stringify(keys)};
 
-/** Active days per month per system — distinct days carrying at least one commit. */
+/** Active days per month per system: distinct days carrying at least one commit. */
 const FLEET = ${JSON.stringify(fleet, null, 2)};
 
 /** Where most months actually land, as an interquartile range of active months. */

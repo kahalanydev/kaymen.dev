@@ -91,13 +91,13 @@
   var ANSWERS = {
     build: {
       t: 'A build, then a plan that keeps it alive',
-      b: 'We scope it, build it, and hand it over running — on your infrastructure, in your accounts. Then it moves onto a maintenance plan that is priced into the contract from day one, so there is no cliff at launch.',
+      b: 'We scope it, build it, and hand it over running, on your infrastructure and in your accounts. Then it moves onto a maintenance plan, priced into the contract from day one. No cliff at launch.',
       l: ['Three to four complete design directions, never one', 'Working builds as we go, not a reveal at the end', 'Ends with a handover document, not a support ticket'],
       p: 'from $2,500', per: 'to build · then from $200/mo'
     },
     run: {
       t: 'Adoption of something we did not build',
-      b: 'First a read of what exists — what it runs on, what is going to break, and what is undocumented. Then it goes on a plan. Most inherited systems need somewhere between one and eight active days a month.',
+      b: 'First a read of what exists. What it runs on, what is going to break, what is undocumented. Then it goes on a plan. Most inherited systems need somewhere between one and eight active days a month.',
       l: ['Backups verified, not assumed to exist', 'Security patches and dependency updates', 'Someone who answers when it breaks'],
       p: '$600/mo', per: 'Keep Running · $1,800/mo to also move it forward'
     },

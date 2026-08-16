@@ -241,7 +241,7 @@ function spark(days) {
 
 function fleetPanel() {
   const { FLEET, TYPICAL, MONTHS } = STATS;
-  const window = `${MONTH_LABEL(MONTHS[0])} – ${MONTH_LABEL(MONTHS[MONTHS.length - 1])}`;
+  const window = `${MONTH_LABEL(MONTHS[0])} to ${MONTH_LABEL(MONTHS[MONTHS.length - 1])}`;
   return `<aside class="fleet rv" id="fleet" aria-label="Live systems">
         <div class="fleet-head"><b>Live fleet</b><span>Active days / mo</span></div>
         ${FLEET.map(
@@ -304,7 +304,7 @@ function runningBoard() {
       <div class="prose rv">
         <p class="eyebrow">The proof</p>
         <h2 class="sec">Systems still running</h2>
-        <p class="sec-sub">Not a gallery of finished things — the fleet currently under maintenance.</p>
+        <p class="sec-sub">Not a gallery of finished things. The fleet currently under maintenance.</p>
       </div>
 
       <div class="board rv">
@@ -344,7 +344,7 @@ function caseCard(s) {
           <h3>${esc(s.tagline)}</h3>
           <p class="tl">${esc(s.summary)}</p>
           <div class="hard">
-            <b>The hard part${demo ? ' — playable' : ''}</b>
+            <b>The hard part${demo ? ', playable' : ''}</b>
             <p>${esc(s.hardPart.title)}</p>
           </div>
           <div class="meta">
@@ -414,7 +414,7 @@ function longTail() {
             )
             .join('\n          ')}
         </div>
-        <p class="more-footnote">Client work is described by shape rather than by name. We don't put client brands, logos or data in our marketing — including in screenshots.</p>
+        <p class="more-footnote">Client work is described by shape rather than by name. We don't put client brands, logos or data in our marketing, including in screenshots.</p>
       </details>
     </div>
   </section>`;
@@ -500,7 +500,7 @@ function caseStudyPage(slug) {
       <details class="case-longform">
         <summary>
           <span class="lf-title">The full write-up</span>
-          <span class="lf-sub">problem, constraints, and the whole debugging story — about a 4-minute read</span>
+          <span class="lf-sub">problem, constraints, and the whole debugging story. About a 4-minute read</span>
         </summary>
         <div class="lf-body">
           <section class="case-section">
@@ -533,7 +533,7 @@ function caseStudyPage(slug) {
   ${ctaBand('Got something shaped like this?', 'Tell us what it is and what has stopped working. We will tell you what we would build.')}`;
 
   return layout({
-    title: `${s.name} — kaymen.dev`,
+    title: `${s.name} | kaymen.dev`,
     description: s.tagline,
     path: `/work/${s.slug}`,
     ogImage,
@@ -581,9 +581,9 @@ function workIndexPage() {
   ${ctaBand('Want the same treatment on your problem?', 'The first conversation is us working out whether this is a build, a fix, or something you should not do at all.')}`;
 
   return layout({
-    title: 'Work — kaymen.dev',
+    title: 'Work | kaymen.dev',
     description:
-      'Six case studies: multi-tenant platforms, business-system integrations, and apps in the stores — each with the part that went wrong and how it was fixed.',
+      'Six case studies: multi-tenant platforms, business-system integrations, and apps in the stores. Each with the part that went wrong and how it was fixed.',
     path: '/work',
     ogType: 'website',
     ogImage: '/assets/og/work.png',
@@ -599,7 +599,7 @@ function notFoundPage() {
     <div class="wrap prose">
       <p class="eyebrow">404</p>
       <h1>That page isn't here</h1>
-      <p>The link may be out of date. The work is all still around — start from there.</p>
+      <p>The link may be out of date. The work is all still around. Start from there.</p>
       <div class="actions">
         <a href="/work" class="btn btn-primary">See the work</a>
         <a href="/" class="btn btn-ghost">Back to home</a>
@@ -607,7 +607,7 @@ function notFoundPage() {
     </div>
   </header>`;
   return layout({
-    title: 'Not found — kaymen.dev',
+    title: 'Not found | kaymen.dev',
     description: 'That page is not here.',
     path: '/404',
     ogType: 'website',
