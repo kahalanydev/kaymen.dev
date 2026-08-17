@@ -403,7 +403,7 @@ router.patch('/clients/:orgId', (req, res) => {
 });
 
 // POST /api/admin/clients/:orgId/users — create client user
-router.post('/clients/:orgId/users', (req, res) => {
+router.post('/clients/:orgId/users', async (req, res) => {
   const db = getDb();
   const org = db.prepare('SELECT * FROM organizations WHERE id = ?').get(req.params.orgId);
   if (!org) return res.status(404).json({ success: false, error: 'Organization not found' });
@@ -453,9 +453,13 @@ router.post('/clients/:orgId/users', (req, res) => {
   const proto = req.headers['x-forwarded-proto'] || req.protocol;
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   const inviteUrl = `${proto}://${host}/portal#/invite/${inviteToken}`;
-  sendWelcomeEmail({ email: email.toLowerCase().trim(), name, role: 'client', inviteUrl });
+  // Awaited and reported. This is the highest-stakes one of the three: a CLIENT
+  // is created with a deliberately unusable placeholder password, so if the
+  // invite silently never sends, they have an account they can never enter and
+  // the operator was told it went out. See the note on /reset-password.
+  const emailed = await sendWelcomeEmail({ email: email.toLowerCase().trim(), name, role: 'client', inviteUrl });
 
-  res.json({ success: true, data: { user: { id: result.lastInsertRowid, email, name }, invite_url: inviteUrl } });
+  res.json({ success: true, data: { user: { id: result.lastInsertRowid, email, name }, invite_url: inviteUrl, emailed } });
 });
 
 // GET /api/admin/clients/:orgId/users — list org users + cross-org members

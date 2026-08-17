@@ -442,7 +442,7 @@ if ('serviceWorker' in navigator) {
           </form>
           <a href="#" id="forgotLink" class="link-quiet">Forgot password?</a>
           <div id="resetSection" class="divide" hidden>
-            <p class="hint sm">Enter your email to reset your password. The new password will appear in the server logs.</p>
+            <p class="hint sm">Enter your email and we will send you a link to set a new password. It expires in an hour, and your current password keeps working until you use it.</p>
             <form id="resetForm" class="row">
               <input type="email" id="resetEmail" placeholder="Your admin email" required class="in grow">
               <button type="submit" class="btn btn-secondary" >Reset</button>
@@ -1496,10 +1496,18 @@ if ('serviceWorker' in navigator) {
             method: 'POST',
             body: JSON.stringify({ email: $('#newUserEmail').value, name: $('#newUserName').value || undefined })
           });
-          $('#newUserResult').innerHTML = `
+          $('#newUserResult').innerHTML = res.data.emailed
+            ? `
             <div class="alert alert-success">
-              Admin created! Invite link sent via email.<br>
+              Admin created — invite emailed.<br>
               <small>You can also share this link directly:</small><br>
+              <input type="text" value="${escapeHtml(res.data.invite_url)}" readonly onclick="this.select()" class="in mono mt-s">
+            </div>
+          `
+            : `
+            <div class="alert alert-warning">
+              <b>Admin created, but no invite was sent</b> — outbound email is not configured, and the account cannot be used until they set a password.
+              <b>Send them this link yourself:</b><br>
               <input type="text" value="${escapeHtml(res.data.invite_url)}" readonly onclick="this.select()" class="in mono mt-s">
             </div>
           `;
@@ -1515,7 +1523,12 @@ if ('serviceWorker' in navigator) {
         if (!confirm('Reset this user\'s password?')) return;
         try {
           const res = await api(`/auth/users/${btn.dataset.resetUser}/reset`, { method: 'POST' });
-          $('#usersMsg').innerHTML = `<div class="alert alert-success">Password reset! Invite link sent via email.<br><small>Or share directly:</small><br><input type="text" value="${escapeHtml(res.data.invite_url)}" readonly onclick="this.select()" class="in mono mt-s"></div>`;
+          // "Sent" only when it was. This claimed delivery unconditionally, and
+          // since the reset also revokes the old password, an operator who
+          // believed it had locked somebody out with no way back.
+          $('#usersMsg').innerHTML = res.data.emailed
+            ? `<div class="alert alert-success">Password reset — link emailed.<br><small>Or share directly:</small><br><input type="text" value="${escapeHtml(res.data.invite_url)}" readonly onclick="this.select()" class="in mono mt-s"></div>`
+            : `<div class="alert alert-warning"><b>Password reset, but no email was sent</b> — outbound email is not configured, and their old password no longer works. <b>Send them this link yourself:</b><br><input type="text" value="${escapeHtml(res.data.invite_url)}" readonly onclick="this.select()" class="in mono mt-s"></div>`;
         } catch (err) {
           $('#usersMsg').innerHTML = `<div class="alert alert-error">${escapeHtml(err.message)}</div>`;
         }
@@ -2738,10 +2751,15 @@ if ('serviceWorker' in navigator) {
           const res = await api(`/admin/clients/${orgId}/users`, { method: 'POST', body: JSON.stringify({ email, name }) });
           result.innerHTML = res.data.linked
             ? `<div class="alert alert-success">${escapeHtml(res.data.message)}</div>`
-            : `<div class="alert alert-success">Created — the invite went out by email.
-                 <input type="text" class="in mono mt-s" value="${escapeHtml(res.data.invite_url)}" readonly
-                        aria-label="Invite link">
-               </div>`;
+            : res.data.emailed
+              ? `<div class="alert alert-success">Created — the invite went out by email.
+                   <input type="text" class="in mono mt-s" value="${escapeHtml(res.data.invite_url)}" readonly
+                          aria-label="Invite link">
+                 </div>`
+              : `<div class="alert alert-warning"><b>Created, but the invite did not send</b> — outbound email is not configured. Their account cannot be used until they set a password, so <b>send them this link yourself:</b>
+                   <input type="text" class="in mono mt-s" value="${escapeHtml(res.data.invite_url)}" readonly
+                          aria-label="Invite link">
+                 </div>`;
           const box = result.querySelector('input');
           if (box) box.addEventListener('click', () => box.select());
           setTimeout(() => renderClients(), 4000);

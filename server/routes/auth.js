@@ -4,7 +4,9 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { getDb, getJwtSecret } = require('../db');
 const { requireAuth, requireRole } = require('../middleware/auth');
-const { sendWelcomeEmail, sendPasswordResetEmail, getSmtpConfig } = require('../utils/email');
+const {
+  sendWelcomeEmail, sendPasswordResetEmail, sendPasswordResetRequestEmail, getSmtpConfig
+} = require('../utils/email');
 
 const router = express.Router();
 
@@ -66,36 +68,73 @@ router.post('/change-password', requireAuth, (req, res) => {
   res.json({ success: true, data: { message: 'Password changed successfully' } });
 });
 
-// POST /api/auth/reset-password — self-service reset (prints new password to server logs)
-router.post('/reset-password', (req, res) => {
+// POST /api/auth/reset-password — self-service reset, by emailed one-time link
+//
+// REWRITTEN 2026-08-16, after it locked the only admin out of production.
+//
+// It used to generate a password, overwrite the account with it, and print the
+// plaintext to stdout — the UI told you to "check the server logs". That is a
+// workable design on a laptop and an unusable one here: `docker logs` only
+// covers the CURRENT container, and every push to master redeploys, so the
+// credential's real lifetime was the gap until the next deploy. Ohav's reset at
+// 23:38 was destroyed by the 23:40 deploy, and because the endpoint had already
+// overwritten his password, the account was unreachable. It reported success
+// throughout.
+//
+// Two rules came out of that, and both matter more than the emailing:
+//
+//  1. NEVER INVALIDATE THE OLD PASSWORD HERE. A reset REQUEST is unauthenticated
+//     — anyone who can type an address can fire it. Destroying the password on
+//     request means any stranger can lock any user out, and it is what turned a
+//     failed delivery into a lockout. The password changes only when the link is
+//     actually used (POST /invite/:token/accept).
+//  2. NEVER CLAIM DELIVERY THAT DID NOT HAPPEN. With no SMTP there is no channel
+//     at all, so this refuses loudly instead of returning success.
+const RESET_TTL_HOURS = 1;
+
+router.post('/reset-password', async (req, res) => {
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({ success: false, error: 'Email is required' });
   }
 
-  const db = getDb();
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase().trim());
-  if (!user) {
-    // Don't reveal whether the email exists
-    return res.json({ success: true, data: { message: 'If that email exists, the password has been reset. Check the server logs.' } });
+  // No delivery channel is a server misconfiguration, not a bad request, and it
+  // is the operator's problem rather than a secret — say so plainly and point at
+  // the path that still works. Returning success here is the original bug.
+  if (!getSmtpConfig()) {
+    return res.status(503).json({
+      success: false,
+      error: 'Password reset by email is unavailable — outbound email is not configured on this server. Ask an administrator to send you a reset link.'
+    });
   }
 
-  const password = crypto.randomBytes(12).toString('base64url');
-  const hash = bcrypt.hashSync(password, 12);
+  const db = getDb();
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase().trim());
 
-  db.prepare('UPDATE users SET password_hash = ?, must_change_password = 1, updated_at = datetime(\'now\') WHERE id = ?')
-    .run(hash, user.id);
+  /* Identical response whether or not the address is on file: this endpoint is
+     public, and a differing reply turns it into an account-existence oracle. */
+  const neutral = { success: true, data: { message: 'If that email is on file, a reset link is on its way. It expires in an hour.' } };
+  if (!user) return res.json(neutral);
 
-  console.log('\n========================================');
-  console.log('  PASSWORD RESET');
-  console.log('========================================');
-  console.log(`  Email:        ${user.email}`);
-  console.log(`  New Password: ${password}`);
-  console.log('');
-  console.log('  Must change on next login.');
-  console.log('========================================\n');
+  const token = crypto.randomBytes(32).toString('hex');
+  const expires = new Date(Date.now() + RESET_TTL_HOURS * 60 * 60 * 1000).toISOString();
 
-  res.json({ success: true, data: { message: 'If that email exists, the password has been reset. Check the server logs.' } });
+  // password_hash is deliberately untouched — see rule 1 above.
+  db.prepare("UPDATE users SET invite_token = ?, invite_expires_at = ?, updated_at = datetime('now') WHERE id = ?")
+    .run(token, expires, user.id);
+
+  const proto = req.headers['x-forwarded-proto'] || req.protocol;
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  const portalPath = user.role === 'client' ? 'portal' : 'admin';
+  const resetUrl = `${proto}://${host}/${portalPath}#/invite/${token}`;
+
+  const sent = await sendPasswordResetRequestEmail({
+    email: user.email, name: user.name, resetUrl, hours: RESET_TTL_HOURS
+  });
+  // Logged, not returned: the caller must not learn the address was real.
+  if (!sent) console.error(`[AUTH] reset link for ${user.email} could not be delivered`);
+
+  res.json(neutral);
 });
 
 // GET /api/auth/invite/:token — validate invite token (public)
@@ -145,7 +184,12 @@ router.post('/invite/:token/accept', (req, res) => {
 });
 
 // POST /api/auth/users/:id/reset — admin resets another user's password
-router.post('/users/:id/reset', requireAuth, (req, res) => {
+// Unlike the self-service route above, this one DOES invalidate the current
+// password, and should: an admin resetting somebody is often revoking access,
+// and it is an authenticated action rather than something a stranger can fire.
+// What it must not do is pretend the invite reached them — `emailed` is now
+// returned so the UI can tell the operator to hand the link over instead.
+router.post('/users/:id/reset', requireAuth, async (req, res) => {
   const db = getDb();
   const targetId = parseInt(req.params.id);
   const target = db.prepare('SELECT * FROM users WHERE id = ?').get(targetId);
@@ -164,9 +208,9 @@ router.post('/users/:id/reset', requireAuth, (req, res) => {
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   const portalPath = target.role === 'client' ? 'portal' : 'admin';
   const inviteUrl = `${proto}://${host}/${portalPath}#/invite/${inviteToken}`;
-  sendPasswordResetEmail({ email: target.email, name: target.name, inviteUrl });
+  const emailed = await sendPasswordResetEmail({ email: target.email, name: target.name, inviteUrl });
 
-  res.json({ success: true, data: { invite_url: inviteUrl } });
+  res.json({ success: true, data: { invite_url: inviteUrl, emailed } });
 });
 
 // GET /api/auth/users — list all users (Settings page)
@@ -177,7 +221,7 @@ router.get('/users', requireAuth, (req, res) => {
 });
 
 // POST /api/auth/users — create new admin
-router.post('/users', requireAuth, (req, res) => {
+router.post('/users', requireAuth, async (req, res) => {
   const { email, name } = req.body;
   if (!email) {
     return res.status(400).json({ success: false, error: 'Email is required' });
@@ -200,13 +244,16 @@ router.post('/users', requireAuth, (req, res) => {
   const proto = req.headers['x-forwarded-proto'] || req.protocol;
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   const inviteUrl = `${proto}://${host}/admin#/invite/${inviteToken}`;
-  sendWelcomeEmail({ email: email.toLowerCase().trim(), name, role: 'admin', inviteUrl });
+  // Awaited and reported for the same reason as the reset above: a new admin
+  // whose invite silently never sent is an account nobody can ever get into.
+  const emailed = await sendWelcomeEmail({ email: email.toLowerCase().trim(), name, role: 'admin', inviteUrl });
 
   res.json({
     success: true,
     data: {
       user: { id: result.lastInsertRowid, email: email.toLowerCase().trim(), name },
-      invite_url: inviteUrl
+      invite_url: inviteUrl,
+      emailed
     }
   });
 });

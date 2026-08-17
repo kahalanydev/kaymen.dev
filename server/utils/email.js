@@ -250,6 +250,38 @@ function sendPasswordResetEmail({ email, name, inviteUrl }) {
   });
 }
 
+/**
+ * Self-service reset — the one the person asked for themselves. Separate from
+ * sendPasswordResetEmail above because that one says "reset by an administrator"
+ * and runs for seven days, and both would be false here: nobody touched their
+ * account but them, and a link they requested a minute ago should not stay live
+ * for a week.
+ *
+ * It also never contains a password. The old flow generated one and printed it
+ * to the server log, which on this deployment meant it survived until the next
+ * push replaced the container — usually minutes. A link that sets a password is
+ * the only version of this that works without a place to put a secret.
+ */
+function sendPasswordResetRequestEmail({ email, name, resetUrl, hours }) {
+  const displayName = esc(name || email);
+  const window = hours === 1 ? 'one hour' : `${hours} hours`;
+
+  return sendEmail({
+    to: email,
+    subject: 'Reset your kaymen.dev password',
+    text:
+      `Reset your password.\n\n${name || email} — you asked to reset your password. ` +
+      `This link works once and expires in ${window}:\n${resetUrl}\n\n` +
+      `If you did not ask for this, ignore this email. Your current password still works and nothing has changed.`,
+    html: emailWrapper(
+      emailHeading('Reset your password.', 21) +
+      emailText(`Hi ${displayName} — you asked to reset your password. This link works once and expires in ${window}.`, { size: 14, gap: 22 }) +
+      emailButton(resetUrl, 'Set a new password'),
+      { footer: 'If you did not ask for this, ignore this email. Your current password still works and nothing has changed.' }
+    )
+  });
+}
+
 function sendTicketNotification({ adminEmails, projectName, ticketNumber, title, type, priority, createdBy, ticketUrl, description }) {
   const pri = String(priority || 'medium');
   const tone = pri === 'urgent' || pri === 'high' ? 'alert' : 'ok';
@@ -351,6 +383,7 @@ module.exports = {
   sendEmail,
   sendWelcomeEmail,
   sendPasswordResetEmail,
+  sendPasswordResetRequestEmail,
   sendTicketNotification,
   sendTicketResolvedEmail,
   sendContactNotification,
