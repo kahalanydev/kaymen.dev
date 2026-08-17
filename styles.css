@@ -854,20 +854,24 @@ footer{padding:36px 0 46px;border-top:1px solid var(--line);margin-top:80px}
    drift from the rail's. */
 .brandbar{display:none}
 @media (max-width:900px){
-  /* The text cut, not the display cut. At 104px wide the nine-segment drawing
-     fuses into a solid band, so this is the five-segment one with wider gaps —
-     they are three drawings, not one scaled. A rounded rect rather than a pill,
-     because the lockup is 1.92:1 and stacked, so it needs height a pill
-     cannot give it. */
+  /* The display cut — the same drawing the desktop rail uses, scaled down.
+     Ohav's call, 2026-08-17: he did not like the five-segment text cut here and
+     asked for the desktop one. This is a deliberate departure from the size
+     bands in assets/brand/README.md, which put 56–140px on the text cut, so do
+     not "fix" it back by matching the README. Change the README instead if this
+     sticks. The trade is real and known: at 118px the display cut's 3-degree
+     gaps land near 1.7–2.1 CSS px against the text cut's ~3.5, so the course
+     reads finer and starts to fuse on a 1x screen. Both cuts are viewBox
+     0 0 200 104, so the swap is the URL alone — no size or aspect change.
+     A rounded rect rather than a pill, because the lockup is 1.92:1 and
+     stacked, so it needs height a pill cannot give it. */
   .brandbar{
     display:block;
     position:fixed;top:12px;left:12px;z-index:80;
     width:148px;height:74px;padding:0;border-radius:22px;
     /* one declaration: image over colour. Two `background:` lines would mean
-       the second silently wins and the lockup never paints.
-       118px sits mid-band for the text cut (56–140px) rather than at its floor;
-       at 104px the larger type of this cut crowds the arch legs. */
-    background:url("/assets/lockup-live-text.svg") no-repeat center/118px auto,
+       the second silently wins and the lockup never paints. */
+    background:url("/assets/lockup-live.svg") no-repeat center/118px auto,
                rgba(255,255,255,.55);
     backdrop-filter:blur(34px) saturate(200%);
     -webkit-backdrop-filter:blur(34px) saturate(200%);
@@ -1143,7 +1147,12 @@ footer{padding:36px 0 46px;border-top:1px solid var(--line);margin-top:80px}
   /* The `*` above cannot reach inside an SVG loaded as an image, so the moving
      lockup has to be swapped for the still one rather than stopped. Only the
      image layer: .brandbar's shorthand carries a background-colour in its last
-     layer and a full `background:` here would drop it. */
+     layer and a full `background:` here would drop it.
+
+     Both land on the same file now that the mobile chip carries the display cut
+     too — they are still written separately because they are two decisions, and
+     if the chip ever goes back to the text cut this is the second line that has
+     to move with it. */
   .rail-brand{background-image:url("/assets/brand/kaymen-lockup.svg")}
-  .brandbar{background-image:url("/assets/brand/kaymen-lockup-text.svg")}
+  .brandbar{background-image:url("/assets/brand/kaymen-lockup.svg")}
 }
