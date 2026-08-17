@@ -2,25 +2,93 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { getDb, getJwtSecret } = require('../db');
+const { getDb, getJwtSecret, logAuthEvent } = require('../db');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { allowIp } = require('../middleware/shield');
 const {
   sendWelcomeEmail, sendPasswordResetEmail, sendPasswordResetRequestEmail, getSmtpConfig
 } = require('../utils/email');
 
 const router = express.Router();
 
+// ===== BRUTE-FORCE LOCKOUT ==================================================
+//
+// `users.login_attempts` and `users.locked_until` have existed since the portal
+// was built and NOTHING HAS EVER READ THEM. The login route compared a password
+// and returned; an attacker could try the admin address as fast as bcrypt would
+// answer, indefinitely, and leave no trace anywhere in the system.
+//
+// Five attempts, then fifteen minutes. The counter resets on success and the
+// lock expires on its own — there is no unlock button and there should not be
+// one, because the only person who could press it is the one locked out.
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MINUTES = 15;
+
+// Whatever the failure was, the caller is told the same thing. "No such user"
+// and "wrong password" are different sentences to an attacker enumerating
+// addresses, and "this account is locked" confirms the address exists.
+const GENERIC_LOGIN_ERROR = 'Invalid email or password';
+
 // POST /api/auth/login
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
+  const db = getDb();
+  const ip = req.clientIp || req.ip;
+  const userAgent = req.headers['user-agent'] || '';
+  const addr = (email || '').toLowerCase().trim();
+
   if (!email || !password) {
     return res.status(400).json({ success: false, error: 'Email and password required' });
   }
 
-  const db = getDb();
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email.toLowerCase().trim());
-  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
-    return res.status(401).json({ success: false, error: 'Invalid email or password' });
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(addr);
+
+  // No such account. Logged anyway — a run of these against addresses that do
+  // not exist is address enumeration, and it is only visible if it is recorded.
+  if (!user) {
+    logAuthEvent(db, { email: addr, event: 'login_failed', ip, userAgent, detail: 'No such account' });
+    return res.status(401).json({ success: false, error: GENERIC_LOGIN_ERROR });
+  }
+
+  if (user.locked_until && new Date(user.locked_until + 'Z') > new Date()) {
+    logAuthEvent(db, {
+      userId: user.id, email: addr, event: 'login_blocked', ip, userAgent,
+      detail: `Locked until ${user.locked_until}`
+    });
+    return res.status(401).json({ success: false, error: GENERIC_LOGIN_ERROR });
+  }
+
+  if (!bcrypt.compareSync(password, user.password_hash)) {
+    const attempts = (user.login_attempts || 0) + 1;
+    const lock = attempts >= MAX_ATTEMPTS;
+    db.prepare(`
+      UPDATE users SET login_attempts = ?, locked_until = ${lock
+        ? `datetime('now', '+${LOCKOUT_MINUTES} minutes')` : 'NULL'} WHERE id = ?
+    `).run(attempts, user.id);
+
+    logAuthEvent(db, {
+      userId: user.id, email: addr, event: lock ? 'lockout' : 'login_failed', ip, userAgent,
+      detail: lock ? `${attempts} failed attempts — locked ${LOCKOUT_MINUTES}m` : `Attempt ${attempts}/${MAX_ATTEMPTS}`
+    });
+    return res.status(401).json({ success: false, error: GENERIC_LOGIN_ERROR });
+  }
+
+  db.prepare("UPDATE users SET login_attempts = 0, locked_until = NULL, last_login_at = datetime('now') WHERE id = ?")
+    .run(user.id);
+  logAuthEvent(db, { userId: user.id, email: addr, event: 'login_success', ip, userAgent, detail: user.role });
+
+  // An admin or staff member who just proved who they are gets their IP marked
+  // trusted for a week. This is the safeguard that keeps the shield's
+  // auto-blocking from ever locking Ohav out of his own production panel — see
+  // the note at the top of middleware/shield.js. It is a visible, revocable row
+  // in the blocklist UI rather than a hidden exception in code.
+  if (user.role === 'admin' || user.role === 'staff') {
+    try {
+      allowIp({
+        ip, reason: `Trusted after ${user.role} login (${user.email})`,
+        source: 'auto', userId: user.id, minutes: 10080
+      });
+    } catch { /* an allow rule is a convenience; never fail a login over it */ }
   }
 
   const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: '24h' });
@@ -64,6 +132,11 @@ router.post('/change-password', requireAuth, (req, res) => {
   const hash = bcrypt.hashSync(new_password, 12);
   db.prepare('UPDATE users SET password_hash = ?, must_change_password = 0, updated_at = datetime(\'now\') WHERE id = ?')
     .run(hash, req.user.id);
+
+  logAuthEvent(db, {
+    userId: req.user.id, email: req.user.email, event: 'password_changed',
+    ip: req.clientIp || req.ip, userAgent: req.headers['user-agent']
+  });
 
   res.json({ success: true, data: { message: 'Password changed successfully' } });
 });
@@ -114,6 +187,17 @@ router.post('/reset-password', async (req, res) => {
   /* Identical response whether or not the address is on file: this endpoint is
      public, and a differing reply turns it into an account-existence oracle. */
   const neutral = { success: true, data: { message: 'If that email is on file, a reset link is on its way. It expires in an hour.' } };
+
+  // Logged either way, and this is the one place the log knows something the
+  // response deliberately does not. A burst of resets against addresses that do
+  // not exist is somebody probing for accounts; the caller must not be able to
+  // tell, but Ohav must.
+  logAuthEvent(db, {
+    userId: user ? user.id : null, email: email.toLowerCase().trim(),
+    event: 'password_reset_requested', ip: req.clientIp || req.ip,
+    userAgent: req.headers['user-agent'],
+    detail: user ? 'Link issued' : 'No such account'
+  });
   if (!user) return res.json(neutral);
 
   const token = crypto.randomBytes(32).toString('hex');
@@ -167,8 +251,17 @@ router.post('/invite/:token/accept', (req, res) => {
   }
 
   const hash = bcrypt.hashSync(password, 12);
-  db.prepare("UPDATE users SET password_hash = ?, must_change_password = 0, invite_token = NULL, invite_expires_at = NULL, updated_at = datetime('now') WHERE id = ?")
+  // The lockout counters are cleared here too: whoever holds a valid one-time
+  // link has proved control of the mailbox, and leaving a lock in place would
+  // mean the documented way out of a lockout does not actually work.
+  db.prepare("UPDATE users SET password_hash = ?, must_change_password = 0, invite_token = NULL, invite_expires_at = NULL, login_attempts = 0, locked_until = NULL, updated_at = datetime('now') WHERE id = ?")
     .run(hash, user.id);
+
+  logAuthEvent(db, {
+    userId: user.id, email: user.email, event: 'invite_accepted',
+    ip: req.clientIp || req.ip, userAgent: req.headers['user-agent'],
+    detail: 'Password set via one-time link'
+  });
 
   // Auto-login after accepting invite
   const token = jwt.sign({ userId: user.id }, getJwtSecret(), { expiresIn: '24h' });
@@ -201,8 +294,14 @@ router.post('/users/:id/reset', requireAuth, async (req, res) => {
   const inviteExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   const placeholder = bcrypt.hashSync(crypto.randomBytes(32).toString('hex'), 4);
 
-  db.prepare("UPDATE users SET password_hash = ?, must_change_password = 1, invite_token = ?, invite_expires_at = ?, updated_at = datetime('now') WHERE id = ?")
+  db.prepare("UPDATE users SET password_hash = ?, must_change_password = 1, invite_token = ?, invite_expires_at = ?, login_attempts = 0, locked_until = NULL, updated_at = datetime('now') WHERE id = ?")
     .run(placeholder, inviteToken, inviteExpires, targetId);
+
+  logAuthEvent(db, {
+    userId: targetId, email: target.email, event: 'password_reset_by_admin',
+    ip: req.clientIp || req.ip, userAgent: req.headers['user-agent'],
+    detail: `Reset by ${req.user.email}`
+  });
 
   const proto = req.headers['x-forwarded-proto'] || req.protocol;
   const host = req.headers['x-forwarded-host'] || req.headers.host;
@@ -513,6 +612,23 @@ router.get('/google/callback', async (req, res) => {
     if (userInfo.id) {
       db.prepare("UPDATE users SET google_id = ?, avatar_url = ?, last_login_at = datetime('now') WHERE id = ?")
         .run(userInfo.id, userInfo.picture || null, user.id);
+    }
+
+    // Google is a second front door and it has to appear in the same log as the
+    // first, or the auth trail reads as though nobody signed in that day.
+    db.prepare('UPDATE users SET login_attempts = 0, locked_until = NULL WHERE id = ?').run(user.id);
+    logAuthEvent(db, {
+      userId: user.id, email: user.email, event: 'login_success',
+      ip: req.clientIp || req.ip, userAgent: req.headers['user-agent'],
+      detail: `${user.role} via Google`
+    });
+    if (user.role === 'admin' || user.role === 'staff') {
+      try {
+        allowIp({
+          ip: req.clientIp || req.ip, reason: `Trusted after ${user.role} login (${user.email})`,
+          source: 'auto', userId: user.id, minutes: 10080
+        });
+      } catch { /* never fail a login over a convenience rule */ }
     }
 
     // Issue JWT

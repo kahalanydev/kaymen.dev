@@ -318,6 +318,20 @@ function writePreview(file, storageKey, tokenValue, target) {
 
 (async () => {
   console.log(`\n  data dir  ${DATA_DIR}`);
+
+  /* Traffic and threat history go in BEFORE the server starts.
+     server/db.js keeps the whole database in memory and rewrites the file on a
+     debounce, so anything written to that file by another process while the
+     server is running is destroyed by the server's next save. Seeding first and
+     booting second is the only ordering that works — and without it the
+     Security and Traffic centres are unreviewable, because every chart is flat
+     and every derived headline takes its nothing-to-report branch. */
+  const { seedTraffic } = require('./seed-traffic');
+  const t = await seedTraffic(DATA_DIR);
+  console.log(t.skipped
+    ? '  traffic   already present, left alone'
+    : `  traffic   ${t.visits} visits, ${t.pageviews} pageviews, ${t.threats} threats over ${t.days} days`);
+
   const bootPassword = await boot();
   console.log(`  server    ${BASE}`);
 

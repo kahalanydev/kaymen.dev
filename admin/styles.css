@@ -787,6 +787,109 @@ select{font-family:var(--body);color:var(--ink)}
 .md-rendered .md-check{color:var(--muted)}
 .md-rendered .md-check.done{color:var(--accent-dark)}
 
+/* ======================== 6b. SECURITY + TRAFFIC CENTRES   (2026-08-17)
+   Both pages lead with a derived sentence in the page header and then a thin
+   severity rule, rather than the coloured alert banner the old Security page
+   used. That is the palette rule doing its job: --alert and --warn are for
+   severity and nothing else, and a full-bleed red box at the top of a page
+   somebody opens every day is exactly the decoration that drains it. Three
+   pixels of colour under a headline says the same thing once.
+
+   Everything else here is either a rank row (one shape reused nine times) or a
+   small definition list. No new colours, no new type scale.                  */
+
+/* The add-a-rule form. It is a .row, and .row's children carry `min-width:0`
+   so they can shrink inside a flex line — which is right everywhere else and
+   wrong here: at 390px the two text inputs collapsed to about 40px and the
+   three field labels printed on top of each other. A min-width forces the line
+   to WRAP instead of squeezing, which is the behaviour a form wants. */
+.rule-form .grow{min-width:190px}
+.rule-form .shrink0{min-width:130px}
+.rule-form button[type=submit]{flex:none}
+
+/* the severity rule under the derived headline */
+.pst{height:3px;border-radius:2px;margin:-8px 0 22px;max-width:180px;background:var(--line)}
+.pst-alert{background:var(--alert)}
+.pst-warn{background:var(--warn)}
+.pst-ok{background:var(--accent)}
+/* the posture sentence is a headline, so it takes the measure a headline needs
+   — without this it runs the full width of the console and stops being one */
+.pst-h{max-width:22ch}
+.page-header h1.pst-h{font-size:clamp(23px,2.6vw,30px)}
+
+/* a quiet inline link, for the ones inside tables and card headers */
+.lk{color:var(--accent-dark);text-decoration:underline;text-underline-offset:3px;
+    text-decoration-color:rgba(43,188,179,.35);transition:text-decoration-color .2s var(--ease)}
+.lk:hover{text-decoration-color:var(--accent)}
+
+/* period pickers sit under the tab row and must read as subordinate to it */
+.filter-tabs.sm{margin-top:-6px;margin-bottom:20px}
+.filter-tabs.sm .filter-tab{padding:5px 11px;font-size:11.5px;border-radius:8px}
+
+/* ---- rank rows -----------------------------------------------------------
+   One component for every "top N of something" list on both pages: referrers,
+   pages, countries, cities, browsers, languages, bots, threat categories.
+   Nine tables would have been nine tables to keep consistent. The bar is
+   proportioned against the biggest row rather than against 100, because a top
+   list is a comparison between its own members.                             */
+.rk-wrap{padding:6px 18px 16px}
+.rk{display:grid;grid-template-columns:minmax(0,1fr) 88px 52px;gap:12px;align-items:center;
+    padding:7px 0;border-bottom:1px solid var(--line)}
+.rk:last-child{border-bottom:0}
+.rk-t{min-width:0;font-size:13px}
+.rk-lbl{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk-t .mono{font-size:12px}
+.rk-b{height:5px;border-radius:3px;background:var(--bg-alt);overflow:hidden}
+.rk-b i{display:block;height:100%;border-radius:3px;background:var(--gradient)}
+.rk-n{text-align:right;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;
+      color:var(--muted)}
+
+/* the period-over-period change, next to a metric value */
+.dl{font-family:var(--body);font-size:11px;font-weight:700;letter-spacing:0;
+    margin-left:5px;vertical-align:middle;color:var(--muted)}
+.dl.up{color:var(--accent-dark)}
+.dl.down{color:var(--warn)}
+
+/* ---- threat feed ---------------------------------------------------------
+   The blocked row gets a leading rule rather than a tinted background: a table
+   where whole rows are washed red becomes unreadable the moment there is more
+   than one, which on a bad day is the only time it matters.                  */
+.thr-blocked td:first-child{box-shadow:inset 3px 0 0 var(--alert)}
+.thr-d{font-size:11px;color:var(--muted);margin-top:3px;
+       overflow:hidden;text-overflow:ellipsis;max-width:34ch}
+.thr-p{font-size:11.5px;color:var(--muted)}
+
+/* ---- dossier + session detail -------------------------------------------- */
+.dsr-ip{font-size:clamp(20px,2.4vw,27px);letter-spacing:-.02em}
+.dsr-r{display:flex;justify-content:space-between;align-items:baseline;gap:16px;
+       padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.dsr-r:last-child{border-bottom:0}
+.dsr-r span{color:var(--muted);flex:none}
+.dsr-r b{font-weight:600;text-align:right;min-width:0;overflow-wrap:anywhere}
+
+/* ---- live ---------------------------------------------------------------- */
+.lv-dot{display:inline-block;width:7px;height:7px;border-radius:50%;
+        background:var(--accent);margin-right:8px;vertical-align:middle;position:relative}
+.lv-dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;
+        border:1.5px solid var(--accent);opacity:0;animation:ping 2.6s var(--ease) infinite}
+
+/* ---- session timeline ----------------------------------------------------
+   A spine with the clock down the left. Reuses the marketing site's timeline
+   idea rather than inventing one; the rule is a border on the content column
+   so it cannot get out of step with the rows the way a positioned pseudo
+   element does.                                                              */
+.tl-w{padding:6px 18px 16px}
+.tl-i{display:grid;grid-template-columns:46px 1fr;gap:14px;align-items:flex-start}
+.tl-m{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:11px;text-align:right}
+.tl-c{border-left:2px solid var(--line);padding:10px 0 10px 16px;position:relative}
+.tl-i:last-child .tl-c{border-left-color:transparent}
+.tl-c::before{content:"";position:absolute;left:-5px;top:14px;width:8px;height:8px;
+              border-radius:50%;background:var(--line)}
+.tl-p .tl-c::before{background:var(--accent)}
+.tl-l{font-size:13px}
+.tl-l .mono{font-size:12px;color:var(--muted)}
+
+
 /* ============================================================= 7. MOBILE */
 .mobile-top-bar{display:none}
 .bottom-nav{display:none}

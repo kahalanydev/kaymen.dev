@@ -4,9 +4,14 @@ const helmet = require('helmet');
 const compression = require('compression');
 const { initDb, seedAdmin } = require('./db');
 
+const { shield } = require('./middleware/shield');
+const { startRollups } = require('./utils/rollup');
+
 const authRoutes = require('./routes/auth');
 const trackRoutes = require('./routes/track');
 const adminRoutes = require('./routes/admin');
+const securityRoutes = require('./routes/security');
+const trafficRoutes = require('./routes/traffic');
 const portalRoutes = require('./routes/portal');
 const devRoutes = require('./routes/dev');
 const uploadRoutes = require('./routes/uploads');
@@ -14,8 +19,14 @@ const uploadRoutes = require('./routes/uploads');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// Trust proxy (behind Traefik)
-app.set('trust proxy', true);
+// Trust proxy — EXACTLY ONE HOP, which is the Traefik in front of this
+// container. This was `true`, meaning "trust every hop", and under that setting
+// `req.ip` is the LEFTMOST X-Forwarded-For entry — a header the client writes.
+// Any visitor could have attributed their traffic to any address they liked,
+// which is merely untidy for analytics and fatal for a blocklist keyed on IP.
+// With 1, Express takes the entry Traefik itself appended: the address it
+// actually observed. Changed 2026-08-17 with the security centre.
+app.set('trust proxy', 1);
 
 // Security headers
 app.use(helmet({
@@ -31,6 +42,17 @@ app.use(express.json({
   limit: '1mb',
   verify: (req, res, buf) => { req.rawBody = buf.toString(); }
 }));
+
+// The shield — every request, in front of everything.
+//
+// It sits AFTER express.json deliberately: half of what it inspects is the
+// request body, and a middleware that runs before the parser can only ever see
+// the URL. It sits BEFORE the sensitive-path 404s below, because a request for
+// /server/db.js is reconnaissance worth recording, not just a miss.
+//
+// It also sets req.clientIp, which every downstream route should use in place
+// of req.ip — one normalised, non-spoofable value (see middleware/shield.js §1).
+app.use(shield);
 
 // Block access to sensitive paths
 app.use('/server', (req, res) => res.status(404).end());
@@ -50,7 +72,7 @@ app.post('/api/contact', async (req, res) => {
   // Timing: submitted in under 2 seconds = bot
   if (typeof _t === 'number' && _t < 2000) return res.json({ success: true });
 
-  const ip = req.ip || req.socket.remoteAddress;
+  const ip = req.clientIp || req.ip || req.socket.remoteAddress;
   const now = Date.now();
   if (contactLimiter[ip] && now - contactLimiter[ip] < 60000) {
     return res.status(429).json({ error: 'Please wait a minute before sending another message' });
@@ -88,6 +110,11 @@ app.post('/api/contact', async (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/track', trackRoutes);
+// Mounted BEFORE the general admin router. Both live under /api/admin and
+// Express matches in registration order, so these two have to be first or
+// /api/admin/security would be swallowed by the older handler of the same name.
+app.use('/api/admin/security', securityRoutes);
+app.use('/api/admin/traffic', trafficRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/portal', portalRoutes);
 app.use('/api/dev', devRoutes);
@@ -170,11 +197,13 @@ app.use((req, res, next) => {
   next();
 });
 
-// 404 handler — track scanner attempts
-const { checkSuspicious } = require('./utils/detection');
+// 404 handler.
+//
+// The shield already inspected and scored this request on the way in, so this
+// no longer re-runs detection — doing both wrote every scanner probe to
+// suspicious_activity twice, once with a category and once without, and the
+// duplicate is what made the old log hard to read.
 app.use((req, res) => {
-  const ip = req.ip || req.socket.remoteAddress;
-  checkSuspicious(ip, req.headers['user-agent'], req.path);
   // A browser following a stale /work/<slug> link should get a page, not JSON.
   if (!req.path.startsWith('/api/') && req.accepts(['html', 'json']) === 'html') {
     return res.status(404).set('Content-Type', 'text/html; charset=utf-8').send(notFoundPage());
@@ -192,6 +221,10 @@ app.use((err, req, res, _next) => {
 async function start() {
   await initDb();
   seedAdmin();
+
+  // Daily rollups + retention. Starts its own timers and runs the first cycle
+  // 20s in, so it never competes with the first requests after a deploy.
+  startRollups();
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);

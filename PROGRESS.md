@@ -2089,3 +2089,80 @@ OAuth path does. The conclusion happened to be right; the reasoning was not.
   cramped**.
 - **Tell Ariel the site is up** — he is gating a lab-company introduction on
   exactly that, and it is the only item in his message with revenue attached.
+
+---
+
+## 2026-08-17 — A security and tracking centre, and the four things the old one only claimed to do
+
+### Context
+
+Ohav asked for "a whole security and tracking platform… traffic, ips, devices, long run
+statistics… robust of both tracking and security systems", overnight, autonomously.
+
+The starting point looked like a small version of that and was measuring something else.
+Four findings shaped the whole build, and each is a thing the system reported doing and did
+not do:
+
+1. **`/api/track/visit` received `path` and never stored it.** Three years of visits and not
+   one record of which page anybody read.
+2. **Detection ran on two code paths** — 404s and the tracking endpoint. An exploit attempt
+   against a route that *exists* was invisible, and there was no blocking mechanism of any
+   kind.
+3. **`users.login_attempts` and `users.locked_until` had never been read.** No brute-force
+   lockout existed; the login route compared a password and returned.
+4. **`app.set('trust proxy', true)`** made `req.ip` the leftmost `X-Forwarded-For` entry — a
+   header the client writes. Merely untidy for analytics, fatal for a blocklist keyed on IP.
+
+### Built
+
+- **`server/middleware/shield.js`** — a firewall on every request. Allow-then-block rules,
+  payload inspection, scored decisions, auto-blocks that escalate (1h → 6h → 24h → 7d) and
+  always expire. Policy lives in one `decide()` function.
+- **`server/utils/detection.js`** — rewritten from three regex lists into a scoring engine.
+  Classifies UAs into a *kind* rather than a boolean (Googlebot and sqlmap want opposite
+  responses) and scores ~20 exploit signatures that **stack**.
+- **`server/utils/rollup.js`** — permanent daily rollups plus retention pruning. This is the
+  answer to the concern raised in the back-office handoff §6: db.js rewrites the entire
+  database file on every debounce, so "keep a year of raw data" was never going to hold.
+  Long-run statistics live in the rollups; raw rows are a working set.
+- **Heartbeats stopped being rows.** They were one INSERT per 30s per open tab — a tab left
+  open overnight was ~1,000 rows describing one visit. Now an UPDATE against the visit.
+- **`tracker.js`** — path and title, SPA navigation, viewport/DPR/timezone/UTM, returning-
+  visitor id, *active* engagement time (a tab open over lunch used to report a two-hour
+  visit), and `visibilitychange` instead of `beforeunload`, which does not fire on iOS.
+- **Two API routers** (`security.js`, `traffic.js`) and **two rebuilt panels**. Both lead with
+  a derived sentence, the same device the client portal's overview uses.
+- **`scripts/verify-security.js`** — 44 end-to-end checks. **`scripts/seed-traffic.js`** — 90
+  days of believable history, wired into `seed-preview.js`.
+
+### Bugs found by building it
+
+- **The Chart.js config was still on the deleted dark theme** — `#3b82f6` series on
+  `rgba(255,255,255,.05)` gridlines, i.e. white on white. The 2026-08-16 sweep could not see
+  it: Chart.js takes colours as a JS object, so `grep var(--surface` came back clean. Then I
+  made the same class of mistake again, using `--line` (a *border* colour) for a chart series
+  and rendering a blank plot area. Check contrast against white, not against the token's name.
+- **Summing daily unique visitors is not a period unique-visitor count.** It read 987 people
+  out of 990 visits, which is only plausible because it is wrong. Counted from raw now, with
+  an explicit `uniqueVisitorsExact` flag once the window outruns retention.
+- **`browserFamily` took the first word**, so `Mobile Safari 18.2` became **"Mobile"** and sat
+  in the chart as the second most popular browser with nothing called Safari nearby.
+- **`timeAgo` on a future date returns "just now"**, so a block expiring in 20 hours and one
+  that had just lapsed rendered identically — on the one screen where that is the point.
+- A `"kind key"` composite map key silently truncated *United States* to "United".
+- Chart animation made the panel unscreenshottable and communicated nothing; it is off.
+
+### Verified, not assumed
+
+`node scripts/verify-security.js` → 44/44, including that engagement never creates event rows,
+that a late heartbeat cannot overwrite a real scroll depth, that SQL injection is refused and a
+low-score probe is not, that an allow-listed IP survives an exploit attempt *and is still
+recorded*, and that an unknown address returns the same error as a wrong password.
+
+Both panels rendered in Chrome over CDP at 1600px and 390px. Two rendering bugs were found that
+way and only that way — the mid-animation chart, and the add-a-rule form collapsing to 40px
+inputs with three labels printed on top of each other.
+
+The first run of the CDP harness reported every page as broken. It was the harness: planting a
+token in localStorage and then changing the `#hash` never re-runs the SPA, so `state.token` kept
+the null it read at boot. Full document load per page.

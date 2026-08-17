@@ -372,20 +372,41 @@ if ('serviceWorker' in navigator) {
   };
 
   // ===== CHART HELPERS =====
+  /* These axis colours were the last of the deleted dark theme still in the
+     panel. The 2026-08-16 sweep replaced inline styles with classes and could
+     not reach them, because Chart.js takes its colours as a JavaScript object
+     rather than from CSS — so `grep var(--surface` came back clean while every
+     chart still drew #a1a1aa text on rgba(255,255,255,.05) gridlines. On the
+     light palette those gridlines are pure white on white: invisible. Fixed
+     2026-08-17. The literal values match --line and --muted; a CSS variable
+     cannot be read from here without getComputedStyle on every draw. */
   const chartDefaults = {
     responsive: true,
     maintainAspectRatio: false,
+    // Off deliberately. These charts are redrawn on every tab switch and every
+    // period change, so the animation plays constantly and communicates
+    // nothing. It also made the panel unscreenshottable — a capture taken
+    // during the sweep-in shows a line compressed into the left edge of its own
+    // axis, which reads as a data bug and is not one.
+    animation: false,
+    responsiveAnimationDuration: 0,
     plugins: {
       legend: { display: false },
+      tooltip: {
+        backgroundColor: '#16303d', padding: 10, cornerRadius: 8,
+        titleFont: { size: 12 }, bodyFont: { size: 12 }, displayColors: false,
+      },
     },
     scales: {
       x: {
-        grid: { color: 'rgba(255,255,255,0.05)' },
-        ticks: { color: '#a1a1aa', font: { size: 11 } }
+        grid: { display: false },
+        border: { color: '#e2e4e8' },
+        ticks: { color: '#5f6368', font: { size: 11 }, maxRotation: 0, autoSkipPadding: 12 }
       },
       y: {
-        grid: { color: 'rgba(255,255,255,0.05)' },
-        ticks: { color: '#a1a1aa', font: { size: 11 } },
+        grid: { color: '#e2e4e8' },
+        border: { display: false },
+        ticks: { color: '#5f6368', font: { size: 11 }, precision: 0 },
         beginAtZero: true
       }
     }
@@ -545,7 +566,7 @@ if ('serviceWorker' in navigator) {
     projects:  '<rect x="2.5" y="6.5" width="19" height="13.5" rx="2.2"/><path d="M8.5 6.5V5a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1.5"/>',
     clients:   '<path d="M16 20v-1.6a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20"/><circle cx="9" cy="7" r="3.4"/><path d="M22 20v-1.6a4 4 0 0 0-3-3.8"/><path d="M16.5 3.8a4 4 0 0 1 0 6.4"/>',
     security:  '<path d="M12 2.8 4.5 6v6c0 4.6 3.1 8 7.5 9.2 4.4-1.2 7.5-4.6 7.5-9.2V6z"/><path d="M9.2 12.2l2 2 3.6-3.9"/>',
-    analytics: '<path d="M3 20h18"/><path d="M6 20V11M11 20V6M16 20v-6M21 20V9"/>',
+    traffic:   '<path d="M3 20h18"/><path d="M6 20V11M11 20V6M16 20v-6M21 20V9"/>',
     settings:  '<circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>',
   };
   const icon = (id) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">${NAV_ICON[id] || ''}</svg>`;
@@ -556,7 +577,11 @@ if ('serviceWorker' in navigator) {
       { id: 'projects', label: 'Projects', count: 'projects' },
       { id: 'clients', label: 'Clients', count: 'clients' },
       { id: 'security', label: 'Security', count: 'security' },
-      { id: 'analytics', label: 'Analytics' },
+      // Renamed from Analytics 2026-08-17. Still six rail items, per
+      // HANDOFF-BACKOFFICE-2026-08-16.md §6 — the page behind it was rebuilt,
+      // the rail was not re-opened. "Traffic" is what it now reports; the old
+      // #/analytics hash still routes here so bookmarks survive.
+      { id: 'traffic', label: 'Traffic' },
       { id: 'settings', label: 'Settings' },
     ];
     // Counts are whatever the last dashboard fetch saw. Absent on a cold load,
@@ -911,315 +936,1142 @@ if ('serviceWorker' in navigator) {
   }
 
   // ===== RENDER: SECURITY =====
+  /* ==========================================================================
+     SECURITY CENTRE + TRAFFIC CENTRE                          (2026-08-17)
+
+     Both replaced whole. The old pages were one flat screen each: Security
+     printed four counts and three tables, Analytics printed four charts. They
+     told you what was in the database and never what it meant.
+
+     Both are tabbed now, and both lead with a DERIVED sentence rather than a
+     number — the same device the client portal's overview uses, for the same
+     reason. A number needs interpreting; a sentence has already done it, and
+     because it is recomputed on every render it cannot drift out of agreement
+     with the figures underneath it.
+     ========================================================================== */
+
+  // The chart palette. This is a FIX, not a preference: the Chart.js config
+  // below still carried the deleted dark theme — #3b82f6 series on
+  // rgba(255,255,255,.05) gridlines. The 2026-08-16 sweep replaced inline
+  // styles with classes and could not see these, because they are JavaScript
+  // object literals rather than CSS. So every chart in the panel has been blue
+  // on a teal site since the redesign, drawn on gridlines that are invisible
+  // against white.
+  //
+  // The ramp is a single hue family walked from the accent down to the deep,
+  // ending on the neutral. A categorical chart needs several colours and the
+  // locked palette has exactly one accent plus two severity tones that may not
+  // be spent on decoration — a sequential ramp of the accent is the only way to
+  // get a legible multi-series chart without inventing a hue.
+  const CHART = {
+    accent: '#2bbcb3',
+    accentDark: '#229e96',
+    accentSoft: 'rgba(43,188,179,.12)',
+    warn: '#a8761c',
+    alert: '#b8443c',
+    muted: '#5f6368',
+    line: '#e2e4e8',
+    ramp: ['#2bbcb3', '#229e96', '#5cc9c2', '#1a7d77', '#8ad9d4', '#16303d', '#9aa0a8'],
+    // A quiet series still has to be VISIBLE. --line (#e2e4e8) is a border
+    // colour: on a white card it is almost exactly white, which is how the
+    // "Seen" bars on the threat chart came out as a blank plot area on the
+    // first screenshot — the same mistake as the dark-theme gridlines above,
+    // made twice in one file.
+    quiet: '#c4c9d0',
+  };
+
+  // ---- small formatters ----------------------------------------------------
+  const fmtNum = (n) => (n === null || n === undefined ? '—' : Number(n).toLocaleString('en-GB'));
+
+  function fmtDuration(seconds) {
+    const s = Math.round(Number(seconds) || 0);
+    if (!s) return '—';
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}m ${s % 60}s`;
+    return `${Math.floor(m / 60)}h ${m % 60}m`;
+  }
+
+  /* Severity to the panel's two tones. `critical` and `high` share --alert
+     deliberately: the palette declares exactly two severity tones and a third
+     would have to be invented, and "critical" vs "high" is a distinction the
+     text can carry when the colour cannot. */
+  const sevTone = (s) => (s === 'critical' || s === 'high') ? 'alert' : (s === 'medium' ? 'warn' : 'gray');
+  const sevBadge = (s) => {
+    const map = { alert: 'badge-red', warn: 'badge-yellow', gray: 'badge-gray' };
+    return `<span class="badge ${map[sevTone(s)]}">${escapeHtml(s || 'low')}</span>`;
+  };
+
+  /* Percentage change against the previous equal window. Returns nothing at all
+     when there is no prior period to compare with — "+100%" against a week that
+     did not exist is a fabricated fact, and the first fortnight of any new
+     metric is exactly when somebody screenshots it. */
+  function delta(now, before) {
+    if (!before || before <= 0 || now === null || now === undefined) return '';
+    const change = Math.round(((now - before) / before) * 100);
+    if (change === 0) return `<span class="dl">level</span>`;
+    return `<span class="dl ${change > 0 ? 'up' : 'down'}">${change > 0 ? '+' : ''}${change}%</span>`;
+  }
+
+  /* A country code to its flag. Purely typographic — regional indicator pairs
+     are just characters, so this needs no image, no sprite and no request. */
+  function flag(code) {
+    if (!code || code.length !== 2) return '';
+    return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1f1a5 + c.charCodeAt(0)));
+  }
+
+  /* Sub-navigation. Reuses the existing .filter-tab component rather than
+     growing a second tab style — there is already one in the panel and two
+     would be a design bug, not a feature. */
+  function subTabs(base, current, items) {
+    return `<div class="filter-tabs">${items.map(([id, label]) => `
+      <a href="#/${base}${id === 'overview' ? '' : '/' + id}"
+         class="filter-tab ${current === id ? 'active' : ''}">${label}</a>`).join('')}</div>`;
+  }
+
+  /* A period picker, rendered as the same tabs. Writes to state and re-renders
+     rather than refetching in place: these pages are cheap and a half-updated
+     screen is worse than a redraw. */
+  function periodTabs(kind, current, options) {
+    return `<div class="filter-tabs sm">${options.map(([days, label]) => `
+      <button class="filter-tab ${String(current) === String(days) ? 'active' : ''}"
+              data-period="${days}" data-period-kind="${kind}">${label}</button>`).join('')}</div>`;
+  }
+
+  function wirePeriodTabs() {
+    $$('[data-period]').forEach(b => b.addEventListener('click', () => {
+      const kind = b.dataset.periodKind;
+      if (kind === 'security') state.securityPeriod = b.dataset.period;
+      else state.trafficPeriod = b.dataset.period;
+      render();
+    }));
+  }
+
+  /* An inline bar for a ranked list. The panel already has .bar for progress;
+     this is the same idea proportioned against the biggest row rather than
+     against 100, which is what a "top referrers" list actually wants. */
+  function rankRows(items, { label, value, href, max }) {
+    const top = max || Math.max(1, ...items.map(value));
+    return items.map(item => `
+      <div class="rk">
+        <div class="rk-t">${href ? `<a href="${href(item)}">${label(item)}</a>` : label(item)}</div>
+        <div class="rk-b"><i style="width:${Math.max(2, Math.round(value(item) / top * 100))}%"></i></div>
+        <div class="rk-n">${fmtNum(value(item))}</div>
+      </div>`).join('');
+  }
+
+  const emptyCard = (text) => `<div class="empty-state"><p>${escapeHtml(text)}</p></div>`;
+
+  /* How long until a timestamp in the FUTURE.
+
+     `timeAgo` cannot do this: it subtracts and gets a negative, which falls
+     through its first branch as "just now". A block expiring in twenty hours
+     therefore rendered as "just now" — indistinguishable from one that had just
+     lapsed, on the one screen where that difference is the entire point. */
+  function timeUntil(dateStr) {
+    const seconds = Math.floor((new Date(dateStr + 'Z') - new Date()) / 1000);
+    if (seconds <= 0) return 'expired';
+    if (seconds < 60) return 'in under a minute';
+    if (seconds < 3600) return `in ${Math.floor(seconds / 60)}m`;
+    if (seconds < 86400) return `in ${Math.floor(seconds / 3600)}h`;
+    return `in ${Math.floor(seconds / 86400)}d`;
+  }
+
+  // ==========================================================================
+  // SECURITY CENTRE
+  // ==========================================================================
   async function renderSecurity() {
+    const tab = state.securityTab || 'overview';
+    const period = state.securityPeriod || '7';
+
+    if (tab === 'ip') return renderIpDossier(state.securityIp);
+
     renderLayout(`
-      <div class="page-header">
-        <h1>Security</h1>
-        <p>Monitor visitor activity and suspicious behavior</p>
-      </div>
-      <div class="loading"><div class="spinner"></div> Loading security data...</div>
+      <div class="page-header"><h1>Security</h1><p>Loading…</p></div>
+      <div class="loading"><div class="spinner"></div> Reading the threat log…</div>
     `);
 
     try {
-      const res = await api('/admin/security?period=7');
-      const d = res.data;
+      // The three tabs need different endpoints; fetch only what is on screen.
+      const [overview, extra] = await Promise.all([
+        api(`/admin/security?period=${encodeURIComponent(period)}`),
+        tab === 'feed' ? api(`/admin/security/events?period=${encodeURIComponent(period)}&limit=200`)
+          : tab === 'addresses' ? api('/admin/security/rules')
+          : tab === 'signins' ? api(`/admin/security/auth?period=${encodeURIComponent(period)}`)
+          : Promise.resolve(null),
+      ]);
+      const d = overview.data;
+      const p = d.posture;
 
-      const suspiciousHigh = d.suspicious.filter(s => s.severity === 'high').length;
-
-      $('#mainContent').innerHTML = `
+      const header = `
         <div class="page-header">
-          <h1>Security</h1>
-          <p>Monitor visitor activity and suspicious behavior</p>
+          <p class="eyebrow">Security</p>
+          <h1 class="pst-h">${escapeHtml(p.headline)}</h1>
+          <p>${escapeHtml(p.detail)}</p>
         </div>
-        ${suspiciousHigh > 0 ? `<div class="alert alert-error">${suspiciousHigh} high severity alert(s) in the last 7 days</div>` : ''}
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="metric-label">Human Visitors</div>
-            <div class="metric-value accent">${d.humanCount}</div>
-            <div class="metric-sub">last 7 days</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Bot Visits</div>
-            <div class="metric-value warning">${d.botCount}</div>
-            <div class="metric-sub">last 7 days</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Suspicious Events</div>
-            <div class="metric-value danger">${d.suspicious.length}</div>
-            <div class="metric-sub">last 7 days</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Unique IPs</div>
-            <div class="metric-value">${d.topIPs.length}</div>
-            <div class="metric-sub">last 7 days</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">Suspicious Activity</span>
-          </div>
-          <div class="table-wrap">
-            <table class="mobile-cards">
-              <thead><tr><th>Severity</th><th>IP</th><th>Reason</th><th>Details</th><th>When</th></tr></thead>
-              <tbody>
-                ${d.suspicious.length === 0 ? '<tr><td colspan="5" class="empty-cell">No suspicious activity detected</td></tr>' :
-                  d.suspicious.slice(0, 50).map(s => `<tr>
-                    <td data-label="Severity">${severityBadge(s.severity)}</td>
-                    <td data-label="IP"><span class="mono">${escapeHtml(s.ip)}</span></td>
-                    <td data-label="Reason">${escapeHtml(s.reason)}</td>
-                    <td data-label="Details">${escapeHtml(truncate(s.details, 40))}</td>
-                    <td data-label="When">${timeAgo(s.created_at)}</td>
-                  </tr>`).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><span class="card-title">Top IPs</span></div>
-            <div class="table-wrap">
-              <table class="mobile-cards">
-                <thead><tr><th>IP</th><th>Location</th><th>Visits</th><th>Type</th></tr></thead>
-                <tbody>
-                  ${d.topIPs.map(ip => `<tr>
-                    <td data-label="IP"><span class="mono">${escapeHtml(ip.ip)}</span></td>
-                    <td data-label="Location">${escapeHtml(ip.country ? `${ip.city || ''}, ${ip.country}` : 'Unknown')}</td>
-                    <td data-label="Visits"><strong>${ip.count}</strong></td>
-                    <td data-label="Type">${ip.is_bot ? '<span class="badge badge-yellow">bot</span>' : '<span class="badge badge-green">human</span>'}</td>
-                  </tr>`).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header"><span class="card-title">Flagged IPs</span></div>
-            <div class="table-wrap">
-              <table class="mobile-cards">
-                <thead><tr><th>IP</th><th>Incidents</th><th>Max Severity</th></tr></thead>
-                <tbody>
-                  ${d.suspiciousIPs.length === 0 ? '<tr><td colspan="3" class="empty-cell">No flagged IPs</td></tr>' :
-                    d.suspiciousIPs.map(ip => `<tr>
-                      <td data-label="IP"><span class="mono">${escapeHtml(ip.ip)}</span></td>
-                      <td data-label="Incidents"><strong>${ip.incidents}</strong></td>
-                      <td data-label="Severity">${severityBadge(ip.max_severity)}</td>
-                    </tr>`).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header"><span class="card-title">Full Visitor Log</span></div>
-          <div class="table-wrap">
-            <table class="mobile-cards">
-              <thead><tr><th>IP</th><th>Location</th><th>ISP</th><th>Browser / OS</th><th>Referrer</th><th>Type</th><th>When</th></tr></thead>
-              <tbody>
-                ${d.visitorLog.slice(0, 100).map(v => `<tr>
-                  <td data-label="IP"><span class="mono">${escapeHtml(v.ip)}</span></td>
-                  <td data-label="Location">${escapeHtml(v.country ? `${v.city || ''}, ${v.country}` : 'Unknown')}</td>
-                  <td data-label="ISP">${escapeHtml(truncate(v.isp, 25) || '-')}</td>
-                  <td data-label="Browser/OS">${escapeHtml(truncate(v.browser, 15))} / ${escapeHtml(truncate(v.os, 15))}</td>
-                  <td data-label="Referrer">${escapeHtml(truncate(v.referrer, 30) || 'Direct')}</td>
-                  <td data-label="Type">${v.is_bot ? '<span class="badge badge-yellow">bot</span>' : '<span class="badge badge-green">human</span>'}</td>
-                  <td data-label="When">${timeAgo(v.created_at)}</td>
-                </tr>`).join('')}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <div class="pst pst-${p.level}"></div>
+        ${subTabs('security', tab, [
+          ['overview', 'Overview'], ['feed', 'Threat feed'],
+          ['addresses', 'Addresses'], ['signins', 'Sign-ins'],
+        ])}
+        ${tab === 'addresses' ? '' : periodTabs('security', period,
+          [[1, 'Today'], [7, '7 days'], [30, '30 days'], [90, '90 days']])}
       `;
+      // No period picker on Addresses: a firewall rule is either in force or it
+      // is not, and offering a control that changes nothing on screen is worse
+      // than offering none.
+
+      let body = '';
+      if (tab === 'overview') body = securityOverview(d);
+      else if (tab === 'feed') body = securityFeed(extra.data);
+      else if (tab === 'addresses') body = securityAddresses(extra.data);
+      else if (tab === 'signins') body = securitySignins(extra.data);
+
+      $('#mainContent').innerHTML = header + body;
+      wirePeriodTabs();
+      wireSecurityActions();
+
+      if (tab === 'overview' && d.daily.length) drawThreatChart(d.daily);
     } catch (err) {
       $('#mainContent').innerHTML = `<div class="alert alert-error">Failed to load security data: ${escapeHtml(err.message)}</div>`;
     }
   }
 
-  // ===== RENDER: ANALYTICS =====
-  async function renderAnalytics() {
-    renderLayout(`
-      <div class="page-header">
-        <h1>Analytics</h1>
-        <p>Understand how people engage with your site</p>
+  function securityOverview(d) {
+    const c = d.counts, v = d.visitors, a = d.auth;
+    return `
+      <div class="section">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value${c.severe > 0 ? ' danger' : ''}">${fmtNum(c.severe || 0)}</div>
+            <div class="metric-label">Serious probes</div>
+            <div class="metric-sub">high or critical</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value${c.blocked > 0 ? ' danger' : ''}">${fmtNum(c.blocked || 0)}</div>
+            <div class="metric-label">Requests refused</div>
+            <div class="metric-sub">stopped at the door</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${fmtNum(c.total || 0)}</div>
+            <div class="metric-label">Flagged events</div>
+            <div class="metric-sub">from ${fmtNum(c.ips || 0)} address${c.ips === 1 ? '' : 'es'}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value${a.lockouts > 0 ? ' warning' : ''}">${fmtNum(a.failed || 0)}</div>
+            <div class="metric-label">Failed sign-ins</div>
+            <div class="metric-sub">${fmtNum(a.lockouts || 0)} lockout${a.lockouts === 1 ? '' : 's'}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value accent">${fmtNum(v.humans || 0)}</div>
+            <div class="metric-label">Human visits</div>
+            <div class="metric-sub">${fmtNum(v.bots || 0)} from bots</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${fmtNum(d.rules.blocks || 0)}</div>
+            <div class="metric-label">Blocked addresses</div>
+            <div class="metric-sub">${fmtNum(d.rules.allows || 0)} trusted</div>
+          </div>
+        </div>
       </div>
-      <div class="loading"><div class="spinner"></div> Loading analytics...</div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Threat activity</span></div>
+        <div class="chart-container chart-h">${d.daily.length ? '<canvas id="threatChart"></canvas>' : emptyCard('Nothing flagged in this period.')}</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Most active offenders</span>
+            <span class="meta">ranked by severity, not volume</span></div>
+          ${d.offenders.length ? `<div class="table-wrap"><table class="mobile-cards">
+            <thead><tr><th>Address</th><th>Location</th><th>Score</th><th>Events</th><th></th></tr></thead>
+            <tbody>${d.offenders.map(o => `<tr>
+              <td data-label="Address"><a class="mono lk" href="#/security/ip/${encodeURIComponent(o.ip)}">${escapeHtml(o.ip)}</a>
+                ${o.blocked_count > 0 ? '<span class="badge badge-red mini">blocked</span>' : ''}</td>
+              <td data-label="Location">${escapeHtml([o.city, o.country].filter(Boolean).join(', ') || 'Unknown')}</td>
+              <td data-label="Score"><strong class="${o.total_score >= 100 ? 't-alert' : ''}">${fmtNum(o.total_score)}</strong></td>
+              <td data-label="Events">${fmtNum(o.incidents)}</td>
+              <td data-label=""><button class="btn btn-secondary btn-sm" data-block-ip="${escapeHtml(o.ip)}">Block</button></td>
+            </tr>`).join('')}</tbody></table></div>` : emptyCard('No offenders in this period.')}
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">What they tried</span></div>
+          ${d.byCategory.length ? `<div class="no-pad rk-wrap">${rankRows(d.byCategory, {
+            label: (r) => `<span class="rk-lbl">${escapeHtml(r.category)}</span>`,
+            value: (r) => r.count,
+            href: () => '#/security/feed',
+          })}</div>` : emptyCard('Nothing to categorise yet.')}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Latest events</span>
+          <a href="#/security/feed" class="meta lk">See all →</a></div>
+        ${threatTable(d.recent.slice(0, 15))}
+      </div>
+    `;
+  }
+
+  function threatTable(events) {
+    if (!events.length) return emptyCard('Nothing flagged.');
+    return `<div class="table-wrap"><table class="mobile-cards">
+      <thead><tr><th>When</th><th>Severity</th><th>Address</th><th>What</th><th>Path</th><th></th></tr></thead>
+      <tbody>${events.map(e => `<tr class="${e.blocked ? 'thr-blocked' : ''}">
+        <td data-label="When"><span class="meta">${timeAgo(e.created_at)}</span></td>
+        <td data-label="Severity">${sevBadge(e.severity)}</td>
+        <td data-label="Address"><a class="mono lk" href="#/security/ip/${encodeURIComponent(e.ip)}">${escapeHtml(e.ip)}</a></td>
+        <td data-label="What">${escapeHtml(e.reason)}
+          <div class="thr-d mono">${escapeHtml(truncate(e.details, 70))}</div></td>
+        <td data-label="Path"><span class="mono thr-p">${escapeHtml(truncate(e.path, 44) || '—')}</span></td>
+        <td data-label="">${e.blocked ? '<span class="badge badge-red">refused</span>' : '<span class="badge badge-gray">seen</span>'}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  }
+
+  function securityFeed(d) {
+    const cats = [...new Set(d.events.map(e => e.category).filter(Boolean))];
+    return `
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Threat feed</span>
+          <span class="meta">${fmtNum(d.total)} event${d.total === 1 ? '' : 's'}</span>
+        </div>
+        <div class="row" id="feedFilters">
+          <select class="in shrink0" id="feedSeverity">
+            <option value="">Any severity</option>
+            ${['critical', 'high', 'medium', 'low'].map(s => `<option value="${s}">${s}</option>`).join('')}
+          </select>
+          <select class="in shrink0" id="feedCategory">
+            <option value="">Any category</option>
+            ${cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}
+          </select>
+          <label class="check"><input type="checkbox" id="feedBlocked"> Refused only</label>
+        </div>
+        <div id="feedBody" class="no-pad">${threatTable(d.events)}</div>
+      </div>`;
+  }
+
+  function securityAddresses(d) {
+    const active = d.rules.filter(r => !r.expires_at || new Date(r.expires_at + 'Z') > new Date());
+    const lapsed = d.rules.filter(r => r.expires_at && new Date(r.expires_at + 'Z') <= new Date());
+    const ruleRow = (r) => `<tr>
+      <td data-label="Address"><a class="mono lk" href="#/security/ip/${encodeURIComponent(r.ip)}">${escapeHtml(r.ip)}</a></td>
+      <td data-label="Rule"><span class="badge ${r.action === 'block' ? 'badge-red' : 'badge-green'}">${r.action}</span></td>
+      <td data-label="Reason">${escapeHtml(r.reason)}
+        <div class="meta">${escapeHtml(r.source)}${r.created_by_email ? ' · ' + escapeHtml(r.created_by_email) : ''}</div></td>
+      <td data-label="Location">${escapeHtml([r.city, r.country].filter(Boolean).join(', ') || '—')}</td>
+      <td data-label="Hits">${fmtNum(r.hits)}</td>
+      <td data-label="Expires"><span class="meta">${r.expires_at ? timeUntil(r.expires_at) : 'never'}</span></td>
+      <td data-label=""><button class="btn btn-secondary btn-sm" data-remove-rule="${escapeHtml(r.ip)}">Remove</button></td>
+    </tr>`;
+
+    return `
+      <div class="card">
+        <div class="card-header"><span class="card-title">Add a rule</span></div>
+        <form id="ruleForm" class="row end rule-form">
+          <div class="grow"><label class="field-label">IP address</label>
+            <input class="in mono" id="ruleIp" placeholder="203.0.113.4" required></div>
+          <div class="grow"><label class="field-label">Reason</label>
+            <input class="in" id="ruleReason" placeholder="Why — you will thank yourself later" required></div>
+          <div class="shrink0"><label class="field-label">Rule</label>
+            <select class="in" id="ruleAction">
+              <option value="block">Block</option>
+              <option value="allow">Trust</option>
+            </select></div>
+          <div class="shrink0"><label class="field-label">For</label>
+            <select class="in" id="ruleMinutes">
+              <option value="">Indefinitely</option>
+              <option value="60">1 hour</option>
+              <option value="1440">1 day</option>
+              <option value="10080">1 week</option>
+            </select></div>
+          <button type="submit" class="btn btn-primary">Add</button>
+        </form>
+        <p class="hint sm mt-m">A trust rule exempts an address from being blocked automatically — it does
+          not stop it being watched. Your own address gets one for a week every time you sign in, which is
+          what stops an automatic block from locking you out of this panel.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Active rules</span>
+          <span class="meta">${active.length} in force</span></div>
+        ${active.length ? `<div class="table-wrap"><table class="mobile-cards">
+          <thead><tr><th>Address</th><th>Rule</th><th>Reason</th><th>Location</th><th>Hits</th><th>Expires</th><th></th></tr></thead>
+          <tbody>${active.map(ruleRow).join('')}</tbody></table></div>`
+        : emptyCard('No rules in force. Nothing is blocked and nothing is exempt.')}
+      </div>
+
+      ${lapsed.length ? `<div class="card">
+        <div class="card-header"><span class="card-title">Lapsed</span>
+          <span class="meta">expired, kept for the record</span></div>
+        <div class="table-wrap"><table class="mobile-cards">
+          <thead><tr><th>Address</th><th>Rule</th><th>Reason</th><th>Location</th><th>Hits</th><th>Expired</th><th></th></tr></thead>
+          <tbody>${lapsed.map(ruleRow).join('')}</tbody></table></div>
+      </div>` : ''}
+    `;
+  }
+
+  function securitySignins(d) {
+    const EV = {
+      login_success: ['ok', 'Signed in'], login_failed: ['warn', 'Failed'],
+      lockout: ['alert', 'Locked out'], login_blocked: ['alert', 'Blocked — locked'],
+      password_changed: ['ok', 'Password changed'], invite_accepted: ['ok', 'Invite accepted'],
+      password_reset_requested: ['warn', 'Reset requested'], password_reset_by_admin: ['warn', 'Reset by admin'],
+      ip_blocked: ['alert', 'IP blocked'], ip_allowed: ['ok', 'IP trusted'], ip_rule_removed: ['warn', 'Rule removed'],
+    };
+    const tone = { ok: 'badge-green', warn: 'badge-yellow', alert: 'badge-red' };
+
+    return `
+      ${d.locked.length ? `<div class="alert alert-warning">
+        ${d.locked.length} account${d.locked.length === 1 ? ' is' : 's are'} locked out right now:
+        ${d.locked.map(u => escapeHtml(u.email)).join(', ')}. Locks expire on their own — a password
+        reset link also clears one.
+      </div>` : ''}
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">What happened</span></div>
+        <div class="no-pad rk-wrap">${d.byEvent.length ? rankRows(d.byEvent, {
+          label: (r) => `<span class="rk-lbl">${escapeHtml((EV[r.event] || [null, r.event])[1])}</span>`,
+          value: (r) => r.count,
+        }) : emptyCard('No sign-in activity in this period.')}</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Sign-in log</span></div>
+        ${d.events.length ? `<div class="table-wrap"><table class="mobile-cards">
+          <thead><tr><th>When</th><th>Event</th><th>Account</th><th>Address</th><th>Detail</th></tr></thead>
+          <tbody>${d.events.map(e => {
+            const [t, label] = EV[e.event] || ['gray', e.event];
+            return `<tr>
+              <td data-label="When"><span class="meta">${timeAgo(e.created_at)}</span></td>
+              <td data-label="Event"><span class="badge ${tone[t] || 'badge-gray'}">${escapeHtml(label)}</span></td>
+              <td data-label="Account">${escapeHtml(e.email || '—')}</td>
+              <td data-label="Address"><a class="mono lk" href="#/security/ip/${encodeURIComponent(e.ip || '')}">${escapeHtml(e.ip || '—')}</a>
+                ${e.country ? `<div class="meta">${escapeHtml([e.city, e.country].filter(Boolean).join(', '))}</div>` : ''}</td>
+              <td data-label="Detail"><span class="meta">${escapeHtml(truncate(e.detail, 50) || '')}</span></td>
+            </tr>`;
+          }).join('')}</tbody></table></div>` : emptyCard('Nothing in the sign-in log for this period.')}
+      </div>
+    `;
+  }
+
+  // ---- IP dossier ----------------------------------------------------------
+  async function renderIpDossier(ip) {
+    renderLayout(`
+      <div class="page-header"><h1>${escapeHtml(ip || '')}</h1></div>
+      <div class="loading"><div class="spinner"></div> Assembling everything known about this address…</div>
     `);
 
     try {
-      const res = await api('/admin/analytics?period=30');
+      const res = await api(`/admin/security/ip/${encodeURIComponent(ip)}`);
       const d = res.data;
+      const g = d.geo || {};
+      const rule = d.rule;
+      const ts = d.threatSummary || {};
+
+      // The same derived-sentence device as the overview, at the scale of one
+      // address: what IS this, in a line, before any table.
+      let verdict, level;
+      if (rule && rule.action === 'block') { level = 'alert'; verdict = 'Blocked. Every request from here is refused.'; }
+      else if (rule && rule.action === 'allow') { level = 'ok'; verdict = 'Trusted. Exempt from automatic blocking, still watched.'; }
+      else if (ts.total_score >= 100) { level = 'alert'; verdict = 'Hostile. Repeated exploit attempts from this address.'; }
+      else if (ts.incidents > 0) { level = 'warn'; verdict = 'Probing. Flagged, but nothing serious enough to refuse.'; }
+      else if (d.summary.bot_visits > 0 && d.summary.bot_visits === d.summary.visits) { level = 'ok'; verdict = 'A bot. Nothing flagged.'; }
+      else { level = 'ok'; verdict = 'Nothing flagged. An ordinary visitor.'; }
 
       $('#mainContent').innerHTML = `
         <div class="page-header">
-          <h1>Analytics</h1>
-          <p>Understand how people engage with your site</p>
+          <p class="eyebrow"><a href="#/security/addresses" class="lk">← Security</a></p>
+          <h1 class="mono dsr-ip">${escapeHtml(d.ip)}</h1>
+          <p>${escapeHtml(verdict)}</p>
+        </div>
+        <div class="pst pst-${level}"></div>
+
+        <div class="section">
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-value${ts.total_score >= 100 ? ' danger' : ''}">${fmtNum(ts.total_score || 0)}</div>
+              <div class="metric-label">Threat score</div>
+              <div class="metric-sub">${fmtNum(d.liveScore)} live in the last 10 min</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value">${fmtNum(ts.incidents || 0)}</div>
+              <div class="metric-label">Flagged events</div>
+              <div class="metric-sub">${fmtNum(ts.blocked || 0)} refused</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value">${fmtNum(d.summary.visits || 0)}</div>
+              <div class="metric-label">Visits</div>
+              <div class="metric-sub">${fmtNum(d.summary.sessions || 0)} session${d.summary.sessions === 1 ? '' : 's'}</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value">${fmtNum(d.authAttempts.length)}</div>
+              <div class="metric-label">Sign-in attempts</div>
+              <div class="metric-sub">from this address</div>
+            </div>
+          </div>
         </div>
 
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Where it is</span></div>
+            <div class="stack">
+              <div class="dsr-r"><span>Country</span><b>${flag(g.country_code)} ${escapeHtml(g.country || 'Unknown')}</b></div>
+              <div class="dsr-r"><span>City</span><b>${escapeHtml([g.city, g.region].filter(Boolean).join(', ') || 'Unknown')}</b></div>
+              <div class="dsr-r"><span>Network</span><b>${escapeHtml(g.isp || 'Unknown')}</b></div>
+              <div class="dsr-r"><span>ASN</span><b class="mono">${escapeHtml(g.asn || '—')}</b></div>
+              <div class="dsr-r"><span>First seen</span><b>${d.summary.first_seen ? timeAgo(d.summary.first_seen) : '—'}</b></div>
+              <div class="dsr-r"><span>Last seen</span><b>${d.summary.last_seen ? timeAgo(d.summary.last_seen) : '—'}</b></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-title">Rule</span></div>
+            ${rule ? `<div class="stack">
+                <div class="dsr-r"><span>Action</span><b><span class="badge ${rule.action === 'block' ? 'badge-red' : 'badge-green'}">${rule.action}</span></b></div>
+                <div class="dsr-r"><span>Reason</span><b>${escapeHtml(rule.reason)}</b></div>
+                <div class="dsr-r"><span>Source</span><b>${escapeHtml(rule.source)}</b></div>
+                <div class="dsr-r"><span>Expires</span><b>${rule.expires_at ? escapeHtml(rule.expires_at) + ' UTC' : 'never'}</b></div>
+                <div class="dsr-r"><span>Hits since</span><b>${fmtNum(rule.hits)}</b></div>
+              </div>
+              <div class="divide"><button class="btn btn-secondary" data-remove-rule="${escapeHtml(d.ip)}">Remove this rule</button></div>`
+            : `<p class="hint">No rule. This address is treated like any other.</p>
+              ${d.isPrivate ? '<p class="hint sm">It is a private or loopback address and cannot be blocked.</p>' : `
+              <div class="row">
+                <button class="btn btn-danger" data-block-ip="${escapeHtml(d.ip)}">Block</button>
+                <button class="btn btn-secondary" data-allow-ip="${escapeHtml(d.ip)}">Trust</button>
+              </div>`}`}
+          </div>
+        </div>
+
+        ${d.threats.length ? `<div class="card">
+          <div class="card-header"><span class="card-title">What it tried</span></div>
+          ${threatTable(d.threats.slice(0, 40))}
+        </div>` : ''}
+
+        ${d.authAttempts.length ? `<div class="card">
+          <div class="card-header"><span class="card-title">Sign-in attempts</span></div>
+          <div class="table-wrap"><table class="mobile-cards">
+            <thead><tr><th>When</th><th>Event</th><th>Account</th><th>Detail</th></tr></thead>
+            <tbody>${d.authAttempts.map(a => `<tr>
+              <td data-label="When"><span class="meta">${timeAgo(a.created_at)}</span></td>
+              <td data-label="Event">${escapeHtml(a.event)}</td>
+              <td data-label="Account">${escapeHtml(a.email || '—')}</td>
+              <td data-label="Detail"><span class="meta">${escapeHtml(truncate(a.detail, 50) || '')}</span></td>
+            </tr>`).join('')}</tbody></table></div>
+        </div>` : ''}
+
+        ${d.pages.length ? `<div class="card">
+          <div class="card-header"><span class="card-title">Pages it read</span></div>
+          <div class="no-pad rk-wrap">${rankRows(d.pages, {
+            label: (r) => `<span class="rk-lbl mono">${escapeHtml(r.path)}</span>`,
+            value: (r) => r.views,
+          })}</div>
+        </div>` : ''}
+
+        ${d.sessions.length ? `<div class="card">
+          <div class="card-header"><span class="card-title">Sessions</span></div>
+          <div class="table-wrap"><table class="mobile-cards">
+            <thead><tr><th>When</th><th>Landed on</th><th>Browser</th><th>Read for</th><th>Type</th></tr></thead>
+            <tbody>${d.sessions.map(s => `<tr>
+              <td data-label="When"><a class="lk" href="#/traffic/session/${encodeURIComponent(s.session_id)}">${timeAgo(s.created_at)}</a></td>
+              <td data-label="Landed on"><span class="mono">${escapeHtml(truncate(s.path, 34) || '/')}</span></td>
+              <td data-label="Browser">${escapeHtml(truncate(s.browser, 18))} / ${escapeHtml(truncate(s.os, 14))}</td>
+              <td data-label="Read for">${fmtDuration(s.duration_seconds)}</td>
+              <td data-label="Type">${s.is_bot
+                ? `<span class="badge badge-yellow">${escapeHtml(s.bot_kind || 'bot')}</span>`
+                : '<span class="badge badge-green">human</span>'}</td>
+            </tr>`).join('')}</tbody></table></div>
+        </div>` : ''}
+      `;
+      wireSecurityActions();
+    } catch (err) {
+      $('#mainContent').innerHTML = `<div class="alert alert-error">Failed to load the dossier: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  // ---- security actions ----------------------------------------------------
+  function wireSecurityActions() {
+    const submitRule = async (ip, action, reason, minutes) => {
+      await api('/admin/security/rules', {
+        method: 'POST',
+        body: JSON.stringify({ ip, action, reason, minutes: minutes || null }),
+      });
+      render();
+    };
+
+    $$('[data-block-ip]').forEach(b => b.addEventListener('click', async () => {
+      const ip = b.dataset.blockIp;
+      const reason = prompt(`Block ${ip}. Why?`, 'Repeated exploit attempts');
+      if (!reason) return;
+      b.disabled = true;
+      try { await submitRule(ip, 'block', reason, null); }
+      catch (e) { alert(e.message); b.disabled = false; }
+    }));
+
+    $$('[data-allow-ip]').forEach(b => b.addEventListener('click', async () => {
+      const ip = b.dataset.allowIp;
+      const reason = prompt(`Trust ${ip}. Why?`, 'Known good address');
+      if (!reason) return;
+      b.disabled = true;
+      try { await submitRule(ip, 'allow', reason, null); }
+      catch (e) { alert(e.message); b.disabled = false; }
+    }));
+
+    $$('[data-remove-rule]').forEach(b => b.addEventListener('click', async () => {
+      const ip = b.dataset.removeRule;
+      if (!confirm(`Remove the rule for ${ip}?`)) return;
+      b.disabled = true;
+      try {
+        await api(`/admin/security/rules/${encodeURIComponent(ip)}`, { method: 'DELETE' });
+        render();
+      } catch (e) { alert(e.message); b.disabled = false; }
+    }));
+
+    const form = $('#ruleForm');
+    if (form) form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = $('button[type="submit"]', form);
+      btn.disabled = true;
+      try {
+        await submitRule($('#ruleIp').value.trim(), $('#ruleAction').value,
+          $('#ruleReason').value.trim(), $('#ruleMinutes').value);
+      } catch (err) { alert(err.message); btn.disabled = false; }
+    });
+
+    // Feed filters refetch rather than filtering the DOM: the table is capped
+    // at 200 rows server-side, so filtering what is on screen would silently
+    // search only the most recent 200 and look like it searched everything.
+    const applyFilters = async () => {
+      const q = new URLSearchParams({ period: state.securityPeriod || '7', limit: '200' });
+      if ($('#feedSeverity').value) q.set('severity', $('#feedSeverity').value);
+      if ($('#feedCategory').value) q.set('category', $('#feedCategory').value);
+      if ($('#feedBlocked').checked) q.set('blocked', '1');
+      $('#feedBody').innerHTML = '<div class="loading"><div class="spinner"></div> Filtering…</div>';
+      const res = await api(`/admin/security/events?${q}`);
+      $('#feedBody').innerHTML = threatTable(res.data.events);
+    };
+    ['#feedSeverity', '#feedCategory', '#feedBlocked'].forEach(sel => {
+      const el = $(sel);
+      if (el) el.addEventListener('change', () => applyFilters().catch(e => alert(e.message)));
+    });
+  }
+
+  function drawThreatChart(daily) {
+    destroyCharts();
+    const el = $('#threatChart');
+    if (!el) return;
+    charts.threats = new Chart(el, {
+      type: 'bar',
+      data: {
+        labels: daily.map(d => d.date.slice(5)),
+        datasets: [
+          { label: 'Refused', data: daily.map(d => d.blocked), backgroundColor: CHART.alert, borderRadius: 3 },
+          { label: 'Seen', data: daily.map(d => d.events - d.blocked), backgroundColor: CHART.quiet, borderRadius: 3 },
+        ],
+      },
+      options: {
+        ...chartDefaults,
+        plugins: { legend: { display: true, position: 'bottom', labels: { color: CHART.muted, boxWidth: 10, font: { size: 11 } } } },
+        scales: {
+          x: { ...chartDefaults.scales.x, stacked: true },
+          y: { ...chartDefaults.scales.y, stacked: true },
+        },
+      },
+    });
+  }
+
+  // ==========================================================================
+  // TRAFFIC CENTRE
+  // ==========================================================================
+  async function renderTraffic() {
+    const tab = state.trafficTab || 'overview';
+    const period = state.trafficPeriod || '30';
+
+    if (tab === 'session') return renderSessionTimeline(state.trafficSession);
+
+    renderLayout(`
+      <div class="page-header"><h1>Traffic</h1><p>Loading…</p></div>
+      <div class="loading"><div class="spinner"></div> Reading the rollups…</div>
+    `);
+
+    try {
+      const endpoint = {
+        overview: `/admin/traffic?period=${period}`,
+        pages: `/admin/traffic/pages?period=${period}`,
+        devices: `/admin/traffic/tech?period=${period}`,
+        places: `/admin/traffic/geo?period=${period}`,
+        live: '/admin/traffic/live?minutes=5',
+      }[tab] || `/admin/traffic?period=${period}`;
+
+      const res = await api(endpoint);
+      const d = res.data;
+
+      const header = `
+        <div class="page-header">
+          <p class="eyebrow">Traffic</p>
+          <h1>${escapeHtml(trafficHeadline(tab, d))}</h1>
+          <p>${escapeHtml(trafficSub(tab, d, period))}</p>
+        </div>
+        ${subTabs('traffic', tab, [
+          ['overview', 'Overview'], ['pages', 'Pages'], ['devices', 'Devices'],
+          ['places', 'Places'], ['live', 'Live'],
+        ])}
+        ${tab === 'live' ? '' : periodTabs('traffic', period,
+          [[7, '7 days'], [30, '30 days'], [90, '90 days'], [365, '1 year'], [3650, 'All time']])}
+      `;
+
+      let body = '';
+      if (tab === 'overview') body = trafficOverview(d);
+      else if (tab === 'pages') body = trafficPages(d);
+      else if (tab === 'devices') body = trafficDevices(d);
+      else if (tab === 'places') body = trafficPlaces(d);
+      else if (tab === 'live') body = trafficLive(d);
+
+      $('#mainContent').innerHTML = header + body;
+      wirePeriodTabs();
+
+      if (tab === 'overview') drawTrafficCharts(d);
+      if (tab === 'devices') drawDeviceChart(d);
+      if (tab === 'live') startLive();
+    } catch (err) {
+      $('#mainContent').innerHTML = `<div class="alert alert-error">Failed to load traffic: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  /* Every headline here is derived from the response, never written. The old
+     Analytics page had a static "Understand how people engage with your site",
+     which is true of every analytics page ever built and tells you nothing
+     about yours. */
+  function trafficHeadline(tab, d) {
+    if (tab === 'live') {
+      if (!d.humans && !d.bots) return 'Nobody on the site right now.';
+      if (!d.humans) return `${d.bots} bot${d.bots === 1 ? '' : 's'} crawling, no people.`;
+      return `${d.humans} ${d.humans === 1 ? 'person is' : 'people are'} reading right now.`;
+    }
+    if (tab === 'pages') {
+      const top = d.pages[0];
+      return top ? `${top.path} is the most-read page.` : 'No pages read yet.';
+    }
+    if (tab === 'devices') {
+      const top = d.devices[0];
+      if (!top) return 'No device data yet.';
+      const total = d.devices.reduce((n, x) => n + x.count, 0);
+      return `${Math.round(top.count / total * 100)}% of visits come from ${top.key}.`;
+    }
+    if (tab === 'places') {
+      const top = d.countries[0];
+      return top ? `Most visits come from ${top.key}.` : 'No location data yet.';
+    }
+    const t = d.totals;
+    if (!t.visits) return 'No traffic in this period.';
+    return `${fmtNum(d.uniqueVisitors)} ${d.uniqueVisitors === 1 ? 'person' : 'people'}, ${fmtNum(t.pageviews)} page${t.pageviews === 1 ? '' : 's'} read.`;
+  }
+
+  function trafficSub(tab, d, period) {
+    const span = period >= 3650 ? 'all time' : period >= 365 ? 'the last year' : `the last ${period} days`;
+    if (tab === 'live') return `Anyone active in the last ${d.minutes} minutes. ${fmtNum(d.today.visitors)} distinct visitors so far today.`;
+    if (tab === 'devices') return `What people read the site on, across ${span}.`;
+    if (tab === 'places') return `Where they are, across ${span}.`;
+    if (tab === 'pages') return `What they read, across ${span}.`;
+    const t = d.totals;
+    if (!t.visits) return `Nothing recorded across ${span}.`;
+    const returning = Math.max(0, d.uniqueVisitors - (t.new_visitors || 0));
+    return `Across ${span}. ${fmtNum(returning)} had been here before, ${d.bounceRate}% left without reading, `
+      + `and the average visit lasted ${fmtDuration(d.avgDuration)}.`;
+  }
+
+  function trafficOverview(d) {
+    const t = d.totals, prev = d.previous || {};
+    return `
+      <div class="section">
         <div class="metrics-grid">
           <div class="metric-card">
-            <div class="metric-label">Avg Scroll Depth</div>
-            <div class="metric-value accent">${d.avgScrollDepth}%</div>
-            <div class="metric-sub">how far people scroll</div>
+            <div class="metric-value accent">${d.uniqueVisitorsExact ? '' : 'at least '}${fmtNum(d.uniqueVisitors || 0)}</div>
+            <div class="metric-label">Visitors</div>
+            <div class="metric-sub">${fmtNum(t.new_visitors || 0)} for the first time</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${fmtNum(t.visits || 0)} ${delta(t.visits, prev.visits)}</div>
+            <div class="metric-label">Visits</div>
+            <div class="metric-sub">${fmtNum(t.pageviews || 0)} pages read</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${fmtDuration(d.avgDuration)}</div>
+            <div class="metric-label">Average visit</div>
+            <div class="metric-sub">${d.avgScroll}% average scroll</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value${d.bounceRate > 70 ? ' warning' : ''}">${d.bounceRate}%</div>
+            <div class="metric-label">Left immediately</div>
+            <div class="metric-sub">one page, under 10s</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${fmtNum(t.bot_visits || 0)}</div>
+            <div class="metric-label">Bot visits</div>
+            <div class="metric-sub">excluded from every figure here</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value${t.blocked > 0 ? ' danger' : ''}">${fmtNum(t.blocked || 0)}</div>
+            <div class="metric-label">Requests refused</div>
+            <div class="metric-sub"><a href="#/security" class="lk">see Security</a></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Visitors</span>
+          <span class="meta">from the permanent daily rollups</span></div>
+        <div class="chart-container">${d.daily.length ? '<canvas id="visitorsChart"></canvas>' : emptyCard('No traffic recorded in this period.')}</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">When they come</span>
+            <span class="meta">UTC hour</span></div>
+          <div class="chart-container chart-h">${d.hourly.length ? '<canvas id="hourlyChart"></canvas>' : emptyCard('Not enough data yet.')}</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">How they found it</span></div>
+          <div class="no-pad rk-wrap">${d.referrers.length ? rankRows(d.referrers, {
+            label: (r) => `<span class="rk-lbl">${escapeHtml(r.key)}</span>`,
+            value: (r) => r.count,
+          }) : emptyCard('No referrer data yet.')}</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Most-read pages</span>
+            <a href="#/traffic/pages" class="meta lk">All pages →</a></div>
+          <div class="no-pad rk-wrap">${d.pages.length ? rankRows(d.pages, {
+            label: (r) => `<span class="rk-lbl mono">${escapeHtml(r.key)}</span>`,
+            value: (r) => r.count,
+          }) : emptyCard('No pages recorded yet.')}</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Where from</span>
+            <a href="#/traffic/places" class="meta lk">All places →</a></div>
+          <div class="no-pad rk-wrap">${d.countries.length ? rankRows(d.countries, {
+            label: (r) => `<span class="rk-lbl">${escapeHtml(r.key)}</span>`,
+            value: (r) => r.count,
+          }) : emptyCard('No location data yet.')}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function trafficPages(d) {
+    return `
+      <div class="card">
+        <div class="card-header"><span class="card-title">Every page</span>
+          <span class="meta">views are long-run; engagement is from retained detail</span></div>
+        ${d.pages.length ? `<div class="table-wrap"><table class="mobile-cards">
+          <thead><tr><th>Path</th><th>Views</th><th>Average time</th><th>Actively read</th><th>Scroll</th></tr></thead>
+          <tbody>${d.pages.map(p => `<tr>
+            <td data-label="Path"><span class="mono">${escapeHtml(p.path)}</span></td>
+            <td data-label="Views"><strong>${fmtNum(p.views)}</strong></td>
+            <td data-label="Average time">${fmtDuration(p.avg_seconds)}</td>
+            <td data-label="Actively read">${fmtDuration(p.avg_active)}</td>
+            <td data-label="Scroll">${p.avg_scroll ? `<div class="row"><div class="bar grow"><i style="width:${Math.min(100, p.avg_scroll)}%"></i></div><span class="meta">${p.avg_scroll}%</span></div>` : '—'}</td>
+          </tr>`).join('')}</tbody></table></div>` : emptyCard('No pages recorded in this period.')}
+      </div>
+
+      <div class="card">
+        <div class="card-header"><span class="card-title">Where people arrive</span>
+          <span class="meta">the first page of a visit</span></div>
+        <div class="no-pad rk-wrap">${d.entries.length ? rankRows(d.entries, {
+          label: (r) => `<span class="rk-lbl mono">${escapeHtml(r.path || '/')}</span>`,
+          value: (r) => r.count,
+        }) : emptyCard('No entry data yet.')}</div>
+      </div>
+    `;
+  }
+
+  function trafficDevices(d) {
+    const table = (title, rows, note) => `
+      <div class="card">
+        <div class="card-header"><span class="card-title">${title}</span>
+          ${note ? `<span class="meta">${note}</span>` : ''}</div>
+        <div class="no-pad rk-wrap">${rows.length ? rankRows(rows, {
+          label: (r) => `<span class="rk-lbl">${escapeHtml(r.key)}</span>`,
+          value: (r) => r.count,
+        }) : emptyCard('Nothing recorded yet.')}</div>
+      </div>`;
+
+    return `
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Device mix</span></div>
+          <div class="chart-container chart-h sm">${d.devices.length ? '<canvas id="devicesChart"></canvas>' : emptyCard('No device data yet.')}</div>
+        </div>
+        ${table('Screen sizes', d.viewports, 'browser window width')}
+      </div>
+
+      <div class="grid-2">
+        ${table('Browsers', d.browsers, 'families, not versions')}
+        ${table('Operating systems', d.operatingSystems)}
+      </div>
+
+      <div class="grid-2">
+        ${table('Languages', d.languages)}
+        ${table('Bots', d.bots, 'classified, not lumped together')}
+      </div>
+
+      ${d.screens.length ? `<div class="card">
+        <div class="card-header"><span class="card-title">Exact screen resolutions</span>
+          <span class="meta">from retained detail, not the rollups</span></div>
+        <div class="table-wrap"><table class="mobile-cards">
+          <thead><tr><th>Resolution</th><th>Visits</th></tr></thead>
+          <tbody>${d.screens.map(s => `<tr>
+            <td data-label="Resolution"><span class="mono">${s.screen_width}×${s.screen_height}</span></td>
+            <td data-label="Visits"><strong>${fmtNum(s.count)}</strong></td>
+          </tr>`).join('')}</tbody></table></div>
+      </div>` : ''}
+    `;
+  }
+
+  function trafficPlaces(d) {
+    return `
+      <div class="card">
+        <div class="card-header"><span class="card-title">Countries</span></div>
+        <div class="no-pad rk-wrap">${d.countries.length ? rankRows(d.countries, {
+          label: (r) => `<span class="rk-lbl">${flag(r.code)} ${escapeHtml(r.key)}</span>`,
+          value: (r) => r.count,
+        }) : emptyCard('No location data yet. Geo lookup is best-effort and skips private addresses.')}</div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Cities</span></div>
+          <div class="no-pad rk-wrap">${d.cities.length ? rankRows(d.cities, {
+            label: (r) => `<span class="rk-lbl">${escapeHtml(r.city)}<span class="meta"> ${escapeHtml(r.country || '')}</span></span>`,
+            value: (r) => r.count,
+          }) : emptyCard('No city data yet.')}</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Networks</span>
+            <span class="meta">datacentre vs consumer</span></div>
+          ${d.networks.length ? `<div class="table-wrap"><table class="mobile-cards">
+            <thead><tr><th>Network</th><th>Visits</th><th>Bots</th></tr></thead>
+            <tbody>${d.networks.map(n => `<tr>
+              <td data-label="Network">${escapeHtml(truncate(n.isp, 34))}
+                <div class="meta mono">${escapeHtml(truncate(n.asn, 30) || '')}</div></td>
+              <td data-label="Visits"><strong>${fmtNum(n.count)}</strong></td>
+              <td data-label="Bots">${n.bot_visits ? `<span class="badge badge-yellow">${n.bot_visits}</span>` : '—'}</td>
+            </tr>`).join('')}</tbody></table></div>` : emptyCard('No network data yet.')}
+        </div>
+      </div>
+    `;
+  }
+
+  function trafficLive(d) {
+    return `
+      <div class="section">
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value accent">${fmtNum(d.humans)}</div>
+            <div class="metric-label">People here now</div>
+            <div class="metric-sub">active in the last ${d.minutes} min</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${fmtNum(d.bots)}</div>
+            <div class="metric-label">Bots</div>
+            <div class="metric-sub">crawling right now</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">${fmtNum(d.today.visitors)}</div>
+            <div class="metric-label">Visitors today</div>
+            <div class="metric-sub">${fmtNum(d.today.visits)} visits</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><span class="lv-dot"></span>Live</span>
+          <span class="meta">refreshes every 10 seconds</span>
+        </div>
+        <div id="liveBody" class="no-pad">${liveTable(d)}</div>
+      </div>`;
+  }
+
+  function liveTable(d) {
+    if (!d.visitors.length) return emptyCard('Nobody is on the site right now.');
+    return `<div class="table-wrap"><table class="mobile-cards">
+      <thead><tr><th>Reading</th><th>Where</th><th>Device</th><th>For</th><th>Scroll</th><th>Type</th></tr></thead>
+      <tbody>${d.visitors.map(v => `<tr>
+        <td data-label="Reading"><a class="mono lk" href="#/traffic/session/${encodeURIComponent(v.session_id)}">${escapeHtml(truncate(v.current_path, 30) || '/')}</a>
+          <div class="meta">${fmtNum(v.pageview_count)} page${v.pageview_count === 1 ? '' : 's'} this visit</div></td>
+        <td data-label="Where">${flag(v.country_code)} ${escapeHtml([v.city, v.country].filter(Boolean).join(', ') || 'Unknown')}</td>
+        <td data-label="Device">${escapeHtml(v.device_type || '—')}
+          <div class="meta">${escapeHtml(truncate(v.browser, 18))}</div></td>
+        <td data-label="For">${fmtDuration(v.duration_seconds)}</td>
+        <td data-label="Scroll">${v.max_scroll ? v.max_scroll + '%' : '—'}</td>
+        <td data-label="Type">${v.is_bot
+          ? `<span class="badge badge-yellow">${escapeHtml(v.bot_kind || 'bot')}</span>`
+          : '<span class="badge badge-green">human</span>'}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  }
+
+  /* The live tab polls. `stopLive()` is called at the top of render(), which is
+     the only safe place — a timer that outlives its page keeps fetching forever
+     and, worse, writes into a #liveBody that belongs to a different screen. */
+  function startLive() {
+    stopLive();
+    state.liveTimer = setInterval(async () => {
+      const body = $('#liveBody');
+      if (!body) return stopLive();
+      try {
+        const res = await api('/admin/traffic/live?minutes=5');
+        body.innerHTML = liveTable(res.data);
+      } catch { stopLive(); }
+    }, 10000);
+  }
+
+  function stopLive() {
+    if (state.liveTimer) { clearInterval(state.liveTimer); state.liveTimer = null; }
+  }
+
+  // ---- session timeline ----------------------------------------------------
+  async function renderSessionTimeline(sessionId) {
+    renderLayout(`<div class="page-header"><h1>Session</h1></div>
+      <div class="loading"><div class="spinner"></div> Rebuilding the visit…</div>`);
+
+    try {
+      const res = await api(`/admin/traffic/session/${encodeURIComponent(sessionId)}`);
+      const d = res.data, v = d.visit;
+
+      $('#mainContent').innerHTML = `
+        <div class="page-header">
+          <p class="eyebrow"><a href="#/traffic/live" class="lk">← Traffic</a></p>
+          <h1>${escapeHtml(v.pageview_count > 1
+            ? `Read ${v.pageview_count} pages over ${fmtDuration(v.duration_seconds)}`
+            : `Read one page for ${fmtDuration(v.duration_seconds)}`)}</h1>
+          <p>${escapeHtml([v.city, v.country].filter(Boolean).join(', ') || 'Unknown location')} ·
+             ${escapeHtml(v.browser)} on ${escapeHtml(v.os)} ·
+             ${escapeHtml(v.device_type || 'desktop')}${v.is_returning ? ' · returning visitor' : ' · first visit'}</p>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Who</span></div>
+            <div class="stack">
+              <div class="dsr-r"><span>Address</span><b><a class="mono lk" href="#/security/ip/${encodeURIComponent(v.ip)}">${escapeHtml(v.ip)}</a></b></div>
+              <div class="dsr-r"><span>Network</span><b>${escapeHtml(v.isp || 'Unknown')}</b></div>
+              <div class="dsr-r"><span>Came from</span><b>${escapeHtml(truncate(v.referrer, 40) || 'Direct')}</b></div>
+              <div class="dsr-r"><span>Screen</span><b class="mono">${v.screen_width ? `${v.screen_width}×${v.screen_height}` : '—'}${v.pixel_ratio ? ` @${v.pixel_ratio}x` : ''}</b></div>
+              <div class="dsr-r"><span>Window</span><b class="mono">${v.viewport_width ? `${v.viewport_width}×${v.viewport_height}` : '—'}</b></div>
+              <div class="dsr-r"><span>Language</span><b>${escapeHtml(v.language || '—')}</b></div>
+              <div class="dsr-r"><span>Time zone</span><b>${escapeHtml(v.timezone || '—')}</b></div>
+              ${v.utm_source ? `<div class="dsr-r"><span>Campaign</span><b>${escapeHtml([v.utm_source, v.utm_medium, v.utm_campaign].filter(Boolean).join(' / '))}</b></div>` : ''}
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Engagement</span></div>
+            <div class="stack">
+              <div class="dsr-r"><span>On the site</span><b>${fmtDuration(v.duration_seconds)}</b></div>
+              <div class="dsr-r"><span>Actively reading</span><b>${fmtDuration(v.active_seconds)}</b></div>
+              <div class="dsr-r"><span>Scrolled to</span><b>${v.max_scroll || 0}%</b></div>
+              <div class="dsr-r"><span>Pages</span><b>${fmtNum(v.pageview_count)}</b></div>
+              <div class="dsr-r"><span>Type</span><b>${v.is_bot ? escapeHtml(v.bot_kind || 'bot') : 'human'}</b></div>
+            </div>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-header"><span class="card-title">Visitors — Last 30 Days</span></div>
-          <div class="chart-container"><canvas id="visitorsChart"></canvas></div>
+          <div class="card-header"><span class="card-title">What they did</span></div>
+          <div class="tl-w">${d.timeline.map(t => `
+            <div class="tl-i tl-${t.kind === 'pageview' ? 'p' : 'e'}">
+              <div class="tl-m">${escapeHtml(String(t.at).slice(11, 16))}</div>
+              <div class="tl-c">
+                <div class="tl-l">${t.kind === 'pageview' ? 'Read' : escapeHtml(t.kind.replace('_', ' '))}
+                  <span class="mono">${escapeHtml(t.label || '')}</span></div>
+                ${t.kind === 'pageview' && t.seconds
+                  ? `<div class="meta">${fmtDuration(t.seconds)} · scrolled ${t.scroll || 0}%</div>` : ''}
+              </div>
+            </div>`).join('')}</div>
         </div>
 
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><span class="card-title">Section Engagement</span></div>
-            <div class="chart-container chart-h" ><canvas id="sectionsChart"></canvas></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><span class="card-title">Visits by Hour</span></div>
-            <div class="chart-container chart-h" ><canvas id="hourlyChart"></canvas></div>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><span class="card-title">Click Tracking</span></div>
-            <div class="table-wrap">
-              <table class="mobile-cards">
-                <thead><tr><th>Element</th><th>Clicks</th></tr></thead>
-                <tbody>
-                  ${d.clickEvents.length === 0 ? '<tr><td colspan="2" class="empty-cell">No click data yet</td></tr>' :
-                    d.clickEvents.map(c => `<tr>
-                      <td data-label="Element">${escapeHtml(c.target)}</td>
-                      <td data-label="Clicks"><strong>${c.clicks}</strong></td>
-                    </tr>`).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-header"><span class="card-title">Referrer Sources</span></div>
-            <div class="table-wrap">
-              <table class="mobile-cards">
-                <thead><tr><th>Source</th><th>Visits</th></tr></thead>
-                <tbody>
-                  ${d.referrers.length === 0 ? '<tr><td colspan="2" class="empty-cell">No referrer data yet</td></tr>' :
-                    d.referrers.map(r => `<tr>
-                      <td data-label="Source">${escapeHtml(truncate(r.source, 50))}</td>
-                      <td data-label="Visits"><strong>${r.count}</strong></td>
-                    </tr>`).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header"><span class="card-title">Devices</span></div>
-            <div class="chart-container chart-h sm" ><canvas id="devicesChart"></canvas></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><span class="card-title">Browsers</span></div>
-            <div class="table-wrap">
-              <table class="mobile-cards">
-                <thead><tr><th>Browser</th><th>Visits</th></tr></thead>
-                <tbody>
-                  ${d.browsers.map(b => `<tr>
-                    <td data-label="Browser">${escapeHtml(b.browser)}</td>
-                    <td data-label="Visits"><strong>${b.count}</strong></td>
-                  </tr>`).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
+        ${d.otherVisits.length ? `<div class="card">
+          <div class="card-header"><span class="card-title">Other visits from this address</span></div>
+          <div class="table-wrap"><table class="mobile-cards">
+            <thead><tr><th>When</th><th>Landed on</th><th>For</th></tr></thead>
+            <tbody>${d.otherVisits.map(o => `<tr>
+              <td data-label="When"><a class="lk" href="#/traffic/session/${encodeURIComponent(o.session_id)}">${timeAgo(o.created_at)}</a></td>
+              <td data-label="Landed on"><span class="mono">${escapeHtml(truncate(o.path, 34) || '/')}</span></td>
+              <td data-label="For">${fmtDuration(o.duration_seconds)}</td>
+            </tr>`).join('')}</tbody></table></div>
+        </div>` : ''}
       `;
-
-      // Draw charts
-      destroyCharts();
-
-      // Visitors line chart
-      if (d.dailyVisitors.length > 0) {
-        charts.visitors = new Chart($('#visitorsChart'), {
-          type: 'line',
-          data: {
-            labels: d.dailyVisitors.map(v => v.date.slice(5)),
-            datasets: [{
-              data: d.dailyVisitors.map(v => v.count),
-              borderColor: '#3b82f6',
-              backgroundColor: 'rgba(59,130,246,0.1)',
-              fill: true,
-              tension: 0.3,
-              pointRadius: 3,
-              pointBackgroundColor: '#3b82f6'
-            }]
-          },
-          options: chartDefaults
-        });
-      }
-
-      // Section engagement bar chart
-      if (d.sectionEngagement.length > 0) {
-        charts.sections = new Chart($('#sectionsChart'), {
-          type: 'bar',
-          data: {
-            labels: d.sectionEngagement.map(s => s.target || 'unknown'),
-            datasets: [{
-              data: d.sectionEngagement.map(s => s.views),
-              backgroundColor: 'rgba(59,130,246,0.3)',
-              borderColor: '#3b82f6',
-              borderWidth: 1
-            }]
-          },
-          options: { ...chartDefaults, indexAxis: 'y' }
-        });
-      }
-
-      // Hourly distribution
-      if (d.hourlyDistribution.length > 0) {
-        const hours = Array.from({ length: 24 }, (_, i) => i);
-        const hourMap = Object.fromEntries(d.hourlyDistribution.map(h => [h.hour, h.count]));
-        charts.hourly = new Chart($('#hourlyChart'), {
-          type: 'bar',
-          data: {
-            labels: hours.map(h => `${h}:00`),
-            datasets: [{
-              data: hours.map(h => hourMap[h] || 0),
-              backgroundColor: 'rgba(59,130,246,0.3)',
-              borderColor: '#3b82f6',
-              borderWidth: 1
-            }]
-          },
-          options: chartDefaults
-        });
-      }
-
-      // Devices doughnut
-      if (d.devices.length > 0) {
-        const colors = ['#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', '#22c55e'];
-        charts.devices = new Chart($('#devicesChart'), {
-          type: 'doughnut',
-          data: {
-            labels: d.devices.map(d => d.device_type),
-            datasets: [{
-              data: d.devices.map(d => d.count),
-              backgroundColor: colors.slice(0, d.devices.length),
-              borderWidth: 0
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { position: 'right', labels: { color: '#a1a1aa', font: { size: 12 } } }
-            }
-          }
-        });
-      }
     } catch (err) {
-      $('#mainContent').innerHTML = `<div class="alert alert-error">Failed to load analytics: ${escapeHtml(err.message)}</div>`;
+      $('#mainContent').innerHTML = `<div class="alert alert-error">Failed to load the session: ${escapeHtml(err.message)}</div>`;
     }
   }
+
+  // ---- traffic charts ------------------------------------------------------
+  function drawTrafficCharts(d) {
+    destroyCharts();
+
+    if (d.daily.length && $('#visitorsChart')) {
+      charts.visitors = new Chart($('#visitorsChart'), {
+        type: 'line',
+        data: {
+          labels: d.daily.map(x => x.date.slice(5)),
+          datasets: [
+            { label: 'Visitors', data: d.daily.map(x => x.visitors),
+              borderColor: CHART.accent, backgroundColor: CHART.accentSoft,
+              fill: true, tension: .32, pointRadius: 0, pointHoverRadius: 4,
+              pointBackgroundColor: CHART.accent, borderWidth: 2 },
+            { label: 'Pages read', data: d.daily.map(x => x.pageviews),
+              borderColor: CHART.accentDark, backgroundColor: 'transparent',
+              fill: false, tension: .32, pointRadius: 0, pointHoverRadius: 4,
+              borderWidth: 1.5, borderDash: [4, 3] },
+          ],
+        },
+        options: {
+          ...chartDefaults,
+          plugins: { legend: { display: true, position: 'bottom', labels: { color: CHART.muted, boxWidth: 10, font: { size: 11 } } } },
+        },
+      });
+    }
+
+    if (d.hourly.length && $('#hourlyChart')) {
+      const map = Object.fromEntries(d.hourly.map(h => [h.hour, h.count]));
+      charts.hourly = new Chart($('#hourlyChart'), {
+        type: 'bar',
+        data: {
+          labels: Array.from({ length: 24 }, (_, i) => `${i}`),
+          datasets: [{
+            data: Array.from({ length: 24 }, (_, i) => map[i] || 0),
+            backgroundColor: CHART.accent, borderRadius: 3,
+          }],
+        },
+        options: chartDefaults,
+      });
+    }
+  }
+
+  function drawDeviceChart(d) {
+    destroyCharts();
+    if (!d.devices.length || !$('#devicesChart')) return;
+    charts.devices = new Chart($('#devicesChart'), {
+      type: 'doughnut',
+      data: {
+        labels: d.devices.map(x => x.key),
+        datasets: [{
+          data: d.devices.map(x => x.count),
+          backgroundColor: CHART.ramp.slice(0, d.devices.length),
+          borderWidth: 0,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '62%',
+        plugins: { legend: { position: 'right', labels: { color: CHART.muted, boxWidth: 10, font: { size: 12 } } } },
+      },
+    });
+  }
+
 
   // ===== RENDER: SETTINGS =====
   async function renderSettings() {
@@ -2798,7 +3650,11 @@ if ('serviceWorker' in navigator) {
 
   // ===== ROUTER =====
   function route() {
-    const hash = window.location.hash.replace('#/', '') || 'dashboard';
+    // Query strings are stripped before splitting. The security centre links to
+    // its own tabs with hashes like #/security/feed, and anything appended after
+    // a ? would otherwise land inside the tab name and match nothing — a page
+    // that silently falls back to Overview with no error is a bad half-hour.
+    const hash = (window.location.hash.replace('#/', '') || 'dashboard').split('?')[0];
     const parts = hash.split('/');
 
     if (parts[0] === 'projects' && parts[1]) {
@@ -2811,7 +3667,33 @@ if ('serviceWorker' in navigator) {
       state.ticketDetailId = parts[1];
       return;
     }
-    if (['dashboard', 'security', 'analytics', 'settings', 'projects', 'clients'].includes(parts[0])) {
+
+    // Security and Traffic are tabbed centres, so their second segment is a tab
+    // rather than an id — except for the two drill-downs, which carry one. Both
+    // are real routes rather than in-page state so a dossier can be linked to,
+    // which is most of the point of having one.
+    if (parts[0] === 'security') {
+      state.page = 'security';
+      if (parts[1] === 'ip' && parts[2]) {
+        state.securityTab = 'ip';
+        state.securityIp = decodeURIComponent(parts.slice(2).join('/'));
+      } else {
+        state.securityTab = parts[1] || 'overview';
+      }
+      return;
+    }
+    if (parts[0] === 'traffic' || parts[0] === 'analytics') {
+      state.page = 'traffic';
+      if (parts[1] === 'session' && parts[2]) {
+        state.trafficTab = 'session';
+        state.trafficSession = decodeURIComponent(parts[2]);
+      } else {
+        state.trafficTab = parts[1] || 'overview';
+      }
+      return;
+    }
+
+    if (['dashboard', 'settings', 'projects', 'clients'].includes(parts[0])) {
       state.page = parts[0];
     }
   }
@@ -2885,6 +3767,10 @@ if ('serviceWorker' in navigator) {
   // ===== MAIN RENDER =====
   async function render() {
     destroyCharts();
+    // The Live tab polls on a 10s interval. This is the only safe place to stop
+    // it: a timer that survives a page change keeps fetching forever and writes
+    // its results into whatever #liveBody it finds next.
+    stopLive();
 
     // Handle invite page before auth check (public route)
     const hash = window.location.hash.replace('#/', '') || '';
@@ -2905,7 +3791,7 @@ if ('serviceWorker' in navigator) {
       case 'ticketDetail': return renderAdminTicketDetail(state.ticketDetailId);
       case 'clients': return renderClients();
       case 'security': return renderSecurity();
-      case 'analytics': return renderAnalytics();
+      case 'traffic': return renderTraffic();
       case 'settings': return renderSettings();
       default: return renderDashboard();
     }

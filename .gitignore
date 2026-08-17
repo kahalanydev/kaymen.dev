@@ -10,3 +10,9 @@ portal/_preview.html
 
 # throwaway database for scripts/seed-preview.js
 .preview-data/
+
+# throwaway database for scripts/verify-security.js
+.verify-data/
+
+# screenshots from an ad-hoc CDP run
+.shots/

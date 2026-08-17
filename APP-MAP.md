@@ -164,7 +164,30 @@ Client → Traefik (SSL) → Express (:8080)
 - **Timing check**: Form sends `_t` (ms since page load) — submissions under 2 seconds silently succeed
 - **Lead tracking**: `project_name` field, `converted_at`/`converted_org_id` columns for future lead-to-client pipeline
 
-### Database Schema (SQLite — 17 tables)
+### Security & tracking centre (2026-08-17)
+
+A request shield, a scoring threat engine, and permanent daily rollups behind a retention
+window. See `HANDOFF-SECURITY-2026-08-17.md` — §1 is the table of what the previous system
+claimed versus what it did, and §4 is the traps.
+
+- **`server/middleware/shield.js`** — runs on every request. Normalises the client IP, honours
+  allow-then-block rules, asks the threat engine what the request contains, and refuses or
+  records on score. Auto-blocks escalate (1h → 6h → 24h → 7d) and always expire. It never
+  blocks a private address, never blocks an allow-listed one, and `SHIELD_DISABLED=1` turns it
+  off without a deploy.
+- **`server/utils/detection.js`** — classifies user agents into a *kind* (search / ai / social
+  / seo / monitor / tool / scanner / headless / human) and scores requests against ~20 exploit
+  signatures. Scores stack, so combinations no rule anticipated still clear the threshold.
+- **`server/utils/rollup.js`** — hourly. Rolls raw visits/pageviews into the permanent
+  `traffic_daily` + `dimension_daily`, then prunes raw rows past their retention window. This
+  is the answer to the unbounded-growth concern raised in
+  `HANDOFF-BACKOFFICE-2026-08-16.md` §6.
+- **`app.set('trust proxy', 1)`** — was `true`, which trusts every hop and made `req.ip` the
+  client-supplied leftmost `X-Forwarded-For` entry. Use `req.clientIp` downstream.
+- **Brute-force lockout is real** — 5 attempts, 15 minutes. `users.login_attempts` and
+  `locked_until` existed since the portal was built and nothing read them until now.
+
+### Database Schema (SQLite — 22 tables)
 
 **Core (existing)**:
 - **config** — key/value store (JWT secret, SMTP settings, Google OAuth config)
@@ -188,6 +211,21 @@ Client → Traefik (SSL) → Express (:8080)
 - **project_plans** — versioned plans for client approval
 - **dev_keys** — HMAC keys for Claude Code dev API
 - **refresh_tokens** — prepared for token refresh flow
+
+**Security & tracking (2026-08-17)**:
+- **pageviews** — one row per page within a visit. `visits` only ever recorded the session, so
+  the panel could not say which pages anyone read (the tracker sent `path`; nothing stored it).
+- **traffic_daily** — PERMANENT daily aggregate, one row per day. Never pruned.
+- **dimension_daily** — PERMANENT breakdowns, `(date, kind, key) → visits`. `kind` is the axis
+  (device / browser / os / country / language / referrer / viewport / page / bot).
+- **ip_rules** — the firewall. `action` is `block` or `allow`; allow exists so auto-blocking can
+  never lock the only admin out of production.
+- **auth_events** — every sign-in, failure, lockout, reset and rule change, with IP and UA.
+
+`visits` also gained ~18 columns (path, visitor_id, is_returning, viewport, pixel_ratio,
+timezone, UTM, country_code, asn, bot_kind, duration/active seconds, max_scroll,
+pageview_count, last_seen_at) and `suspicious_activity` gained six (category, path, method,
+user_agent, score, blocked). All additive — an existing `analytics.db` keeps every row.
 
 ### Auth System
 - JWT tokens (24h expiry), secret auto-generated and stored in DB

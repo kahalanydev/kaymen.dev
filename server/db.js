@@ -195,6 +195,111 @@ function initSchema() {
   db.run('CREATE INDEX IF NOT EXISTS idx_suspicious_created ON suspicious_activity(created_at);');
   db.run('CREATE INDEX IF NOT EXISTS idx_suspicious_ip ON suspicious_activity(ip);');
 
+  // ===== SECURITY & TRACKING CENTER (2026-08-17) =====================
+  //
+  // Four tables and a pile of columns. Two of the tables exist only so the raw
+  // ones can be DELETED: `traffic_daily` and `dimension_daily` are permanent
+  // aggregates, and `server/utils/rollup.js` prunes raw visits/events/pageviews
+  // behind them. That is the answer to the concern raised in
+  // HANDOFF-BACKOFFICE-2026-08-16.md §6 — this whole database is held in memory
+  // and rewritten to disk on every debounce, so "keep a year of 30-second
+  // heartbeats" was never going to hold. Long-run statistics live in the
+  // rollups; the raw rows are a 90-day working set.
+
+  // One row per page view inside a visit. `visits` only ever recorded the
+  // session, so the panel could say how many people came and never which pages
+  // they read — the tracker was already POSTing `path` and nothing stored it.
+  db.run(`
+    CREATE TABLE IF NOT EXISTS pageviews (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      visit_id INTEGER,
+      session_id TEXT NOT NULL,
+      path TEXT NOT NULL,
+      title TEXT,
+      referrer TEXT,
+      duration_seconds INTEGER DEFAULT 0,
+      active_seconds INTEGER DEFAULT 0,
+      max_scroll INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
+  // Permanent. Never pruned. One row per day.
+  db.run(`
+    CREATE TABLE IF NOT EXISTS traffic_daily (
+      date TEXT PRIMARY KEY,
+      visits INTEGER DEFAULT 0,
+      visitors INTEGER DEFAULT 0,
+      new_visitors INTEGER DEFAULT 0,
+      pageviews INTEGER DEFAULT 0,
+      bot_visits INTEGER DEFAULT 0,
+      bounces INTEGER DEFAULT 0,
+      avg_scroll INTEGER DEFAULT 0,
+      avg_duration INTEGER DEFAULT 0,
+      threats INTEGER DEFAULT 0,
+      blocked INTEGER DEFAULT 0,
+      rolled_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
+  // Permanent too — the long-run breakdowns. `kind` is the axis (device,
+  // browser, os, country, referrer, path, language, viewport, bot), `key` is
+  // the value. One generic table rather than nine, because every one of them
+  // is the same shape and the UI asks for them the same way.
+  db.run(`
+    CREATE TABLE IF NOT EXISTS dimension_daily (
+      date TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      key TEXT NOT NULL,
+      visits INTEGER DEFAULT 0,
+      PRIMARY KEY (date, kind, key)
+    );
+  `);
+
+  // Firewall rules. `action` is block or allow, and allow exists for a specific
+  // failure mode: auto-blocking cannot be allowed to lock the only admin out of
+  // production. A successful admin/staff login writes a rolling allow rule for
+  // that IP, and the shield checks allow before block.
+  db.run(`
+    CREATE TABLE IF NOT EXISTS ip_rules (
+      ip TEXT PRIMARY KEY,
+      action TEXT NOT NULL DEFAULT 'block',
+      reason TEXT NOT NULL,
+      source TEXT NOT NULL DEFAULT 'manual',
+      severity TEXT DEFAULT 'high',
+      hits INTEGER NOT NULL DEFAULT 0,
+      created_by INTEGER REFERENCES users(id),
+      expires_at TEXT,
+      last_hit_at TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
+  // Who tried to get in, from where, and whether it worked. `users` has carried
+  // login_attempts and locked_until since the portal was built and nothing ever
+  // read them; the lockout is real now and this is its audit trail.
+  db.run(`
+    CREATE TABLE IF NOT EXISTS auth_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER REFERENCES users(id),
+      email TEXT,
+      event TEXT NOT NULL,
+      ip TEXT,
+      user_agent TEXT,
+      detail TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
+  db.run('CREATE INDEX IF NOT EXISTS idx_pageviews_session ON pageviews(session_id);');
+  db.run('CREATE INDEX IF NOT EXISTS idx_pageviews_created ON pageviews(created_at);');
+  db.run('CREATE INDEX IF NOT EXISTS idx_pageviews_path ON pageviews(path);');
+  db.run('CREATE INDEX IF NOT EXISTS idx_dimension_daily_kind ON dimension_daily(kind, date);');
+  db.run('CREATE INDEX IF NOT EXISTS idx_ip_rules_action ON ip_rules(action);');
+  db.run('CREATE INDEX IF NOT EXISTS idx_auth_events_created ON auth_events(created_at);');
+  db.run('CREATE INDEX IF NOT EXISTS idx_auth_events_email ON auth_events(email);');
+  db.run('CREATE INDEX IF NOT EXISTS idx_auth_events_ip ON auth_events(ip);');
+
   // Contact form submissions
   db.run(`
     CREATE TABLE IF NOT EXISTS contact_submissions (
@@ -405,6 +510,54 @@ function initSchema() {
   safeAlter('ALTER TABLE projects ADD COLUMN scaffolded_at TEXT');
   safeAlter('ALTER TABLE project_members ADD COLUMN added_by INTEGER');
 
+  // --- Security & tracking centre: columns on the tables that already existed.
+  // All additive, all nullable or defaulted, so an existing analytics.db keeps
+  // every row it has and simply starts recording more from the next visit.
+  //
+  // `visits` gains the landing path (the tracker always sent it and nothing
+  // stored it), the shape of the screen it was read on, and the two engagement
+  // figures that used to live only inside an `events` JSON blob — which meant
+  // pruning events would have destroyed them.
+  safeAlter('ALTER TABLE visits ADD COLUMN path TEXT');
+  safeAlter('ALTER TABLE visits ADD COLUMN visitor_id TEXT');
+  safeAlter('ALTER TABLE visits ADD COLUMN is_returning INTEGER DEFAULT 0');
+  safeAlter('ALTER TABLE visits ADD COLUMN viewport_width INTEGER');
+  safeAlter('ALTER TABLE visits ADD COLUMN viewport_height INTEGER');
+  safeAlter('ALTER TABLE visits ADD COLUMN pixel_ratio REAL');
+  safeAlter('ALTER TABLE visits ADD COLUMN timezone TEXT');
+  safeAlter('ALTER TABLE visits ADD COLUMN utm_source TEXT');
+  safeAlter('ALTER TABLE visits ADD COLUMN utm_medium TEXT');
+  safeAlter('ALTER TABLE visits ADD COLUMN utm_campaign TEXT');
+  safeAlter('ALTER TABLE visits ADD COLUMN country_code TEXT');
+  safeAlter('ALTER TABLE visits ADD COLUMN asn TEXT');
+  safeAlter('ALTER TABLE visits ADD COLUMN bot_kind TEXT');
+  safeAlter('ALTER TABLE visits ADD COLUMN duration_seconds INTEGER DEFAULT 0');
+  safeAlter('ALTER TABLE visits ADD COLUMN active_seconds INTEGER DEFAULT 0');
+  safeAlter('ALTER TABLE visits ADD COLUMN max_scroll INTEGER DEFAULT 0');
+  safeAlter('ALTER TABLE visits ADD COLUMN pageview_count INTEGER DEFAULT 1');
+  safeAlter('ALTER TABLE visits ADD COLUMN last_seen_at TEXT');
+
+  // `suspicious_activity` was three columns and a free-text reason, which is a
+  // log you can read but not query. `category` is the machine-readable one the
+  // threat feed filters on; `blocked` records whether the shield actually
+  // stopped the request or only watched it.
+  safeAlter('ALTER TABLE suspicious_activity ADD COLUMN category TEXT');
+  safeAlter('ALTER TABLE suspicious_activity ADD COLUMN path TEXT');
+  safeAlter('ALTER TABLE suspicious_activity ADD COLUMN method TEXT');
+  safeAlter('ALTER TABLE suspicious_activity ADD COLUMN user_agent TEXT');
+  safeAlter('ALTER TABLE suspicious_activity ADD COLUMN score INTEGER DEFAULT 0');
+  safeAlter('ALTER TABLE suspicious_activity ADD COLUMN blocked INTEGER DEFAULT 0');
+
+  // ip-api's free endpoint returns countryCode, org and `as` for nothing; the
+  // ASN is what tells a datacentre scanner apart from a person on a phone.
+  safeAlter('ALTER TABLE geo_cache ADD COLUMN country_code TEXT');
+  safeAlter('ALTER TABLE geo_cache ADD COLUMN org TEXT');
+  safeAlter('ALTER TABLE geo_cache ADD COLUMN asn TEXT');
+  safeAlter('ALTER TABLE geo_cache ADD COLUMN timezone TEXT');
+
+  db.run('CREATE INDEX IF NOT EXISTS idx_visits_visitor ON visits(visitor_id);');
+  db.run('CREATE INDEX IF NOT EXISTS idx_suspicious_category ON suspicious_activity(category);');
+
   // Plan version history
   db.run(`
     CREATE TABLE IF NOT EXISTS plan_versions (
@@ -464,6 +617,33 @@ function logActivity(db, { projectId, userId, action, entityType, entityId, deta
     details ? JSON.stringify(details) : null, ip || null);
 }
 
+/* Append to the authentication audit trail.
+
+   Separate from `activity_log` on purpose: activity is project history and is
+   scoped to a project, whereas an auth event usually has no project and often
+   no user either — a failed login against an address that does not exist is
+   exactly the row a security panel most wants, and it has nothing to hang off.
+
+   Swallows its own errors. Every call site is inside a request that has already
+   decided what to do; none of them should fail because the log did. */
+function logAuthEvent(db, { userId, email, event, ip, userAgent, detail }) {
+  try {
+    db.prepare(`
+      INSERT INTO auth_events (user_id, email, event, ip, user_agent, detail)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(
+      userId || null,
+      email ? String(email).slice(0, 200) : null,
+      event,
+      ip || null,
+      userAgent ? String(userAgent).slice(0, 300) : null,
+      detail ? String(detail).slice(0, 400) : null
+    );
+  } catch (e) {
+    console.error('[auth-log] failed:', e.message);
+  }
+}
+
 function slugify(text) {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').substring(0, 80);
 }
@@ -473,4 +653,12 @@ function nextTicketNumber(db, projectId) {
   return row.next;
 }
 
-module.exports = { initDb, getDb, getJwtSecret, seedAdmin, generateId, logActivity, slugify, nextTicketNumber };
+module.exports = {
+  initDb, getDb, getJwtSecret, seedAdmin, generateId,
+  logActivity, logAuthEvent, slugify, nextTicketNumber,
+  // Flush to disk synchronously. Writes are normally debounced by a second,
+  // which is right for a server and wrong for a script that seeds rows and then
+  // exits — the process would end before the debounce fired and the work would
+  // be silently lost. Used by scripts/seed-preview.js.
+  saveNow: saveToDisk,
+};

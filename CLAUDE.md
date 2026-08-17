@@ -2,13 +2,16 @@
 
 ## On Every New Conversation
 
-- **Always** read `HANDOFF-FRONTEND-2026-08-16.md` first — it is the most recent
-  build document (hero, pricing section, the mark, the mobile pass). It says what
-  landed, what is open, and the four things about the hero mesh that will
-  otherwise be rediscovered the hard way.
-- Then read `HANDOFF-BACKOFFICE-2026-08-16.md` — it is the **active** build document
-  (admin, client portal, outbound email onto the site's design system). It says exactly what is
-  done, what is next, and the traps.
+- **Always** read `HANDOFF-SECURITY-2026-08-17.md` first — it is the **active** build
+  document (the security & tracking centre: the request shield, the threat engine, daily
+  rollups and retention, the rebuilt Security and Traffic panels). Its §4 holds the traps,
+  including the two that are invisible to a CSS sweep and the one about summing unique
+  visitors.
+- Then read `HANDOFF-FRONTEND-2026-08-16.md` — the most recent front-end build document
+  (hero, pricing section, the mark, the mobile pass). It says what landed, what is open, and
+  the four things about the hero mesh that will otherwise be rediscovered the hard way.
+- Then read `HANDOFF-BACKOFFICE-2026-08-16.md` — landed and live (admin, client portal,
+  outbound email onto the site's design system). Its §4 traps still bind.
 - Then read `HANDOFF-REDESIGN-2026-08-15.md`. The redesign it describes is **landed and live**, but
   its §1 holds the LOCKED design decisions that still bind everything — palette, Sora + Inter, the
   always-labelled glass rail, the wide measure, the page structure. Do not re-open them.
