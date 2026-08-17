@@ -1883,3 +1883,209 @@ something looks wrong but measures right, measure what renders.**
   `scripts/seed-preview.js` demo data instead.
 - Existing shots are illegible at phone width; the mobile hero is cramped; the
   pricing headline runs to four lines on mobile.
+
+---
+
+## 2026-08-16 (evening) — Client back ends in the strip, Ariel's pricing notes, and the reset flow that locked us out
+
+### Context
+
+Four threads in one session: shoot the client back ends the strip has been
+waiting for, act on Ariel's review of the live page, add www + a client login,
+and — unplanned — work out why nobody could log into the admin panel.
+
+Commits `c97625d` … `f7d5182`.
+
+### The screenshot strip
+
+**BridgeMTG, Thrive and Horse & Harmony are in.** It shipped at six for about an
+hour (client back ends *plus* predictable/kartov/davenen); Ohav killed that on
+sight, and he was right — it doubled a strip already too small to read and
+diluted what the section is for. **Three, and it stays three.** The retired
+JPEGs stay in `assets/shots/` so the mix can change without a re-shoot.
+
+**Every shot is a local instance on fabricated data, and that is the point.**
+The Thrive screenshot originally supplied held six real students by name, an
+intake queue, a staff member and a university. Consent to name the **client** is
+not consent to publish the **people inside their system**. So: `@example.com`
+addresses, reserved `555` phone ranges, invented names throughout. BridgeMTG's
+seeded staff were renamed too — its `seeds/009_staff_users.ts` creates the real
+people with their `@bridgemtg.com` addresses, and employees are not covered by
+client naming consent either.
+
+`scripts/shoot-app.js` is new: Chrome over the DevTools protocol, same approach
+as `build-icons.js` and `build-og.js`, no new dependency. It asserts 900x562 on
+the way out, because the markup hard-codes those dimensions and nothing
+downstream would catch a miss.
+
+Two traps cost an hour each and are written into
+`HANDOFF-FRONTEND-2026-08-16.md` §6:
+
+- **Type, don't assign.** Assigning `.value` fills the box and leaves React's
+  `useState` and Livewire's state empty, so the form submits blank. Needs
+  `Input.insertText` *plus* `Emulation.setFocusEmulationEnabled` — headless pages
+  are never focused, so without it every keystroke goes nowhere.
+- **Next.js `dev` never hydrated at all** (no React fiber on any element, HMR
+  socket failing in a loop). `next build && next start` fixed it, and a
+  production build is the more honest screenshot anyway.
+- Also: **BridgeMTG deals are invisible without a `deal_assignees` row** — the
+  pipeline query scopes to the signed-in user, so a seeded deal with no assignee
+  renders as "No deals yet".
+
+### Ariel's review — two changes that are really one
+
+**The hero panel now prices the person, not just the licences.** It stopped at
+$290 of subscriptions, which was its weakest point: $290 is not a frightening
+number, and the panel already conceded the page is not cheaper in year one.
+Ariel: *"we dont necessarily save u money on the saas fee but we save u money on
+manpower."* What is published is a **break-even, not a salary** —
+`reconcileBreakEven()` divides the licence total by four hours a week, computed
+rather than typed, so it is arithmetic a reader can check rather than a claim
+about their payroll.
+
+**The entry rung went $200 to $300/mo.** The ladder's own evidence agrees: ~5
+h/mo on a light system made $200 an effective $40/hr against a published $125/hr
+overflow rate. **It was only safe to raise because the labour line landed with
+it** — $200 sat under the $290 total and the panel put them side by side, so the
+comparison is now $290 *plus the person* against $300 flat. **Do not undo one
+without the other.** No case study moved; all are `stack` or `platform`.
+
+**All four rungs now show what they include** (`#askAll`). The picker showed one
+at a time, so comparing meant clicking and remembering. Deliberately **not** a
+tier table: ordered by the situation you are in, money muted at the foot of each
+card, and a third way into the same `askSel` state rather than a second pricing
+surface. A price-led grid would put $15,000 on screen before anyone had read what
+it was for, in the rental frame the rest of the page argues against.
+
+The ratified ladder doc in `unified-memory` was updated with all of this,
+including the scope caveat: this is **not** a per-seat TCO argument (which that
+doc rightly forbids) — it sits on a panel that says "team of five" out loud,
+which is the size where somebody really is losing half a day a week.
+
+### Copy: "What we run"
+
+**"Systems still running" is gone.** "Still" presupposes that software stopping
+is the normal outcome, so it read as relief rather than confidence — and it
+invited "still, since when?", which the board answered badly. The replacement is
+present tense, needs no duration to be true, and mirrors "What you need" directly
+above it in the rail. Three places, as always: the `h2`, `index.html`'s rail, and
+`RAIL_ITEMS` in `server/render.js`.
+
+### Mobile
+
+Two strips now **swipe below their breakpoint** rather than stack:
+
+- `.ask-grid` — four cards were 949px on a 390px phone; now 294px.
+- `.shots` — three 900x562 desktop captures were 963px at 390px and 1,671px at
+  768px; now 295px and 471px.
+
+The chosen card is centred by setting the strip's **own `scrollLeft`**, never
+`scrollIntoView`, which is entitled to scroll the page vertically and would drag
+a first-time visitor down it on load. This does not make a back office legible at
+320px and is not meant to — real legibility needs mobile-specific crops.
+
+### A client login
+
+`/portal` had no route in from the marketing site. It sits **outside**
+`.rail-nav`: the lozenge is positioned against that list's children, so a seventh
+child would give it a link to park on that never becomes current, and the rail's
+grammar is "where am I on this page", which a login is not. No top bar was
+invented — this design replaced the header with the rail, and a fixed top-right
+control for one link would fight that.
+
+**It turned out to be four places, not two.** The rail *and the footer* each
+exist twice, once in `index.html` for the homepage and once in `server/render.js`
+for every other page. The footer duplication is the same trap as the rail/tabbar
+lists and was not written down before now.
+
+### Infrastructure
+
+- **www.kaymen.dev added.** DNS was already correct; Coolify simply had no router
+  or certificate for it. Let's Encrypt issued on redeploy.
+- **kahalany.dev removed** from the app's domain list. Legacy, its apex A record
+  is gone, and its certificate would have failed renewal on 22 Aug.
+  `www.kahalany.dev` separately still points at the JYA box (178.156.226.190).
+- **LIVE SINCE corrected.** Every row said 2026 because the years had been taken
+  from git history, and the KDEV repos were re-initialised (history starts
+  Feb–Jun 2026). Only the OLAMI platform that became Thrive, Torah Tracker and
+  Davenen predate 2026; the first two are case studies, so two rows moved to
+  **2025**. `year` is LIVE SINCE, not repo age — do not re-derive it from git.
+
+### The password reset flow — why nobody could log in
+
+`/reset-password` generated a password, **overwrote the account with it**, and
+printed the plaintext to stdout. The UI said *"the new password will appear in
+the server logs."* Workable on a laptop; unusable here, because `docker logs`
+only covers the **current** container and every push to `master` redeploys. The
+23:38 reset was destroyed by the 23:40 deploy, and since the endpoint had already
+overwritten the password, the account was unreachable. **It reported success
+throughout.**
+
+SMTP had never been configured — the `config` table held only `jwt_secret`, and
+`git log -S"smtp_host"` shows the storage location never moved, so nothing was
+orphaned by the email rewrite.
+
+Two rules came out of it, and **the first matters more than the emailing**:
+
+1. **A reset request no longer touches the password.** The endpoint is
+   unauthenticated — anyone who can type an address can fire it — so destroying
+   the password on request let any stranger lock any user out, and it is what
+   turned a failed delivery into a lockout. The password changes only when the
+   emailed link is used, via the existing `/invite/:token/accept` flow, at one
+   hour rather than the invite's seven days.
+2. **Nothing claims delivery it did not make.** `sendEmail` already returned
+   `true`/`false`; **all four callers discarded it.** They now await and report
+   it, and the UI says "no email was sent — send them this link yourself" instead
+   of "Invite link sent via email". That mattered most on client creation, where
+   the account is seeded with a deliberately unusable password: a silent failure
+   there is an account the client can never enter, while the operator was told
+   the invite went out.
+
+With no SMTP the self-service route now refuses with **503** rather than
+returning success. Known and unknown addresses still get byte-identical replies,
+so it is not an account-existence oracle.
+
+**SMTP is now configured** (Gmail, `ohav@kaymengroup.com`) and delivery was
+verified end to end — `[EMAIL] Sent "Reset your kaymen.dev password"` in the
+container log — rather than assumed from the settings being present. The app
+password's embedded spaces are fine.
+
+### The lessons worth carrying forward
+
+**Verifying a fix can trigger the bug.** The first poll confirming the reset
+deploy POSTed to `/api/auth/reset-password` about seven seconds *before* the new
+code went live. The old endpoint answered, rotated the password, and the
+container was replaced moments later taking the log with it — destroying the
+credential handed over ten minutes earlier. **A probe against production is a
+write if the endpoint is a write.** Check the deployed version first, or probe
+with something inert.
+
+**`pkill -f "node server/index.js"` silently kills nothing on this host.** The
+old process keeps the port, the newly-started one fails to bind, and every
+`curl` is answered by stale code. It twice produced confident, wrong conclusions
+about code that was already correct — once about a nav mismatch, once about the
+rewritten reset route. Kill by port and assert the port is free.
+
+**A blank field is not evidence.** "You have never logged in" was read off
+`last_login_at`, which the password login route never writes — only the Google
+OAuth path does. The conclusion happened to be right; the reasoning was not.
+
+### Open
+
+- **No backups of `analytics.db`.** One sql.js file on one Docker volume
+  (`kahalany-dev-data`), no copies anywhere. It is now the single point of
+  failure for every client account, project and ticket. Most pressing item here.
+- **The login endpoint cannot lock out.** `users.login_attempts` and
+  `locked_until` exist and are **never written** — zero write sites. A working
+  `rateLimit` middleware exists in `server/middleware/auth.js` but is applied
+  only to `server/routes/dev.js`, not to `/api/auth/login`. bcrypt at cost 12 is
+  the only mitigation. Every piece needed is already in the codebase.
+- **All production data begins 2026-08-16 19:45** — every visit, event and user.
+  Consistent with the back office landing that day, but unprovable either way
+  with no backup to compare against.
+- The **shots are still illegible on a phone**; fixing that properly needs
+  mobile-specific crops, i.e. a second set of assets shot at a tighter frame.
+- The **pricing headline runs to four lines on mobile**; the **mobile hero is
+  cramped**.
+- **Tell Ariel the site is up** — he is gating a lab-company introduction on
+  exactly that, and it is the only item in his message with revenue attached.
