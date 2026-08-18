@@ -30,6 +30,13 @@
    consequence of what they tick and nothing else.
    ============================================================================ */
 
+/* NO LONGER PUBLISHED. This is now an internal derivation basis only — the
+   build tiers below are measured effort priced at this rate, and the case-study
+   comparison is this rate against COMPARE.hourly. The site stopped printing it
+   on 2026-08-18: it was the only per-unit price about us on a page arguing
+   against per-unit pricing, it reframed the retainer as consumption rather than
+   availability, and it capped the monthly at hours x rate. See the comment
+   beside the fine print in index.html. Do not put it back on a page. */
 const OVERFLOW_HOURLY = 125;
 
 /* The pilot. A cheaper BUILD would devalue the work and attract clients who

@@ -91,37 +91,37 @@ Own your software. Stop renting it.
 
 ---
 
-## 3. About — 2,000 characters max, this is 1,696
+## 3. About — 2,000 characters max, this is 1,752
 
 Paste verbatim. LinkedIn strips bold, so the section headers are caps rather than markup,
 and the bullets are `•` because asterisks render as literal asterisks.
 
 ```
-Five subscriptions, each doing half a job. Somebody reconciles them by hand every week, every hire costs more, and you own none of it.
+Five subscriptions, each doing half a job. Somebody reconciles them by hand every week, every new hire costs more, and you own none of it.
 
-We build the one system that does all of it — and then we run it.
+We build the one system that does all of it, and then we run it.
 
-kaymen.dev builds custom platforms, integrations and native apps for organisations that have outgrown spreadsheets and a drawer full of disconnected tools. You own the code, the data and the servers. Hire twenty more people and the bill does not move.
+kaymen.dev builds custom platforms, integrations and native apps for organizations that have outgrown spreadsheets and a drawer full of tools that don't talk to each other. You own the code, the data and the servers. Hire twenty more people and the bill doesn't move.
 
 WHAT WE BUILD
 
-• Multi-tenant platforms — one system, many organisations, isolation enforced in the database rather than hoped for in the application.
-• Business systems and integrations — the connective work most shops decline: two-way Salesforce syncs, reconciliation against a live book, APIs that were never designed for the question being asked.
-• Consumer and mobile apps — native iOS and Android in the stores, plus the release discipline that keeps an update from reaching zero users.
+• Multi-tenant platforms. One system, many organizations, with isolation enforced in the database instead of hoped for in the application.
+• Business systems and integrations. The connective work most shops turn down: two-way Salesforce syncs, reconciliation against a live book, APIs that were never built to answer the question you need to ask.
+• Consumer and mobile apps. Native iOS and Android, actually in the stores, plus the release discipline that keeps an update from reaching zero users.
 
 WHAT IS ACTUALLY RUNNING
 
-19 systems in production, on infrastructure we operate ourselves. 3 apps in the App Store and Google Play. 1,924 commits in the last twelve months. One team end to end — architecture, build, deploy, and the 3am page.
+19 systems in production, on infrastructure we operate ourselves. 3 apps in the App Store and Google Play. 1,924 commits in the last twelve months. One team the whole way: architecture, build, deploy, and the 3am page.
 
 HOW WE PRICE
 
-A build fee, then a flat monthly to run it. Overflow beyond the monthly is $125/hr. Nonprofits get 25% off, publicly and without asking. And sometimes the answer is that you should not build anything yet — we will say so.
+A build fee, then a flat monthly to run it. No hourly rate — bigger changes get their own price, agreed before they begin. Nonprofits get 25% off, publicly and without asking. And sometimes the answer is that you shouldn't build anything yet. We'll tell you that too.
 
 NO HOSTAGES
 
-Your code, your data, your servers. No lock-in, no per-seat tax, and you can take the whole thing with you any time.
+Your code, your data, your servers. No lock-in, no per-seat tax, and you can take the whole thing with you whenever you want.
 
-Every case study on the site names the part that broke. A capability list is free to write; naming what went wrong is not.
+Every case study on our site names the part that broke. A capability list is free to write. Naming what went wrong isn't.
 
 kaymen.dev
 ```
