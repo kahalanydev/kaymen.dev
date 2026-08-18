@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kaymen.dev — the cost calculator, four directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   kaymen.dev — "what renting it costs" calculator, FOUR DIRECTIONS
+
+   MOCKUP ONLY. Nothing wired into the site. No real code is touched until one
+   of these is picked.
+
+   SECOND PASS, and the model changed underneath it. The first pass priced
+   Starter/Standard tiers and the argument barely held: five people never broke
+   even inside five years. Ohav's correction — "no business takes anything less
+   than the pro membership, and with 5 people and automations running you eat
+   your limits, the cheap tiers are a nice looking spreadsheet" — is right, and
+   pricing the PRO rungs moves break-even from never to month 10.
+
+   Every list price below was re-checked against vendor and analyst sources on
+   2026-08-18 (see SOURCES at the foot of this file). Three things the first
+   pass had simply wrong:
+
+     · monday.com sells SEATS IN BLOCKS — 3 minimum, then multiples of 5. A
+       team of six pays for ten. The per-seat line is a STAIRCASE, not a slope,
+       and drawing it as a slope was flattering the wrong side.
+     · QuickBooks Essentials CAPS AT 3 USERS and Plus at 5. A five-person team
+       cannot legally sit on the $85 rung, and a sixth hire forces Advanced.
+     · HubSpot Professional carries a MANDATORY $1,500 ONE-TIME ONBOARDING FEE.
+       They have a build fee too. Ours is the only one anybody mentions.
+
+   Palette lifted verbatim from styles.css. The two series were run through the
+   dataviz validator: #e07a5f x #2bbcb3 PASSES lightness, chroma, CVD
+   separation (deutan dE 11.4) and the normal-vision floor (dE 24.5), with a
+   contrast WARN against white discharged by direct labels on both line ends
+   plus a numbers table — neither line relies on colour alone.
+   ============================================================================ */
+
+:root{
+  --bg:#ffffff; --bg-alt:#f4f5f7; --ink:#1a1b1e; --muted:#5f6368;
+  --accent:#2bbcb3; --accent-dark:#229e96; --accent-soft:rgba(43,188,179,.08);
+  --line:#e2e4e8; --deep:#16303d;
+  --rent:#e07a5f; --rent-dark:#b8563a; --rent-soft:rgba(224,122,95,.09);
+  --display:'Sora',-apple-system,BlinkMacSystemFont,sans-serif;
+  --body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--body);color:var(--ink);background:var(--bg-alt);line-height:1.55;-webkit-font-smoothing:antialiased}
+
+/* ---------- mockup chrome (not part of the site) ---------- */
+.chrome{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.93);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.chrome-in{max-width:1240px;margin:0 auto;padding:11px 22px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.chrome h1{font-family:var(--display);font-size:13.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap}
+.chrome h1 span{color:var(--muted);font-weight:400}
+.seg{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:9px;border:1px solid var(--line)}
+.seg button{font:inherit;font-size:12.5px;font-weight:500;border:0;background:transparent;color:var(--muted);padding:6px 12px;border-radius:6px;cursor:pointer;transition:.16s var(--ease);white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.chrome .spacer{flex:1}
+
+/* ---------- the note above each direction ---------- */
+.note{max-width:1240px;margin:0 auto;padding:26px 22px 0}
+.note .tag{display:inline-block;font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-dark);background:var(--accent-soft);padding:5px 10px;border-radius:6px}
+.note h2{font-family:var(--display);font-size:23px;font-weight:600;letter-spacing:-.02em;margin:11px 0 6px}
+.note p{font-size:14.5px;color:var(--muted);max-width:78ch}
+.note p b{color:var(--ink);font-weight:600}
+.note .risk{margin-top:9px;font-size:13.5px;color:var(--muted);border-left:2px solid var(--rent);padding-left:12px;max-width:78ch}
+.note .risk b{color:var(--rent-dark);font-weight:600}
+
+/* ---------- the device stage ---------- */
+.stagewrap{overflow-x:auto;padding:22px 22px 80px}
+.stage{margin:0 auto;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:44px 40px;transition:width .28s var(--ease);box-shadow:0 1px 2px rgba(0,0,0,.03),0 12px 40px -22px rgba(0,0,0,.18)}
+.stage.w-desk{width:1120px}
+.stage.w-tab{width:820px}
+.stage.w-phone{width:390px;padding:28px 20px}
+.dirpane{display:none}
+.dirpane.on{display:block}
+
+/* ---------- shared section furniture ---------- */
+.eyebrow{font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:12px}
+.h2{font-family:var(--display);font-size:38px;font-weight:600;letter-spacing:-.03em;line-height:1.12;margin-bottom:13px;max-width:19ch}
+.w-tab .h2{font-size:33px}
+.w-phone .h2{font-size:26px;max-width:none}
+.lede{font-size:16.5px;color:var(--muted);max-width:60ch;margin-bottom:28px}
+.w-phone .lede{font-size:15px;margin-bottom:22px}
+.fine{font-size:12.5px;color:var(--muted);line-height:1.6;margin-top:16px}
+.fine a{color:var(--accent-dark)}
+.fine b{color:var(--ink);font-weight:600}
+.calcgrid{display:grid;grid-template-columns:340px 1fr;gap:36px;align-items:start}
+.w-tab .calcgrid{grid-template-columns:290px 1fr;gap:26px}
+.w-phone .calcgrid{grid-template-columns:1fr;gap:24px}
+
+/* ---------- controls ---------- */
+.ctrl{display:block;margin-bottom:22px}
+.ctrl-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:9px}
+.ctrl-head label{font-size:13.5px;font-weight:600;color:var(--ink)}
+.ctrl-head .val{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
+.ctrl-head .val small{font-size:12.5px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:3px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:3px;background:var(--line);outline:none;cursor:pointer;margin:6px 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--accent);box-shadow:0 1px 5px rgba(0,0,0,.17);cursor:grab;transition:transform .14s var(--ease)}
+input[type=range]::-webkit-slider-thumb:active{transform:scale(1.12);cursor:grabbing}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--accent);box-shadow:0 1px 5px rgba(0,0,0,.17);cursor:grab}
+input[type=range]:focus-visible::-webkit-slider-thumb{outline:2px solid var(--accent-dark);outline-offset:2px}
+.scale{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+.hint{font-size:12.5px;color:var(--muted);margin-top:7px}
+.hint b{color:var(--ink);font-weight:600}
+
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.chip{font:inherit;font-size:12.5px;font-weight:500;border:1px solid var(--line);background:#fff;color:var(--muted);padding:7px 12px;border-radius:20px;cursor:pointer;transition:.16s var(--ease);text-align:left}
+.chip:hover{border-color:var(--accent);color:var(--ink)}
+.chip[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-dark);font-weight:600}
+.chip i{font-style:normal;opacity:.72;font-variant-numeric:tabular-nums}
+
+.opt{display:flex;align-items:flex-start;gap:9px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.opt input{margin-top:3px;accent-color:var(--accent);width:15px;height:15px;flex:none}
+.opt label{font-size:13px;color:var(--muted);cursor:pointer}
+.opt label b{color:var(--ink);font-weight:600;display:block;margin-bottom:2px;font-size:13.5px}
+.subctrl{margin:12px 0 0 24px;padding-left:12px;border-left:1px solid var(--line)}
+.subctrl .ctrl{margin-bottom:14px}
+
+/* ---------- the verdict ---------- */
+.verdict{border-radius:14px;padding:22px 24px;margin-bottom:20px;border:1px solid var(--line);background:var(--bg-alt);transition:background .2s var(--ease),border-color .2s var(--ease)}
+.verdict.win{background:var(--accent-soft);border-color:rgba(43,188,179,.34)}
+.verdict.hold{background:var(--rent-soft);border-color:rgba(224,122,95,.32)}
+.verdict .vk{font-family:var(--display);font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.verdict.win .vk{color:var(--accent-dark)}
+.verdict.hold .vk{color:var(--rent-dark)}
+.verdict .vs{font-family:var(--display);font-size:20px;font-weight:600;letter-spacing:-.02em;line-height:1.35;margin-bottom:9px}
+.w-phone .verdict .vs{font-size:17.5px}
+.verdict .vn{font-size:14px;color:var(--muted)}
+.verdict .vn b{color:var(--ink);font-weight:600}
+
+/* the "one more hire" line — the single most persuasive number here */
+.hirebar{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:14px 18px;border:1px solid rgba(224,122,95,.32);background:var(--rent-soft);border-radius:12px;font-size:14px}
+.hirebar b{font-family:var(--display);font-size:19px;font-weight:600;letter-spacing:-.02em;color:var(--rent-dark);font-variant-numeric:tabular-nums;flex:none}
+.hirebar span{color:var(--muted)}
+.hirebar span b{font-family:var(--body);font-size:14px;color:var(--ink);display:inline}
+
+/* ---------- the chart ---------- */
+.chartcard{border:1px solid var(--line);border-radius:14px;padding:18px 20px 12px;background:#fff;position:relative}
+.chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:14px;margin-bottom:8px;flex-wrap:wrap}
+.chart-head h3{font-family:var(--display);font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.legend{display:flex;gap:15px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.legend i{width:15px;height:2px;border-radius:2px;display:inline-block;flex:none}
+.viewseg{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:8px;border:1px solid var(--line)}
+.viewseg button{font:inherit;font-size:12px;font-weight:500;border:0;background:transparent;color:var(--muted);padding:5px 10px;border-radius:5px;cursor:pointer;white-space:nowrap}
+.viewseg button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+svg.plot{display:block;width:100%;overflow:visible;touch-action:pan-y}
+svg.plot text{font-family:var(--body);font-variant-numeric:tabular-nums}
+.tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:0 6px 24px -8px rgba(0,0,0,.24);font-size:12.5px;opacity:0;transition:opacity .12s var(--ease);z-index:5;min-width:176px}
+.tip.on{opacity:1}
+.tip .tw{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;margin-bottom:6px}
+.tip .tr{display:flex;align-items:center;gap:8px;margin-top:5px}
+.tip .tr i{width:13px;height:2px;border-radius:2px;flex:none}
+.tip .tr b{font-family:var(--display);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;margin-left:auto}
+.tip .tr span{color:var(--muted)}
+
+.tabtog{margin-top:12px;font:inherit;font-size:12.5px;font-weight:500;background:none;border:0;color:var(--accent-dark);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(43,188,179,.42)}
+table.nums{width:100%;border-collapse:collapse;margin-top:13px;font-size:13px;font-variant-numeric:tabular-nums}
+table.nums caption{text-align:left;font-size:12px;color:var(--muted);padding-bottom:8px}
+table.nums th,table.nums td{text-align:right;padding:7px 6px;border-bottom:1px solid var(--line)}
+table.nums th:first-child,table.nums td:first-child{text-align:left}
+table.nums th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+table.nums tr.cross td{background:var(--accent-soft);font-weight:600}
+
+/* ---------- B: the hero number ---------- */
+.heroline{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center;margin-bottom:26px}
+.w-phone .heroline{grid-template-columns:1fr;gap:22px}
+.bignum{font-family:var(--display);font-size:104px;font-weight:600;letter-spacing:-.045em;line-height:.92;color:var(--ink);font-variant-numeric:tabular-nums}
+.w-tab .bignum{font-size:88px}
+.w-phone .bignum{font-size:64px}
+.bignum small{display:block;font-size:15px;font-weight:500;letter-spacing:-.005em;color:var(--muted);margin-top:12px;line-height:1.45;max-width:28ch}
+.bignum.hold{color:var(--rent-dark)}
+.meter{margin-top:6px}
+.meter-track{display:flex;gap:2px;height:38px;align-items:flex-end}
+.meter-track b{flex:1;border-radius:2px 2px 0 0;background:var(--rent);opacity:.3;transition:.2s var(--ease)}
+.meter-track b.after{background:var(--accent);opacity:.85}
+.meter-track b.at{background:var(--accent-dark);opacity:1}
+.meter-lbl{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:8px;font-variant-numeric:tabular-nums}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:24px 0 4px}
+.w-phone .tiles{grid-template-columns:1fr}
+.tile{border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.tile.rent{background:var(--rent-soft);border-color:rgba(224,122,95,.28)}
+.tile.own{background:var(--accent-soft);border-color:rgba(43,188,179,.3)}
+.tile .tk{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;color:var(--muted);margin-bottom:7px;display:flex;align-items:center;gap:7px}
+.tile .tk i{width:13px;height:2px;border-radius:2px;flex:none}
+.tile .tv{font-family:var(--display);font-size:30px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.w-phone .tile .tv{font-size:26px}
+.tile .tn{font-size:12.5px;color:var(--muted);margin-top:5px}
+
+/* ---------- C: the itemised stack ---------- */
+.rows{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:baseline;padding:12px 16px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .rn{font-size:13.5px;font-weight:600}
+.row .rn em{display:block;font-style:normal;font-size:12px;font-weight:400;color:var(--muted);margin-top:2px}
+.row .rn s{display:block;text-decoration:none;font-size:11.5px;font-weight:500;color:var(--rent-dark);margin-top:3px}
+.row .rp{font-family:var(--display);font-size:15.5px;font-weight:600;font-variant-numeric:tabular-nums;min-width:76px;text-align:right}
+.row.bump{background:var(--rent-soft)}
+.rowtot{display:flex;justify-content:space-between;align-items:baseline;padding:14px 16px;background:var(--bg-alt);font-family:var(--display);font-weight:600}
+.rowtot span{font-family:var(--body);font-size:12.5px;font-weight:400;color:var(--muted)}
+.rowtot b{font-size:22px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.onceline{display:flex;justify-content:space-between;padding:11px 16px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted)}
+.onceline b{font-family:var(--display);color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* ---------- T: the bar chart that reads like a table ----------------------
+   Ohav, 2026-08-18: "remove as much unneeded wording as possible, and fit this
+   into a compact super rich looking dynamic chart."
+
+   So the table BECAME the chart rather than sitting next to one — every row
+   carries its own bar, the bars rescale live against the tallest row, and the
+   copy went from ~230 words to ~80.
+
+   Form: emphasis, not categorical. Every vendor bar is the same warm tone at
+   one weight, ours is the accent, and the glue is the warm tone hatched — so
+   the eye is told what to look at instead of having to decode seven hues.
+   Direct value labels on every row, which is what discharges the contrast
+   warning the two-colour palette carries against white. */
+.chart{margin-top:2px}
+/* Six columns: who, the stacked bar, three years, the total. The YEAR HEADERS
+   are what makes "annual" explicit — without them the three figures read as
+   arbitrary and the whole point of the row is lost. */
+.chead,.crow{display:grid;grid-template-columns:212px 1fr 72px 72px 72px 96px;gap:14px;align-items:center}
+.w-tab .chead,.w-tab .crow{grid-template-columns:150px 1fr 58px 58px 58px 80px;gap:9px}
+.chead{padding-bottom:6px;border-bottom:1px solid var(--line)}
+.chead div{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;text-align:right}
+.chead div:first-child,.chead div:nth-child(2){text-align:left}
+.crow{padding:5px 0;border-bottom:1px solid var(--line)}
+.crow .cn{font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:-.012em;line-height:1.25;min-width:0}
+.crow .cn i{display:block;font-style:normal;font-family:var(--body);font-size:10.5px;font-weight:400;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* the stacked bar — one segment per year, 2px surface gaps between them */
+.crow .bar{height:8px;display:flex;gap:2px;align-items:stretch}
+.crow .bar b{display:block;border-radius:2px;transition:width .26s var(--ease);background:var(--rent)}
+.crow .bar b:first-child{border-radius:6px 2px 2px 6px}
+.crow .bar b:last-child{border-radius:2px 6px 6px 2px}
+.crow .bar b.y2{background:rgba(224,122,95,.72)}
+.crow .bar b.y3{background:rgba(224,122,95,.46)}
+.crow .bar .rest{flex:1}
+.crow .yr{font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.crow .cv{font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:-.02em;text-align:right;font-variant-numeric:tabular-nums}
+.crow.glue{border-top:1px dashed rgba(224,122,95,.5);border-bottom:0;margin-top:4px}
+.crow.glue .bar b{background:repeating-linear-gradient(45deg,rgba(224,122,95,.5) 0 5px,rgba(224,122,95,.2) 5px 10px)}
+.crow.glue .cv{color:var(--rent-dark);font-size:13.5px}
+.crow.glue .cn{font-weight:500}
+.crow.ours{border-top:2px solid var(--accent);border-bottom:0;margin-top:5px;padding-top:10px}
+.crow.ours .bar b{background:var(--accent-dark)}
+.crow.ours .bar b.y2{background:var(--accent)}
+.crow.ours .bar b.y3{background:rgba(43,188,179,.5)}
+.crow.ours .cv{color:var(--accent-dark);font-size:17px}
+.crow.ours .cn i{color:var(--accent-dark)}
+.crow.ours .yr{color:var(--ink);font-weight:500}
+.crow .tagline{grid-column:1/-1;font-size:11px;color:var(--muted);margin-top:-3px}
+
+/* PHONE: one line per row, and the stacked bar carries the annual story on
+   its own. Stacking name / bar / three-year run / tagline made every row four
+   lines deep — nine rows of that is a chunky column nobody scrolls. Dropping
+   the numeric year run costs nothing here because the bar IS the year
+   breakdown: three segments, tapering on our row, square on theirs. */
+.w-phone .chead{grid-template-columns:1fr 74px 76px;gap:9px;padding-bottom:5px}
+.w-phone .chead div:nth-child(3),.w-phone .chead div:nth-child(4),.w-phone .chead div:nth-child(5){display:none}
+.w-phone .crow{grid-template-columns:1fr 74px 76px;gap:9px;padding:6px 0;align-items:center}
+.w-phone .crow .cn{font-size:12.5px;line-height:1.2}
+.w-phone .crow .cn i{font-size:10px;margin-top:1px}
+.w-phone .crow .bar{height:8px}
+.w-phone .crow .yr,.w-phone .crow .yrs,.w-phone .crow .tagline{display:none}
+.w-phone .crow .cv{font-size:13.5px}
+.w-phone .crow.ours .cv{font-size:15px}
+.w-phone .crow.ours{padding-top:9px;margin-top:4px}
+.crow .yrs{display:none}
+
+/* The head is two columns: the question and its one control on the left, the
+   explanation on the right behind a hairline. That right half was dead space —
+   and it is exactly where the concession belongs, because a caveat sitting
+   beside the chart reads as confidence and the same caveat sitting under it
+   reads as an apology. */
+.thead{display:grid;grid-template-columns:1fr 320px;gap:40px;align-items:start;margin-bottom:18px}
+.w-tab .thead{grid-template-columns:1fr 260px;gap:30px}
+.w-phone .thead{grid-template-columns:1fr;gap:22px}
+.thead-r{border-left:1px solid var(--line);padding-left:32px;align-self:stretch}
+.w-tab .thead-r{padding-left:24px}
+.w-phone .thead-r{border-left:0;border-top:1px solid var(--line);padding-left:0;padding-top:20px}
+.thead-r h3{font-family:var(--display);font-size:13.5px;font-weight:600;letter-spacing:-.01em;margin-bottom:8px}
+.thead-r p{font-size:13px;color:var(--muted);line-height:1.62}
+.thead-r p b{color:var(--ink);font-weight:600}
+.thead-r .prov{margin-top:12px;font-size:11px;color:var(--muted);opacity:.8}
+
+/* the headcount control is the only control left, so it can carry more weight */
+#T-seats-wrap .ctrl-head label{font-size:16px;font-weight:600}
+#T-seats-wrap .ctrl-head .val{font-size:26px}
+
+/* MOCKUP CHROME, not part of the design — it sits above the white card so it
+   cannot be mistaken for a control the real section would carry. */
+.rungline{max-width:1240px;margin:12px auto 0;padding:0 22px;display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.rungline span{font-weight:600;color:var(--ink);font-size:11px;text-transform:uppercase;letter-spacing:.07em}
+.rungline button{font:inherit;font-size:12.5px;background:none;border:0;padding:0;color:var(--muted);cursor:pointer;border-bottom:1px solid transparent}
+.rungline button:hover{color:var(--ink)}
+.rungline button[aria-pressed=true]{color:var(--accent-dark);font-weight:600;border-bottom-color:var(--accent)}
+
+/* ---------- T (old table styles, still used by nothing) ----------
+   One control, one table, our row pinned at the foot. The whole point is that
+   it reads without being operated — the slider is there for the person who
+   wants to check their own size, not a gate in front of the answer. */
+.tpick{max-width:460px;margin-bottom:26px}
+.tsize{font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:-.01em;margin-bottom:14px}
+.tsize b{font-size:22px}
+.ttable{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.ttable th{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;text-align:right;padding:0 10px 12px;white-space:nowrap}
+.ttable th:first-child{text-align:left;padding-left:0}
+.ttable th:last-child{padding-right:0}
+.ttable td{padding:16px 10px;border-top:1px solid var(--line);text-align:right;font-size:15.5px}
+.ttable td:first-child{text-align:left;padding-left:0}
+.ttable td:last-child{padding-right:0}
+.ttable .sys{font-size:15.5px;font-weight:600;color:var(--ink)}
+.ttable .sys em{display:block;font-style:normal;font-size:12.5px;font-weight:400;color:var(--muted);margin-top:3px}
+/* <s> is being used as a plain sub-line, so its default line-through has to
+   go — it rendered the infrastructure split as struck-out text, which reads
+   as "this cost was removed" on the one row that must not be misread. */
+.ttable .sys s{display:block;text-decoration:none;font-size:12px;font-weight:500;color:var(--accent-dark);margin-top:5px}
+.ttable .tco{font-family:var(--display);font-size:20px;font-weight:600;letter-spacing:-.02em}
+.w-phone .ttable .tco{font-size:17px}
+.ttable .vs{font-size:13.5px;font-weight:500;color:var(--rent-dark)}
+.ttable .vs.under{color:var(--muted)}
+.ttable tr.glue td{border-top:1px dashed rgba(224,122,95,.55);background:var(--rent-soft)}
+.ttable tr.glue .tco{color:var(--rent-dark)}
+.ttable tr.glue .vs{color:var(--rent-dark)}
+.ttable tr.ours td{border-top:2px solid var(--accent);background:var(--accent-soft)}
+.ttable tr.ours td:first-child{border-radius:10px 0 0 10px}
+.ttable tr.ours td:last-child{border-radius:0 10px 10px 0}
+.ttable tr.ours .tco{color:var(--accent-dark)}
+.ttable tr.ours .vs{color:var(--accent-dark);font-weight:600}
+/* Narrow widths drop columns rather than squeezing them. At 390px the system
+   name was wrapping to three lines and its plan line to five, which turned a
+   five-row table into a wall — the "A month" figure is the first to go
+   because the three-year total is the column the table exists for. */
+.w-tab .ttable .hide-tab,.w-phone .ttable .hide-tab{display:none}
+.w-phone .ttable .hide-phone{display:none}
+.w-phone .ttable th,.w-phone .ttable td{padding-left:5px;padding-right:5px;font-size:14px}
+.w-phone .ttable td{padding-top:13px;padding-bottom:13px}
+.w-phone .ttable .sys{font-size:14.5px}
+.w-phone .ttable .sys em{font-size:11.5px;margin-top:2px}
+.w-phone .ttable .vs{font-size:12.5px}
+.tfoot{margin-top:22px;font-size:13.5px;color:var(--muted);line-height:1.65;max-width:78ch}
+.tfoot b{color:var(--ink);font-weight:600}
+.tfoot + .tfoot{margin-top:10px}
+
+/* ---------- D: the build-cost cards ---------- */
+.dgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.w-phone .dgrid{grid-template-columns:1fr}
+.dcard{border:1px solid var(--line);border-radius:13px;padding:18px 20px;background:#fff}
+.dcard h4{font-family:var(--display);font-size:16px;font-weight:600;letter-spacing:-.015em;margin-bottom:4px}
+.dcard .dd{font-size:12.5px;color:var(--muted);margin-bottom:14px}
+.dcard .dd b{color:var(--ink);font-weight:600}
+.dbars{display:grid;gap:9px}
+.dbar{display:grid;grid-template-columns:74px 1fr;gap:11px;align-items:center}
+.dbar .dw{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.dbar .dt{position:relative;height:26px;background:var(--bg-alt);border-radius:4px;overflow:hidden}
+.dbar .df{position:absolute;inset:0 auto 0 0;border-radius:4px;transition:width .3s var(--ease)}
+.dbar.us .df{background:var(--accent)}
+.dbar.them .df{background:var(--rent);opacity:.85}
+.dbar .dv{position:absolute;top:50%;transform:translateY(-50%);font-family:var(--display);font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dcard .drun{margin-top:13px;padding-top:12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.dcard .drun b{color:var(--ink);font-weight:600}
+[hidden]{display:none !important}
+</style>
+</head>
+<body>
+
+<div class="chrome"><div class="chrome-in">
+  <h1>Cost calculator <span>— four directions</span></h1>
+  <div class="seg" id="dirseg" role="group" aria-label="Direction">
+    <button data-dir="T" aria-pressed="true">The table</button>
+    <button data-dir="A" aria-pressed="false">A · The staircase</button>
+    <button data-dir="B" aria-pressed="false">B · The month you cross</button>
+    <button data-dir="C" aria-pressed="false">C · Itemised stack</button>
+    <button data-dir="D" aria-pressed="false">D · What it costs to build</button>
+  </div>
+  <div class="spacer"></div>
+  <div class="seg" id="wseg" role="group" aria-label="Width">
+    <button data-w="w-desk" aria-pressed="true">1120</button>
+    <button data-w="w-tab" aria-pressed="false">820</button>
+    <button data-w="w-phone" aria-pressed="false">390</button>
+  </div>
+</div></div>
+
+<div class="note" id="note"></div>
+<div class="rungline" id="T-rungs"></div>
+
+<div class="stagewrap"><div class="stage w-desk" id="stage">
+
+  <!-- ============================ T ============================ -->
+  <section class="dirpane on" data-pane="T">
+    <div class="thead">
+      <div>
+        <div class="eyebrow">Three years, at your headcount</div>
+        <h2 class="h2">What will it cost you to scale?</h2>
+        <div id="T-seats-wrap">
+          <div class="ctrl" style="margin-bottom:0">
+            <div class="ctrl-head"><label for="T-seats">People who need a login</label><span class="val" id="T-seatsv">10</span></div>
+            <input type="range" id="T-seats" min="3" max="40" step="1" value="10">
+            <div class="scale"><span>3</span><span>40</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="thead-r" id="T-aside"></div>
+    </div>
+
+    <div class="chead" aria-hidden="true">
+      <div>System</div><div>By year</div><div>Year 1</div><div>Year 2</div><div>Year 3</div><div>Total</div>
+    </div>
+    <div class="chart" id="T-chart" role="img" aria-labelledby="T-aside"></div>
+  </section>
+
+
+  <!-- ============================ A ============================ -->
+  <section class="dirpane" data-pane="A">
+    <div class="eyebrow">What you are paying now</div>
+    <h2 class="h2">Every hire buys them a raise.</h2>
+    <p class="lede">Per-seat software does not charge you per seat. It charges you per block, per tier and per limit — so the bill climbs in steps you did not choose. Ours does not move.</p>
+
+    <div class="calcgrid">
+      <div>
+        <div class="ctrl">
+          <div class="ctrl-head"><label for="A-seats">People with a login</label><span class="val" id="A-seatsv">5</span></div>
+          <input type="range" id="A-seats" min="3" max="40" step="1" value="5">
+          <div class="scale"><span>3</span><span>40</span></div>
+          <p class="hint" id="A-blocks"></p>
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-head"><label>Which rungs you are on</label></div>
+          <div class="chips" id="A-chips"></div>
+          <p class="hint" id="A-blurb"></p>
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-head"><label>What you would have us build</label></div>
+          <div class="chips" id="A-rungs"></div>
+        </div>
+        <div class="opt">
+          <input type="checkbox" id="A-lab">
+          <label for="A-lab"><b>Count the person keeping it in step</b>Half a day a week reconciling between the tools. Off by default — it is the one number that is about your payroll rather than your invoices.</label>
+        </div>
+        <div class="subctrl" id="A-labbox" hidden>
+          <div class="ctrl">
+            <div class="ctrl-head"><label for="A-hrs">Hours a week</label><span class="val" id="A-hrsv">4</span></div>
+            <input type="range" id="A-hrs" min="1" max="15" step="1" value="4">
+          </div>
+          <div class="ctrl">
+            <div class="ctrl-head"><label for="A-rate">At an hourly cost of</label><span class="val" id="A-ratev">$28</span></div>
+            <input type="range" id="A-rate" min="15" max="90" step="1" value="28">
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="hirebar" id="A-hire"></div>
+        <div class="verdict" id="A-verdict"></div>
+        <div class="chartcard" id="A-card">
+          <div class="chart-head">
+            <h3 id="A-charttitle">What a year costs, as you grow</h3>
+            <div class="viewseg" id="A-viewseg" role="group" aria-label="Chart view">
+              <button data-view="grow" aria-pressed="true">As you grow</button>
+              <button data-view="time" aria-pressed="false">Over five years</button>
+            </div>
+          </div>
+          <div class="legend" style="margin-bottom:6px">
+            <span><i style="background:var(--rent)"></i>Renting</span>
+            <span><i style="background:var(--accent)"></i>Owning it</span>
+          </div>
+          <svg class="plot" id="A-plot" height="286" role="img" aria-labelledby="A-plotdesc"></svg>
+          <p id="A-plotdesc" class="fine" style="margin-top:2px"></p>
+          <button class="tabtog" data-table="A">Show the numbers</button>
+          <div id="A-table" hidden></div>
+          <div class="tip" id="A-tip" role="status"></div>
+        </div>
+        <p class="fine" id="A-foot"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ B ============================ -->
+  <section class="dirpane" data-pane="B">
+    <div class="eyebrow">What you are paying now</div>
+    <h2 class="h2">Every hire buys them a raise.</h2>
+    <p class="lede">Per-seat software charges you per block, per tier and per limit. One number comes back: the month you stop paying more.</p>
+
+    <div class="heroline">
+      <div><div class="bignum" id="B-big">—<small id="B-bigsub"></small></div></div>
+      <div>
+        <div class="ctrl">
+          <div class="ctrl-head"><label for="B-seats">People with a login</label><span class="val" id="B-seatsv">5</span></div>
+          <input type="range" id="B-seats" min="3" max="40" step="1" value="5">
+          <div class="scale"><span>3</span><span>40</span></div>
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-head"><label>Which rungs you are on</label></div>
+          <div class="chips" id="B-chips"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hirebar" id="B-hire"></div>
+
+    <div class="meter">
+      <div class="meter-track" id="B-meter" role="img" aria-label="Five years, month by month"></div>
+      <div class="meter-lbl"><span>Today</span><span>Year 1</span><span>Year 2</span><span>Year 3</span><span>Year 4</span><span>Year 5</span></div>
+    </div>
+
+    <div class="tiles">
+      <div class="tile rent">
+        <div class="tk"><i style="background:var(--rent)"></i>Five years, rented</div>
+        <div class="tv" id="B-rent">—</div>
+        <div class="tn" id="B-rentn"></div>
+      </div>
+      <div class="tile own">
+        <div class="tk"><i style="background:var(--accent)"></i>Five years, owned</div>
+        <div class="tv" id="B-own">—</div>
+        <div class="tn" id="B-ownn"></div>
+      </div>
+    </div>
+    <p class="fine" id="B-foot"></p>
+    <button class="tabtog" data-table="B">Show the numbers</button>
+    <div id="B-table" hidden></div>
+  </section>
+
+  <!-- ============================ C ============================ -->
+  <section class="dirpane" data-pane="C">
+    <div class="eyebrow">What you are paying now</div>
+    <h2 class="h2">Every hire buys them a raise.</h2>
+    <p class="lede">This is the bill, itemised, at list price, for the tiers a business that actually automates has to be on. Drag your headcount and watch which lines jump.</p>
+
+    <div class="calcgrid">
+      <div>
+        <div class="ctrl">
+          <div class="ctrl-head"><label for="C-seats">People with a login</label><span class="val" id="C-seatsv">5</span></div>
+          <input type="range" id="C-seats" min="3" max="40" step="1" value="5">
+          <div class="scale"><span>3</span><span>40</span></div>
+        </div>
+        <div class="ctrl">
+          <div class="ctrl-head"><label>Which rungs you are on</label></div>
+          <div class="chips" id="C-chips"></div>
+        </div>
+        <div class="rows" id="C-rows"></div>
+        <div class="rowtot"><span>Your bill, every month</span><b id="C-tot">—</b></div>
+        <div class="onceline" id="C-once" hidden><span id="C-oncew"></span><b id="C-oncev"></b></div>
+        <p class="fine" id="C-fine"></p>
+      </div>
+      <div>
+        <div class="verdict" id="C-verdict"></div>
+        <div class="chartcard" id="C-card">
+          <div class="chart-head">
+            <h3>What a year costs, as you grow</h3>
+            <div class="legend">
+              <span><i style="background:var(--rent)"></i>Renting</span>
+              <span><i style="background:var(--accent)"></i>Owning it</span>
+            </div>
+          </div>
+          <svg class="plot" id="C-plot" height="256" role="img" aria-labelledby="C-plotdesc"></svg>
+          <p id="C-plotdesc" class="fine" style="margin-top:2px"></p>
+          <button class="tabtog" data-table="C">Show the numbers</button>
+          <div id="C-table" hidden></div>
+          <div class="tip" id="C-tip" role="status"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ D ============================ -->
+  <section class="dirpane" data-pane="D">
+    <div class="eyebrow">What it costs to build</div>
+    <h2 class="h2">The same work, at the two rates.</h2>
+    <p class="lede">Every figure below is a real build, and the days are counted out of the repository rather than estimated afterwards. Drag in the rate you are being quoted and the other side answers.</p>
+
+    <div class="ctrl" style="max-width:420px">
+      <div class="ctrl-head"><label for="D-rate">The rate you are being quoted</label><span class="val" id="D-ratev">$200<small>/hr</small></span></div>
+      <input type="range" id="D-rate" min="90" max="350" step="5" value="200">
+      <div class="scale"><span>$90 small shop</span><span>$350 big firm</span></div>
+      <p class="hint">US agency rates, August 2026: small shops $90–160, mid-market $120–250, large firms $250–350.</p>
+    </div>
+
+    <div class="dgrid" id="D-grid" style="margin-top:26px"></div>
+    <p class="fine">A rate comparison, not a bill. Working days are distinct days carrying a commit, regenerated from each repository on every deploy. Our figures are the published ladder for the closest match to that shape of work — the same numbers <a href="#">the pricing section</a> shows.</p>
+  </section>
+
+</div></div>
+
+<script>
+/* ==========================================================================
+   ONE ENGINE, FOUR SKINS. Every direction reads the same numbers, so no two
+   of them can disagree — the same reason content/pricing.js exists.
+   ========================================================================== */
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+const money  = (n) => '$' + Math.round(n).toLocaleString('en-US');
+const moneyK = (n) => n >= 1000 ? '$' + (Math.round(n / 100) / 10).toFixed(1).replace(/\.0$/, '') + 'k' : money(n);
+
+const HORIZON = 60;      /* five years, in months */
+const MAXSEATS = 40;
+
+/* --- our side, verbatim from content/pricing.js -------------------------- */
+const RUNGS = [
+  { id:'tool',     build:2500,  mo:300,  chip:'One part of the business' },
+  { id:'stack',    build:6500,  mo:450,  chip:'One system, the whole lot' },
+  { id:'platform', build:15000, mo:1200, chip:'Several systems, several teams' }
+];
+
+/* --- monday.com sells seats in BLOCKS, not per head ----------------------
+   3 minimum, then multiples of 5. A team of four pays for five; a team of six
+   pays for ten. This is why the rented line is a staircase, and drawing it as
+   a smooth slope (as the first pass did) understates it at exactly the sizes
+   most visitors are. */
+const blockSeats = (n) => n <= 3 ? 3 : Math.ceil(n / 5) * 5;
+
+/* --- the three stacks ---------------------------------------------------
+   List prices re-checked 2026-08-18. Monthly billing throughout, because most
+   small businesses do not prepay a year — annual is roughly 20% cheaper and is
+   named in each line's note so nobody can say the panel took the top of the
+   range. */
+const STACKS = [
+  {
+    id:'starter', label:'Starter tiers', once:0,
+    blurb:'The cheap rungs — 250 automation actions a month on monday, no workflows in HubSpot at all, and QuickBooks Essentials stops dead at three users. A spreadsheet with a nicer skin.',
+    lines:[
+      { name:'Work & projects', plan:'monday.com Standard, $12/seat',
+        cost:(n) => 12 * blockSeats(n), cap:(n) => n > 3 ? blockSeats(n) + ' seats billed for ' + n + ' people' : '',
+        flag:'250 automation actions a month' },
+      { name:'CRM & pipeline', plan:'HubSpot Sales Starter, $20/seat',
+        cost:(n) => 20 * n, flag:'no workflows — automation starts at Professional' },
+      { name:'Invoicing & books', plan:'QuickBooks Essentials / Plus',
+        cost:(n) => n <= 3 ? 85 : 140, bump:(n) => n === 4, flag:'Essentials caps at 3 users' },
+      { name:'Forms & scheduling', plan:'Jotform Bronze + Calendly', cost:(n) => 35 + 2 * n },
+      { name:'Files & e-signature', plan:'storage + DocuSign', cost:(n) => 15 + 5 * n }
+    ]
+  },
+  {
+    id:'pro', label:'Pro tiers', def:true, once:1500,
+    onceWhy:'HubSpot Professional onboarding — one-time, and not optional',
+    blurb:'What a business that actually runs automations has to buy. Pro is where monday’s automation limit goes from 250 a month to 25,000, and where HubSpot gets workflows at all.',
+    lines:[
+      { name:'Work & projects', plan:'monday.com Pro, $24/seat monthly',
+        cost:(n) => 24 * blockSeats(n), cap:(n) => n > 3 && blockSeats(n) !== n ? blockSeats(n) + ' seats billed for ' + n + ' people' : '',
+        flag:'sold in blocks — 3 minimum, then multiples of 5' },
+      { name:'CRM & pipeline', plan:'HubSpot Sales Professional, $100/seat monthly',
+        cost:(n) => 100 * n, flag:'plus $1,500 one-time onboarding, mandatory' },
+      { name:'Invoicing & books', plan:'QuickBooks Plus / Advanced',
+        cost:(n) => n <= 5 ? 140 : 340, bump:(n) => n === 6,
+        flag:'Plus caps at 5 users — the sixth forces Advanced' },
+      { name:'Glue between them', plan:'Zapier Professional, 2,000 tasks',
+        cost:() => 73.5, flag:'overage bills at 1.25×, and Zaps stop dead at 3×' },
+      { name:'Files & e-signature', plan:'Dropbox Business + DocuSign Standard',
+        cost:(n) => 15 * n + 25 * Math.min(n, 3) }
+    ]
+  },
+  {
+    id:'sf', label:'Pro + Salesforce', once:0,
+    blurb:'The same stack with Sales Cloud Enterprise in place of HubSpot. Annual billing only, and the per-user price is the one number nobody negotiates down at this size.',
+    lines:[
+      { name:'Work & projects', plan:'monday.com Pro, $24/seat monthly',
+        cost:(n) => 24 * blockSeats(n), cap:(n) => n > 3 && blockSeats(n) !== n ? blockSeats(n) + ' seats billed for ' + n + ' people' : '',
+        flag:'sold in blocks — 3 minimum, then multiples of 5' },
+      { name:'CRM & pipeline', plan:'Salesforce Sales Cloud Enterprise, $175/user',
+        cost:(n) => 175 * n, flag:'annual billing only; API limits are per-edition' },
+      { name:'Invoicing & books', plan:'QuickBooks Plus / Advanced',
+        cost:(n) => n <= 5 ? 140 : 340, bump:(n) => n === 6, flag:'Plus caps at 5 users' },
+      { name:'Glue between them', plan:'Zapier Professional, 2,000 tasks',
+        cost:() => 73.5, flag:'overage bills at 1.25×, and Zaps stop dead at 3×' },
+      { name:'Files & e-signature', plan:'Dropbox Business + DocuSign Standard',
+        cost:(n) => 15 * n + 25 * Math.min(n, 3) }
+    ]
+  }
+];
+const stackById = (id) => STACKS.filter((s) => s.id === id)[0];
+
+/* --- THE TABLE ------------------------------------------------------------
+   One product per row rather than a whole stack, which is the simplification
+   Ohav asked for: a CRM against a CRM, not a five-line invoice. Monthly
+   billing throughout so the rows are comparable — annual is 20–30% cheaper on
+   all of them and that is said in the footnote rather than hidden.
+
+   The monday row is deliberately here even though it is the row we LOSE to
+   under about sixteen people. Dropping it would make the table an argument
+   instead of a table, and the footnote that names our losing range is worth
+   more than the row costs us. */
+const CRM_MONTHS = 36;
+const CRMS = [
+  { name:'Salesforce Sales Cloud', plan:'Enterprise · $175 per user, annual billing only',
+    seat:175, once:0, blocks:false },
+  { name:'Microsoft Dynamics 365 Sales', plan:'Enterprise · $105 per user, annual commitment — quoted through a partner',
+    seat:105, once:0, blocks:false },
+  { name:'HubSpot Sales Hub', plan:'Professional · $100 per user monthly, plus $1,500 onboarding',
+    seat:100, once:1500, blocks:false },
+  { name:'Salesforce Sales Cloud', plan:'Pro Suite · $100 per user',
+    seat:100, once:0, blocks:false },
+  { name:'Zoho CRM', plan:'Enterprise · $50 per user monthly ($40 annual)',
+    seat:50, once:0, blocks:false },
+  { name:'Pipedrive', plan:'Premium · $49 per user, annual billing',
+    seat:49, once:0, blocks:false },
+  { name:'monday CRM', plan:'Pro · $41 per seat monthly, 3-seat minimum then blocks of 5',
+    seat:41, once:0, blocks:true }
+];
+
+/* THE GLUE ROW. Ohav, 2026-08-18: "another row reflecting added automation
+   costs". This is not an alternative to the rows above — it sits ON TOP of
+   whichever one you pick, because none of them talks to your books, your
+   forms or your storage on its own.
+
+   Task volume scales with headcount, so the tier does too. Only Zapier's
+   PUBLISHED tiers are used (2K / 10K / 20K / 50K, monthly billing) — the
+   in-between tiers are interpolations and interpolations are guesses.
+
+   This is the row that ends the argument: at forty people the glue alone
+   costs more over three years than the entire system that would not need it. */
+const GLUE_TIERS = [
+  { upTo:5,   tasks:'2,000',  mo:73.50 },
+  { upTo:25,  tasks:'10,000', mo:193.50 },
+  { upTo:50,  tasks:'20,000', mo:283.50 },
+  { upTo:999, tasks:'50,000', mo:433.50 }
+];
+const glueTier = (n) => GLUE_TIERS.filter((t) => n <= t.upTo)[0];
+
+/* OUR INFRASTRUCTURE, AND IT IS NOT FLAT EITHER.
+   Ohav, 2026-08-18: "as they get to 40 team members they might need to
+   upgrade server and stuff, let's take that into account so we give them a
+   roughly accurate number on our end too."
+
+   He is right, and pretending otherwise is the same sin the vendor rows are
+   being judged for. A self-hosted system on Hetzner-class hardware runs
+   EUR 8.50/mo at 4 vCPU / 8GB and EUR 17 at 8 vCPU / 16GB — so the compute is
+   genuinely small. What makes it more than that is everything around it:
+   backups, object storage for documents, transactional email, TLS and a
+   domain. These figures are that whole bill, not just the box.
+
+   IT IS PAID TO THEIR PROVIDER, NOT TO US. That is the point of the row and
+   the reason it is stated separately rather than folded into the monthly —
+   there is no markup on it, and they can take it elsewhere. */
+const INFRA = [
+  { upTo:10,  mo:35,  spec:'2–4 vCPU, backups, storage, mail' },
+  { upTo:25,  mo:55,  spec:'4 vCPU / 8GB, backups, storage, mail' },
+  { upTo:50,  mo:90,  spec:'8 vCPU / 16GB, backups, storage, mail' },
+  { upTo:999, mo:150, spec:'dedicated, backups, storage, mail' }
+];
+const infraAt = (n) => INFRA.filter((t) => n <= t.upTo)[0];
+/* WHICH RUNG OUR ROW IS PRICED AT, and it is the whole argument.
+
+   The table compares a CRM to a CRM. `stack` ($6,500 + $450) is not a CRM —
+   content/pricing.js describes it as "work spread across tools that do not
+   talk to each other", i.e. the whole toolset. `tool` ($2,500 + $300) is
+   literally "one part of the business, on software you own… quotes, jobs,
+   bookings, stock, who owes what", which is what a CRM is.
+
+   Pricing our row at `stack` against their single product was comparing the
+   wrong things, and it is the entire reason we looked expensive at five
+   people. Nothing had to get cheaper — the row was just wrong.
+
+   The $150 rung is Ohav's 2026-08-18 proposal ($100 of us, $50 of server),
+   kept here so the trade can be seen rather than argued about. Read the
+   footnote under it. */
+const T_OURS = [
+  { id:'tool',  build:2500, mo:300, label:'Their CRM, our tool rung',
+    plan:'Built once, then run for you — no per-seat licence, ever',
+    why:'The published <b>tool</b> rung: $2,500 to build, $300 a month. This is the like-for-like row — one part of the business, on software you own.' },
+  { id:'stack', build:6500, mo:450, label:'Our stack rung',
+    plan:'The whole toolset replaced, run for you — no per-seat licence, ever',
+    why:'The <b>stack</b> rung: $6,500 to build, $450 a month. This is not a like-for-like row — it replaces the whole toolset, not just the CRM, so it should really be compared against a whole stack.' },
+  { id:'prop',  build:6500, mo:150, label:'Proposed $150/mo',
+    plan:'Built once, then $150 a month — $100 of us, $50 of server',
+    why:'<b>The proposal.</b> $50 of that is server, so $100 is the work. At the 5–12.5 hours a month a live system actually takes, that is <b>$8 to $20 an hour</b> — against the <b>$125/hr</b> this site publishes as its overflow rate, and against the $300 rung that was raised from $200 two days ago precisely because $200 was too low.' }
+];
+const OURS_T = { name:'Your own system' };
+const tRung = () => T_OURS.filter((r) => r.id === S.T.rung)[0];
+const crmMonthly = (row, n) => row.seat * (row.blocks ? blockSeats(n) : n);
+const crmTco     = (row, n) => row.once + crmMonthly(row, n) * CRM_MONTHS;
+/* Our monthly is support PLUS their infrastructure, because at forty people
+   the box really does have to get bigger and saying otherwise would make this
+   table exactly as dishonest as the ones it is arguing with. */
+const oursMonthly = (n) => tRung().mo + infraAt(n).mo;
+const oursTco     = (n) => tRung().build + oursMonthly(n) * CRM_MONTHS;
+/* The headcount at which a row passes us. Null means it never does, which for
+   the cheap rows is the truth and gets printed. Compared against OUR cost at
+   the same headcount, since ours is no longer a constant. */
+function crmCrossAt(row) {
+  for (let n = 3; n <= 200; n++) if (crmTco(row, n) > oursTco(n)) return n;
+  return null;
+}
+
+/* --- direction D. Days are REAL, summed out of content/stats.js ---------- */
+const BUILDS = [
+  { name:'A portal your customers log into',   days:13, build:10500, mo:450,  from:'the mortgage broker portal' },
+  { name:'One system instead of spreadsheets', days:26, build:10500, mo:450,  from:'the community lending ledger' },
+  { name:'An app in both stores',              days:35, build:11500, mo:750,  from:'Torah Tracker, iOS and Android' },
+  { name:'Two systems that finally talk',      days:19, build:9000,  mo:450,  from:'the MSP time-and-compliance portal' },
+  { name:'A booking system in two languages',  days:10, build:8000,  mo:450,  from:'the bilingual booking platform' },
+  { name:'A platform for many locations',      days:59, build:0,     mo:3500, partner:true, from:'the multi-campus platform' }
+];
+const AGENCY_DAY = [6, 8];
+const MAINT = [5, 12.5];
+
+/* ---------- state ---------- */
+const S = {
+  T: { seats:10, rung:'tool' },
+  A: { seats:5, stack:'pro', rung:'stack', lab:false, hrs:4, rate:28, view:'grow' },
+  B: { seats:5, stack:'pro', rung:'stack', lab:false, hrs:4, rate:28 },
+  C: { seats:5, stack:'pro', rung:'stack', lab:false, hrs:4, rate:28 },
+  D: { rate:200 }
+};
+
+/* ---------- the maths ---------- */
+function rentMonthly(st) {
+  const sk = stackById(st.stack);
+  let sum = 0;
+  sk.lines.forEach((l) => { sum += l.cost(st.seats); });
+  if (st.lab) sum += (st.hrs * 52 / 12) * st.rate;
+  return sum;
+}
+const rentOnce = (st) => stackById(st.stack).once;
+const rung     = (st) => RUNGS.filter((r) => r.id === st.rung)[0];
+const cumRent  = (st, m) => rentOnce(st) + rentMonthly(st) * m;
+const cumOwn   = (st, m) => rung(st).build + rung(st).mo * m;
+
+/* The month owning stops costing more. Their onboarding fee counts against
+   their side, which is the whole reason it is modelled: we are not the only
+   one charging to get started, we are just the only one who says so. */
+function crossover(st) {
+  const gap = rentMonthly(st) - rung(st).mo;
+  if (gap <= 0) return null;
+  const m = Math.ceil((rung(st).build - rentOnce(st)) / gap);
+  return m <= HORIZON ? Math.max(1, m) : null;
+}
+function seatsToCross(st) {
+  for (let n = st.seats; n <= 400; n++) {
+    if (crossover(Object.assign({}, st, { seats:n }))) return n;
+  }
+  return null;
+}
+/* What the NEXT hire costs in licences. The single most persuasive number in
+   this whole exercise, because of the blocks and the caps: at five people on
+   Pro tiers the sixth hire costs more per month than our entire retainer. */
+function nextHire(st) {
+  const now  = rentMonthly(st);
+  const then = rentMonthly(Object.assign({}, st, { seats: st.seats + 1 }));
+  return then - now;
+}
+
+function computeVerdict(st) {
+  const m = crossover(st);
+  const r60 = cumRent(st, HORIZON), o60 = cumOwn(st, HORIZON);
+  if (!m) {
+    const n = seatsToCross(st);
+    return { kind:'hold', m:null, r60:r60, o60:o60,
+      key:'Not yet — and that is the honest answer',
+      say:'At ' + st.seats + ' people on these rungs, renting is cheaper than owning for the whole five years.',
+      note:'Five years of licences comes to <b>' + moneyK(r60) + '</b> against <b>' + moneyK(o60) + '</b> with us. ' +
+        (n ? 'It turns over at about <b>' + n + ' people</b> — or the first time a limit forces a tier upgrade.'
+           : 'On this stack it does not turn over at any size we would build for, and we would say so on a call rather than sell you something.') };
+  }
+  return { kind:'win', m:m, r60:r60, o60:o60,
+    key:'You cross in month ' + m,
+    say:'From month ' + m + ' onward you pay less than you do today — and the system is yours rather than rented back to you.',
+    note:'Five years: <b>' + moneyK(r60) + '</b> rented against <b>' + moneyK(o60) + '</b> owned. That is <b>' +
+      moneyK(r60 - o60) + '</b> less, and at the end of it you still have the thing.' };
+}
+
+/* ==========================================================================
+   THE CHART. Two views, one axis each, never two scales.
+
+     "As you grow"      x = headcount, y = cost of a year. The rented series is
+                        a STEP because that is literally how it bills.
+     "Over five years"  x = months, y = everything paid so far.
+
+   No animation (it redraws on every drag, so a sweep-in communicates nothing
+   and makes the panel unscreenshottable), solid hairline gridlines, direct
+   labels on both line ends so identity is never colour-alone.
+   ========================================================================== */
+const SER = { rent:{ c:'#e07a5f', name:'Renting' }, own:{ c:'#2bbcb3', name:'Owning it' } };
+
+function niceMax(v) {
+  if (v <= 0) return 1000;
+  const p = Math.pow(10, Math.floor(Math.log10(v)));
+  return Math.ceil(v / (p / 2)) * (p / 2);
+}
+
+function drawPlot(key) {
+  const st = S[key];
+  const svg = $('#' + key + '-plot');
+  if (!svg || !svg.clientWidth) return;
+  const view = key === 'A' ? st.view : 'grow';
+  const W = svg.clientWidth, H = svg.getAttribute('height') | 0;
+  const phone = $('#stage').classList.contains('w-phone');
+  const L = phone ? 44 : 58, R = phone ? 56 : 98, T = 16, B = 30;
+  const iw = W - L - R, ih = H - T - B;
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  /* build the two series for whichever view is up */
+  let xs = [], rentV = [], ownV = [], xMin, xMax, xLab, tipLab, stepped;
+  if (view === 'grow') {
+    xMin = 3; xMax = MAXSEATS; stepped = true;
+    for (let n = xMin; n <= xMax; n++) {
+      const at = Object.assign({}, st, { seats:n });
+      xs.push(n);
+      rentV.push(rentMonthly(at) * 12);
+      ownV.push(rung(st).mo * 12);
+    }
+    xLab = (n) => n + (phone ? '' : ' people');
+    tipLab = (n) => n + ' people';
+  } else {
+    xMin = 0; xMax = HORIZON; stepped = false;
+    for (let m = xMin; m <= xMax; m++) { xs.push(m); rentV.push(cumRent(st, m)); ownV.push(cumOwn(st, m)); }
+    xLab = (m) => phone ? (m / 12) + 'y' : (m / 12) + ' yr';
+    tipLab = (m) => m === 0 ? 'Day one' : 'Month ' + m;
+  }
+
+  const top = niceMax(Math.max.apply(null, rentV.concat(ownV)) * 1.05);
+  const x = (v) => L + ((v - xMin) / (xMax - xMin)) * iw;
+  const y = (v) => T + ih - (v / top) * ih;
+
+  for (let i = 0; i <= 4; i++) {
+    const v = top * i / 4, yy = y(v);
+    svg.appendChild(el('line', { x1:L, x2:L + iw, y1:yy, y2:yy, stroke:'#e2e4e8', 'stroke-width':1 }));
+    const t = el('text', { x:L - 9, y:yy + 4, 'text-anchor':'end', 'font-size':phone ? 10 : 11, fill:'#5f6368' });
+    t.textContent = i === 0 ? '$0' : moneyK(v);
+    svg.appendChild(t);
+  }
+  const ticks = view === 'grow' ? [5, 10, 15, 20, 25, 30, 35, 40] : [12, 24, 36, 48, 60];
+  ticks.forEach((v) => {
+    if (phone && view === 'grow' && v % 10 !== 0) return;
+    const t = el('text', { x:x(v), y:H - 9, 'text-anchor':'middle', 'font-size':phone ? 10 : 11, fill:'#5f6368' });
+    t.textContent = xLab(v);
+    svg.appendChild(t);
+  });
+
+  const path = (vals) => {
+    let d = '';
+    for (let i = 0; i < xs.length; i++) {
+      const px = x(xs[i]), py = y(vals[i]);
+      if (i === 0) { d += 'M' + px.toFixed(1) + ' ' + py.toFixed(1); continue; }
+      if (stepped) d += ' L' + px.toFixed(1) + ' ' + y(vals[i - 1]).toFixed(1) + ' L' + px.toFixed(1) + ' ' + py.toFixed(1);
+      else d += ' L' + px.toFixed(1) + ' ' + py.toFixed(1);
+    }
+    return d;
+  };
+  svg.appendChild(el('path', { d:path(rentV), fill:'none', stroke:SER.rent.c, 'stroke-width':2, 'stroke-linejoin':'round', 'stroke-linecap':'round' }));
+  svg.appendChild(el('path', { d:path(ownV),  fill:'none', stroke:SER.own.c,  'stroke-width':2, 'stroke-linejoin':'round', 'stroke-linecap':'round' }));
+
+  /* the marker each view exists for */
+  if (view === 'grow') {
+    const i = xs.indexOf(st.seats);
+    if (i >= 0) {
+      svg.appendChild(el('line', { x1:x(st.seats), x2:x(st.seats), y1:T, y2:T + ih, stroke:'#1a1b1e', 'stroke-width':1, opacity:.16 }));
+      svg.appendChild(el('circle', { cx:x(st.seats), cy:y(rentV[i]), r:6, fill:SER.rent.c, stroke:'#fff', 'stroke-width':2 }));
+      svg.appendChild(el('circle', { cx:x(st.seats), cy:y(ownV[i]),  r:6, fill:SER.own.c,  stroke:'#fff', 'stroke-width':2 }));
+      if (!phone) {
+        const t = el('text', { x:x(st.seats), y:T - 3, 'text-anchor':st.seats > 33 ? 'end' : 'middle', 'font-size':11.5, 'font-weight':600, fill:'#1a1b1e' });
+        t.textContent = 'you, today';
+        svg.appendChild(t);
+      }
+    }
+  } else {
+    const m = crossover(st);
+    if (m) {
+      const cx = x(m), cy = y(cumOwn(st, m));
+      svg.appendChild(el('line', { x1:cx, x2:cx, y1:T, y2:T + ih, stroke:'#2bbcb3', 'stroke-width':1, opacity:.35 }));
+      svg.appendChild(el('circle', { cx:cx, cy:cy, r:6.5, fill:'#2bbcb3', stroke:'#fff', 'stroke-width':2 }));
+      if (!phone) {
+        const t = el('text', { x:cx, y:T - 3, 'text-anchor':cx > L + iw * .8 ? 'end' : 'middle', 'font-size':11.5, 'font-weight':600, fill:'#1a1b1e' });
+        t.textContent = 'month ' + m;
+        svg.appendChild(t);
+      }
+    }
+  }
+
+  /* direct labels — this is what discharges the contrast warning */
+  let ry = y(rentV[rentV.length - 1]), oy = y(ownV[ownV.length - 1]);
+  if (Math.abs(ry - oy) < 17) { if (ry < oy) { ry -= 9; oy += 9; } else { ry += 9; oy -= 9; } }
+  [[ry, SER.rent, moneyK(rentV[rentV.length - 1])], [oy, SER.own, moneyK(ownV[ownV.length - 1])]].forEach((row) => {
+    const yy = Math.max(T + 8, Math.min(T + ih - 2, row[0]));
+    svg.appendChild(el('line', { x1:L + iw + 7, x2:L + iw + 20, y1:yy, y2:yy, stroke:row[1].c, 'stroke-width':2, 'stroke-linecap':'round' }));
+    const t1 = el('text', { x:L + iw + 25, y:yy - 2, 'font-size':phone ? 10.5 : 12, 'font-weight':600, fill:'#1a1b1e' });
+    t1.textContent = row[2];
+    svg.appendChild(t1);
+    if (!phone) {
+      const t2 = el('text', { x:L + iw + 25, y:yy + 11, 'font-size':11, fill:'#5f6368' });
+      t2.textContent = row[1].name;
+      svg.appendChild(t2);
+    }
+  });
+
+  /* hover: the crosshair finds the X, one tooltip lists both series */
+  const hit = el('rect', { x:L, y:T, width:iw, height:ih, fill:'transparent', style:'cursor:crosshair' });
+  const cross = el('line', { x1:0, x2:0, y1:T, y2:T + ih, stroke:'#1a1b1e', 'stroke-width':1, opacity:0 });
+  const d1 = el('circle', { r:5, fill:SER.rent.c, stroke:'#fff', 'stroke-width':2, opacity:0 });
+  const d2 = el('circle', { r:5, fill:SER.own.c,  stroke:'#fff', 'stroke-width':2, opacity:0 });
+  svg.appendChild(cross); svg.appendChild(d1); svg.appendChild(d2); svg.appendChild(hit);
+
+  const tip = $('#' + key + '-tip'), card = $('#' + key + '-card');
+  hit.addEventListener('pointermove', (ev) => {
+    const box = svg.getBoundingClientRect();
+    const raw = xMin + ((ev.clientX - box.left - L) / iw) * (xMax - xMin);
+    const i = Math.max(0, Math.min(xs.length - 1, Math.round(raw) - xMin));
+    const xv = xs[i], xx = x(xv);
+    cross.setAttribute('x1', xx); cross.setAttribute('x2', xx); cross.setAttribute('opacity', .16);
+    d1.setAttribute('cx', xx); d1.setAttribute('cy', y(rentV[i])); d1.setAttribute('opacity', 1);
+    d2.setAttribute('cx', xx); d2.setAttribute('cy', y(ownV[i]));  d2.setAttribute('opacity', 1);
+    while (tip.firstChild) tip.removeChild(tip.firstChild);
+    const hd = document.createElement('div'); hd.className = 'tw';
+    hd.textContent = tipLab(xv) + (view === 'grow' ? '  ·  a year' : '');
+    tip.appendChild(hd);
+    [[SER.rent, rentV[i]], [SER.own, ownV[i]]].forEach((row) => {
+      const r = document.createElement('div'); r.className = 'tr';
+      const ic = document.createElement('i'); ic.style.background = row[0].c;
+      const sp = document.createElement('span'); sp.textContent = row[0].name;
+      const bb = document.createElement('b'); bb.textContent = money(row[1]);
+      r.appendChild(ic); r.appendChild(sp); r.appendChild(bb); tip.appendChild(r);
+    });
+    tip.classList.add('on');
+    const cb = card.getBoundingClientRect();
+    let lx = ev.clientX - cb.left + 16;
+    if (lx + tip.offsetWidth > cb.width - 8) lx = ev.clientX - cb.left - tip.offsetWidth - 16;
+    tip.style.left = Math.max(8, lx) + 'px';
+    tip.style.top  = Math.max(8, ev.clientY - cb.top - tip.offsetHeight / 2) + 'px';
+  });
+  hit.addEventListener('pointerleave', () => {
+    tip.classList.remove('on'); cross.setAttribute('opacity', 0);
+    d1.setAttribute('opacity', 0); d2.setAttribute('opacity', 0);
+  });
+
+  const desc = $('#' + key + '-plotdesc');
+  if (desc) {
+    if (view === 'grow') {
+      const at = rentMonthly(st) * 12, ours = rung(st).mo * 12;
+      desc.textContent = 'At ' + st.seats + ' people that is ' + money(at) + ' a year against ' + money(ours) +
+        '. Every step in the orange line is a seat block or a user cap, not a decision you made.';
+    } else {
+      const m = crossover(st);
+      desc.textContent = m
+        ? 'Owning costs more until month ' + m + ', then less every month after it.'
+        : 'On these figures renting stays cheaper for the whole five years.';
+    }
+  }
+}
+
+function buildTable(key) {
+  const st = S[key];
+  const host = $('#' + key + '-table');
+  if (!host) return;
+  while (host.firstChild) host.removeChild(host.firstChild);
+  const t = document.createElement('table'); t.className = 'nums';
+  const cap = document.createElement('caption');
+  const view = key === 'A' ? st.view : 'grow';
+  cap.textContent = view === 'grow'
+    ? 'What a year costs at each team size, on ' + stackById(st.stack).label.toLowerCase() + '.'
+    : 'Everything paid by that month, at ' + st.seats + ' people.';
+  t.appendChild(cap);
+  const head = document.createElement('tr');
+  [view === 'grow' ? 'Team' : '', 'Renting', 'Owning it', 'Difference'].forEach((h) => {
+    const c = document.createElement('th'); c.textContent = h; head.appendChild(c);
+  });
+  t.appendChild(head);
+  const m = crossover(st);
+  const rows = view === 'grow' ? [3, 5, 6, 10, 15, 20, 30, 40] : (() => {
+    const r = [12, 24, 36, 48, 60];
+    if (m && r.indexOf(m) === -1) { r.push(m); r.sort((a, b) => a - b); }
+    return r;
+  })();
+  rows.forEach((v) => {
+    let label, rentV, ownV, mark = false;
+    if (view === 'grow') {
+      const at = Object.assign({}, st, { seats:v });
+      label = v + ' people'; rentV = rentMonthly(at) * 12; ownV = rung(st).mo * 12;
+      mark = v === st.seats;
+    } else {
+      label = v === m ? 'Month ' + v + ' — you cross' : (v % 12 === 0 ? 'Year ' + (v / 12) : 'Month ' + v);
+      rentV = cumRent(st, v); ownV = cumOwn(st, v); mark = v === m;
+    }
+    const tr = document.createElement('tr');
+    if (mark) tr.className = 'cross';
+    [label, money(rentV), money(ownV), (ownV > rentV ? '+' : '−') + money(Math.abs(ownV - rentV))]
+      .forEach((val, i) => { const c = document.createElement(i === 0 ? 'th' : 'td'); c.textContent = val; tr.appendChild(c); });
+    t.appendChild(tr);
+  });
+  host.appendChild(t);
+}
+
+/* ==========================================================================
+   RENDERERS
+   ========================================================================== */
+function paintVerdict(key) {
+  const v = computeVerdict(S[key]);
+  const box = $('#' + key + '-verdict');
+  if (!box) return v;
+  box.className = 'verdict ' + v.kind;
+  box.innerHTML = '';
+  const k = document.createElement('div'); k.className = 'vk'; k.textContent = v.key;
+  const s = document.createElement('div'); s.className = 'vs'; s.textContent = v.say;
+  const n = document.createElement('div'); n.className = 'vn'; n.innerHTML = v.note;
+  box.appendChild(k); box.appendChild(s); box.appendChild(n);
+  return v;
+}
+
+function paintHire(key) {
+  const host = $('#' + key + '-hire');
+  if (!host) return;
+  const st = S[key], jump = nextHire(st), ours = rung(st).mo;
+  host.innerHTML = '';
+  const b = document.createElement('b'); b.textContent = '+' + money(jump) + '/mo';
+  const s = document.createElement('span');
+  s.innerHTML = jump >= ours
+    ? 'is what hiring <b>one more person</b> adds to your software bill — more than our entire monthly fee of ' + money(ours) + ', for one hire.'
+    : 'is what hiring <b>one more person</b> adds to your software bill. With us it adds nothing at all.';
+  host.appendChild(b); host.appendChild(s);
+}
+
+function stackChips(key) {
+  const host = $('#' + key + '-chips');
+  if (!host) return;
+  host.innerHTML = '';
+  STACKS.forEach((sk) => {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.type = 'button';
+    b.setAttribute('aria-pressed', String(S[key].stack === sk.id));
+    b.appendChild(document.createTextNode(sk.label + ' '));
+    const i = document.createElement('i');
+    i.textContent = money(rentMonthly({ seats:S[key].seats, stack:sk.id, lab:false })) + '/mo';
+    b.appendChild(i);
+    b.addEventListener('click', () => { S[key].stack = sk.id; render(key); });
+    host.appendChild(b);
+  });
+}
+
+function rungChips(key) {
+  const host = $('#' + key + '-rungs');
+  if (!host) return;
+  host.innerHTML = '';
+  RUNGS.forEach((r) => {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.type = 'button';
+    b.setAttribute('aria-pressed', String(S[key].rung === r.id));
+    b.appendChild(document.createTextNode(r.chip + ' '));
+    const i = document.createElement('i'); i.textContent = money(r.build) + ' · ' + money(r.mo) + '/mo';
+    b.appendChild(i);
+    b.addEventListener('click', () => { S[key].rung = r.id; render(key); });
+    host.appendChild(b);
+  });
+}
+
+function footNote(key) {
+  const st = S[key], sk = stackById(st.stack), r = rung(st);
+  const bits = ['Our side is the published ladder — <b>from ' + money(r.build) + ' to build, then ' + money(r.mo) +
+    ' a month</b>, flat however many people use it.'];
+  if (sk.once) bits.push('Their side carries <b>' + money(sk.once) + ' of one-time onboarding</b> too — ' + sk.onceWhy + '. We are not the only one with a build fee, only the one who prints it.');
+  bits.push('List prices checked 18 August 2026, monthly billing; annual is roughly 20% cheaper on most of them.');
+  const el = $('#' + key + '-foot');
+  if (el) el.innerHTML = bits.join(' ');
+}
+
+function renderA() {
+  const st = S.A;
+  $('#A-seatsv').textContent = st.seats;
+  $('#A-hrsv').textContent   = st.hrs;
+  $('#A-ratev').textContent  = money(st.rate);
+  $('#A-labbox').hidden = !st.lab;
+  const billed = blockSeats(st.seats);
+  $('#A-blocks').innerHTML = billed !== st.seats
+    ? 'monday.com bills you for <b>' + billed + ' seats</b> — it sells in blocks of five, so you are paying for ' + (billed - st.seats) + ' people you have not hired.'
+    : 'monday.com bills in blocks of five, so this headcount happens to land exactly on a block.';
+  $('#A-blurb').textContent = stackById(st.stack).blurb;
+  $('#A-charttitle').textContent = st.view === 'grow' ? 'What a year costs, as you grow' : 'Everything you will have paid, by month';
+  $$('#A-viewseg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === st.view)));
+  stackChips('A'); rungChips('A'); paintHire('A'); paintVerdict('A');
+  drawPlot('A'); buildTable('A'); footNote('A');
+}
+
+function renderB() {
+  const st = S.B;
+  $('#B-seatsv').textContent = st.seats;
+  stackChips('B'); paintHire('B');
+  const v = computeVerdict(st), m = v.m;
+  const big = $('#B-big'), sub = $('#B-bigsub');
+  big.className = 'bignum' + (m ? '' : ' hold');
+  big.childNodes[0].nodeValue = m ? String(m) : 'Not yet';
+  const n = m ? null : seatsToCross(st);
+  sub.textContent = m
+    ? 'the month you stop paying more — and after it, the system is yours'
+    : (n ? 'at ' + st.seats + ' people on these rungs renting wins. Come back at about ' + n + '.'
+         : 'on this stack renting wins at any size. We would say so on a call.');
+  const track = $('#B-meter'); track.innerHTML = '';
+  for (let i = 1; i <= HORIZON; i++) {
+    const b = document.createElement('b');
+    if (m && i > m) b.className = 'after';
+    if (m && i === m) b.className = 'at';
+    b.style.height = (44 + (i / HORIZON) * 56) + '%';
+    track.appendChild(b);
+  }
+  $('#B-rent').textContent  = moneyK(v.r60);
+  $('#B-rentn').textContent = 'and none of it is yours at the end';
+  $('#B-own').textContent   = moneyK(v.o60);
+  $('#B-ownn').textContent  = 'build once, then ' + money(rung(st).mo) + ' a month however many people you add';
+  buildTable('B'); footNote('B');
+}
+
+function renderC() {
+  const st = S.C, sk = stackById(st.stack);
+  $('#C-seatsv').textContent = st.seats;
+  stackChips('C');
+  const host = $('#C-rows'); host.innerHTML = '';
+  sk.lines.forEach((l) => {
+    const row = document.createElement('div');
+    row.className = 'row' + (l.bump && l.bump(st.seats) ? ' bump' : '');
+    const nm = document.createElement('div'); nm.className = 'rn';
+    nm.appendChild(document.createTextNode(l.name));
+    const em = document.createElement('em'); em.textContent = l.plan; nm.appendChild(em);
+    const capTxt = l.cap ? l.cap(st.seats) : '';
+    const flagTxt = capTxt || l.flag || '';
+    if (flagTxt) { const s = document.createElement('s'); s.textContent = flagTxt; nm.appendChild(s); }
+    const p = document.createElement('div'); p.className = 'rp'; p.textContent = money(l.cost(st.seats));
+    row.appendChild(nm); row.appendChild(p);
+    host.appendChild(row);
+  });
+  $('#C-tot').textContent = money(rentMonthly(st));
+  const onceBox = $('#C-once');
+  onceBox.hidden = !sk.once;
+  if (sk.once) { $('#C-oncew').textContent = sk.onceWhy; $('#C-oncev').textContent = money(sk.once) + ' once'; }
+  $('#C-fine').innerHTML = 'List prices, checked 18 August 2026, monthly billing. Google Workspace is deliberately not counted — email and documents are not a business system doing half a job. ' +
+    'Highlighted rows are the ones your <b>next hire</b> pushes over a cap.';
+  paintVerdict('C'); drawPlot('C'); buildTable('C');
+}
+
+function renderT() {
+  const n = S.T.seats, r = tRung(), inf = infraAt(n), glue = glueTier(n);
+  $('#T-seatsv').textContent = n;
+
+  /* Each row is now three ANNUAL figures, not one lump. That is the whole
+     point of the year columns: theirs is the same number every year forever,
+     ours is fat in year one and thin after it, and no amount of prose makes
+     that as clear as putting the three numbers side by side.
+
+     Headcount is held constant across the three years — the chart answers
+     "at this size", not "if you grow mid-contract". */
+  const vendorRow = (c) => {
+    const yr = crmMonthly(c, n) * 12;
+    return { name:c.name, tier:c.plan.split(' · ')[0], per:money(c.seat) + '/user',
+             y:[yr + c.once, yr, yr] };
+  };
+  const glueYr = glue.mo * 12;
+  const oursYr = oursMonthly(n) * 12;
+
+  const rows = CRMS.map(vendorRow)
+    .sort((a, b) => (b.y[0] + b.y[1] + b.y[2]) - (a.y[0] + a.y[1] + a.y[2]))
+    .concat([
+      { kind:'glue', name:'Zapier, to glue them together', tier:glue.tasks + ' tasks a month',
+        per:'', y:[glueYr, glueYr, glueYr], tag:'on top of whichever you pick' },
+      { kind:'ours', name:'Your own system', tier:money(r.build) + ' once, then ' + money(r.mo) + '/mo',
+        per:'$0/user', y:[r.build + oursYr, oursYr, oursYr],
+        tag:money(inf.mo) + '/mo of that is infrastructure, paid to your provider — no markup' }
+    ]);
+
+  rows.forEach((x) => { x.tco = x.y[0] + x.y[1] + x.y[2]; });
+  const top = Math.max.apply(null, rows.map((x) => x.tco));
+
+  const host = $('#T-chart');
+  host.innerHTML = '';
+  rows.forEach((row) => {
+    const d = document.createElement('div');
+    d.className = 'crow' + (row.kind ? ' ' + row.kind : '');
+
+    const nm = document.createElement('div'); nm.className = 'cn';
+    nm.appendChild(document.createTextNode(row.name));
+    const i = document.createElement('i');
+    i.textContent = row.per ? row.tier + ' · ' + row.per : row.tier;
+    nm.appendChild(i);
+    d.appendChild(nm);
+
+    /* One segment per year, so the bar carries the same story the columns do.
+       The trailing .rest keeps every bar the same overall width — without it
+       flex stretches the segments and every row looks identical. */
+    const bar = document.createElement('div'); bar.className = 'bar';
+    row.y.forEach((v, k) => {
+      const seg = document.createElement('b');
+      if (k) seg.className = 'y' + (k + 1);
+      seg.style.width = ((v / top) * 100) + '%';
+      seg.title = 'Year ' + (k + 1) + ': ' + money(v);
+      bar.appendChild(seg);
+    });
+    const rest = document.createElement('span'); rest.className = 'rest';
+    bar.appendChild(rest);
+    d.appendChild(bar);
+
+    row.y.forEach((v) => {
+      const c = document.createElement('div'); c.className = 'yr'; c.textContent = money(v);
+      d.appendChild(c);
+    });
+
+    const v = document.createElement('div'); v.className = 'cv'; v.textContent = money(row.tco);
+    d.appendChild(v);
+
+    /* phone fallback for the three year columns, which are hidden there */
+    const yrs = document.createElement('div'); yrs.className = 'yrs';
+    yrs.textContent = 'Yr 1 ' + money(row.y[0]) + '  ·  Yr 2 ' + money(row.y[1]) + '  ·  Yr 3 ' + money(row.y[2]);
+    d.appendChild(yrs);
+
+    if (row.tag) { const t = document.createElement('div'); t.className = 'tagline'; t.textContent = row.tag; d.appendChild(t); }
+    host.appendChild(d);
+  });
+
+  /* The aside. It changes side when the numbers do — the conceding version is
+     what earns the winning one, and it sits BESIDE the chart rather than under
+     it so it reads as a note rather than a retraction. */
+  const ours = r.build + oursYr * 3;
+  const cheap = CRMS.slice().sort((x, y) => crmTco(x, n) - crmTco(y, n))[0];
+  const cross = crmCrossAt(cheap);
+  const dearest = CRMS.slice().sort((x, y) => crmTco(y, n) - crmTco(x, n))[0];
+  const aside = $('#T-aside');
+  aside.innerHTML = '';
+  const h = document.createElement('h3');
+  const p = document.createElement('p');
+  if (crmTco(cheap, n) < ours) {
+    const under = CRMS.filter((c) => crmTco(c, n) < ours);
+    h.textContent = 'Why the cheap rows win here';
+    p.innerHTML = (under.length === 1 ? '<b>' + under[0].name + '</b> comes in' : '<b>' +
+      under.map((c) => c.name).join(', ') + '</b> come in') +
+      ' under us at ' + n + ' people, and we are not going to pretend otherwise. ' +
+      'They are licences, not systems: they stop the day you stop paying and you cannot take them anywhere. ' +
+      'Under about <b>' + (cross || 'any size we build for') + ' people</b> that trade is usually the right one, and we will say so on a call.';
+  } else {
+    h.textContent = 'Why year one looks expensive';
+    p.innerHTML = 'Ours is the only row with a build fee, so <b>year one is the only year we cost more</b>. ' +
+      'After it, <b>' + money(oursYr) + ' a year</b> against ' + money(crmMonthly(dearest, n) * 12) +
+      ' — every year, at any headcount, and at the end of it the system is yours rather than rented back to you.';
+  }
+  aside.appendChild(h); aside.appendChild(p);
+  /* The 45-word provenance paragraph is gone. Four words stay, because every
+     number in the chart is a claim about somebody else's pricing and the site's
+     whole position is that it publishes what it is asserting. */
+  const prov = document.createElement('p'); prov.className = 'prov';
+  prov.textContent = 'August 2026 list prices.';
+  aside.appendChild(prov);
+
+  /* MOCKUP CONTROL — lives above the stage, outside the design. */
+  const rh = $('#T-rungs'); rh.innerHTML = '';
+  const lb = document.createElement('span'); lb.textContent = 'Mockup only · our row priced as'; rh.appendChild(lb);
+  T_OURS.forEach((o) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.setAttribute('aria-pressed', String(S.T.rung === o.id));
+    btn.textContent = o.label + ' · ' + money(o.build + (o.mo + inf.mo) * CRM_MONTHS);
+    btn.addEventListener('click', () => { S.T.rung = o.id; renderT(); });
+    rh.appendChild(btn);
+  });
+}
+
+
+function renderD() {
+  const rate = S.D.rate;
+  $('#D-ratev').innerHTML = money(rate) + '<small>/hr</small>';
+  const grid = $('#D-grid'); grid.innerHTML = '';
+  const worst = Math.max.apply(null, BUILDS.map((b) => b.days * AGENCY_DAY[1] * rate));
+  BUILDS.forEach((b) => {
+    const lo = b.days * AGENCY_DAY[0] * rate, hi = b.days * AGENCY_DAY[1] * rate;
+    const ourBuild = b.partner ? 0 : b.build;
+    const card = document.createElement('div'); card.className = 'dcard';
+    const h = document.createElement('h4'); h.textContent = b.name;
+    const dd = document.createElement('div'); dd.className = 'dd';
+    dd.innerHTML = '<b>' + b.days + ' working days</b>, counted out of the repository — ' + b.from + '.';
+    card.appendChild(h); card.appendChild(dd);
+    const bars = document.createElement('div'); bars.className = 'dbars';
+    [['them', 'At that rate', moneyK(lo) + ' – ' + moneyK(hi), hi],
+     ['us',   'With us',      b.partner ? 'No build fee' : money(ourBuild), ourBuild]
+    ].forEach((r) => {
+      const row = document.createElement('div'); row.className = 'dbar ' + r[0];
+      const w = document.createElement('div'); w.className = 'dw'; w.textContent = r[1];
+      const tr = document.createElement('div'); tr.className = 'dt';
+      const f = document.createElement('div'); f.className = 'df';
+      const pct = Math.max(2, (r[3] / worst) * 100);
+      f.style.width = pct + '%';
+      const v = document.createElement('div'); v.className = 'dv'; v.textContent = r[2];
+      if (pct > 46) { v.style.left = '10px'; v.style.color = '#fff'; }
+      else { v.style.left = 'calc(' + pct + '% + 10px)'; v.style.color = '#1a1b1e'; }
+      tr.appendChild(f); tr.appendChild(v);
+      row.appendChild(w); row.appendChild(tr);
+      bars.appendChild(row);
+    });
+    card.appendChild(bars);
+    const run = document.createElement('div'); run.className = 'drun';
+    run.innerHTML = 'Then somebody has to run it. A live system needs <b>' + MAINT[0] + '–' + MAINT[1] +
+      ' hours a month</b>: <b>' + moneyK(MAINT[0] * rate) + '–' + moneyK(MAINT[1] * rate) +
+      '</b> at that rate, against <b>' + money(b.mo) + ' a month</b> flat with us.';
+    card.appendChild(run);
+    grid.appendChild(card);
+  });
+}
+
+const render = (key) => { ({ T:renderT, A:renderA, B:renderB, C:renderC, D:renderD })[key](); };
+
+/* ---------- wiring ---------- */
+function bindRange(id, key, prop) {
+  const inp = $('#' + id);
+  if (!inp) return;
+  inp.addEventListener('input', () => { S[key][prop] = +inp.value; render(key); });
+}
+bindRange('T-seats','T','seats');
+bindRange('A-seats','A','seats'); bindRange('A-hrs','A','hrs'); bindRange('A-rate','A','rate');
+bindRange('B-seats','B','seats'); bindRange('C-seats','C','seats'); bindRange('D-rate','D','rate');
+$('#A-lab').addEventListener('change', function () { S.A.lab = this.checked; render('A'); });
+$$('#A-viewseg button').forEach((b) => b.addEventListener('click', () => { S.A.view = b.dataset.view; render('A'); }));
+
+$$('.tabtog').forEach((b) => b.addEventListener('click', () => {
+  const t = $('#' + b.dataset.table + '-table');
+  t.hidden = !t.hidden;
+  b.textContent = t.hidden ? 'Show the numbers' : 'Hide the numbers';
+}));
+
+const NOTES = {
+  T: { tag:'The chart', h:'One bar per system, ours at the foot',
+    p:'The table became the chart rather than sitting beside one — every row carries its own bar, sorted expensive-first, all of them rescaling live off the slider. Copy is down from about <b>230 words to 80</b>: no lede paragraph, no column headers, no per-row explanation. The form is <b>emphasis, not categorical</b> — every vendor bar is the same warm tone at one weight and ours is the accent, so the eye is told where to look instead of decoding seven hues.',
+    r:'<b>Risk:</b> at five people three rows still beat us — monday $7,380, Pipedrive $8,820, Zoho $9,000 against our $14,560 — and the sentence under the chart says so. It flips at six. That sentence is the last thing to approve or kill before this ships.' },
+  A: { tag:'Direction A', h:'The staircase',
+    p:'Your idea, rebuilt on the tiers you named. The chart defaults to <b>cost of a year against team size</b> — which is what you actually described — and the rented line is a <b>step function</b>, because monday sells seats in blocks of five and QuickBooks Plus stops at five users. The second view is the five-year break-even. On Pro tiers at five people it now crosses at <b>month 10</b>; on the Starter tiers I priced first it never crossed at all.',
+    r:'<b>Risk:</b> it is the most controls of any direction, and every named price is a claim about somebody else’s pricing that has to be kept current. QuickBooks went up 41% on 1 August — that is how fast this rots.' },
+  B: { tag:'Direction B', h:'The month you cross',
+    p:'Same maths, no chart. One headline-sized number, the five-year meter, two totals, and the one-more-hire line. Reads in two seconds on a phone, which is where the case studies lose people.',
+    r:'<b>Risk:</b> it throws away the staircase, and the staircase is now the best thing in the argument. Strongest on mobile, weakest to a buyer who wants to see the shape.' },
+  C: { tag:'Direction C', h:'The itemised stack',
+    p:'The bill, line by line, with the cap that bites printed under each one. Drag the headcount and the row your next hire breaks lights up — at six people that is QuickBooks, jumping $140 to $340 in one step. The most concrete and the most screenshottable.',
+    r:'<b>Risk:</b> this is the version you warned against on the rate comparison — every line is a number we have to defend and keep current. It is also a form, above the fold.' },
+  D: { tag:'Direction D', h:'What it costs to build — by category',
+    p:'The second half of what you asked for, and <b>additive, not an either/or</b> with A–C. Those answer "what am I paying to rent". This answers "what would this cost me to build". Every figure is real: days counted out of the repositories, our side the published ladder, and the slider is the rate <i>you</i> are being quoted.',
+    r:'<b>Risk:</b> the build gap is not one number — 1.5× on the short jobs, nearly 5× on the long ones, because our side is a fixed ladder price and theirs is days × rate. The line that lands every time is at the foot of each card: the running cost, forever, at their rate against our flat monthly.' }
+};
+function setNote(d) {
+  const n = NOTES[d];
+  $('#T-rungs').style.display = d === 'T' ? 'flex' : 'none';
+  $('#note').innerHTML = '<span class="tag">' + n.tag + '</span><h2>' + n.h + '</h2><p>' + n.p + '</p><p class="risk">' + n.r + '</p>';
+}
+$$('#dirseg button').forEach((b) => b.addEventListener('click', () => {
+  $$('#dirseg button').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+  $$('.dirpane').forEach((p) => p.classList.toggle('on', p.dataset.pane === b.dataset.dir));
+  setNote(b.dataset.dir);
+  render(b.dataset.dir);
+}));
+$$('#wseg button').forEach((b) => b.addEventListener('click', () => {
+  $$('#wseg button').forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+  $('#stage').className = 'stage ' + b.dataset.w;
+  const cur = $$('#dirseg button').filter((x) => x.getAttribute('aria-pressed') === 'true')[0];
+  setTimeout(() => render(cur.dataset.dir), 300);
+}));
+window.addEventListener('resize', () => {
+  const cur = $$('#dirseg button').filter((x) => x.getAttribute('aria-pressed') === 'true')[0];
+  render(cur.dataset.dir);
+});
+
+setNote('T');
+['T','A','B','C','D'].forEach(render);
+
+/* ==========================================================================
+   SOURCES — every list price above, checked 2026-08-18. If any of this ships,
+   this block becomes a dated comment in content/pricing.js, the same way the
+   $200/hr agency rate carries its FullStack Labs citation.
+
+     monday.com    Pro $19/seat annual, $24 monthly. 3-seat minimum, then
+                   multiples of 5. Standard = 250 automation actions/mo, Pro =
+                   25,000.  get-alfred.ai/blog/monday-pricing · empyra.com
+     HubSpot       Sales Hub Professional $90/seat annual, $100 monthly, plus a
+                   mandatory one-time $1,500 onboarding fee ($3,500 at
+                   Enterprise). Starter has no workflows.
+                   docket.io/resources/research/hubspot-sales-hub-pricing
+     Salesforce    Sales Cloud: Starter $25, Pro Suite $100, Enterprise $175,
+                   Unlimited $350 per user/mo. Annual billing except Starter.
+                   salesforce.com/sales/pricing
+     QuickBooks    From 1 Aug 2026: Essentials $75 -> $85 (caps 3 users), Plus
+                   $99 -> $140 (caps 5), Advanced $200 -> $340 (caps 25).
+                   quickbooks.intuit.com/r/product-update/quickbooks-price-changes
+     Zapier        Professional from $29.99/mo (750 tasks) to $49/mo annual
+                   (2,000). Overage bills at 1.25x; Zaps halt at 3x the plan.
+                   nocode.mba/articles/zapier-pricing-2026
+     Agency rate   $200/hr mid-market, 6-8 billable hours a day — unchanged,
+                   already cited in content/pricing.js from FullStack Labs.
+
+   NOT re-verified, carried over from the first pass and still marked soft:
+   Dropbox Business Standard $15/seat, DocuSign Standard $25/seat, Jotform
+   Bronze $34, Calendly Standard. They move the total by tens, not hundreds,
+   but they should be checked before this goes near production.
+   ========================================================================== */
+</script>
+</body>
+</html>

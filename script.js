@@ -680,3 +680,70 @@
   window.addEventListener('load', syncRailGutter);
   syncRailGutter();
 })();
+
+/* ==========================================================================
+   The scale comparison — the slider only.
+
+   The markup is SERVER-RENDERED by scaleChart() in server/render.js, at ten
+   people, so it is complete before this file runs: a reader with no JS, a
+   crawler, and anyone who screenshots the page all get the full argument. This
+   block does one thing — mutate the numbers and the bar widths when the slider
+   moves. It never rebuilds a row, because a second markup generator is a second
+   thing to keep in step, and content/pricing.js already learned that lesson the
+   hard way with the price ladder.
+
+   All arithmetic lives in window.KD_PRICING.scaleRows()/scaleAside(), the same
+   functions the server called. Nothing is computed twice.
+   ========================================================================== */
+(function () {
+  var input = document.getElementById('scaleSeats');
+  var chart = document.getElementById('scaleChart');
+  if (!input || !chart || !window.KD_PRICING || !window.KD_PRICING.scaleRows) return;
+
+  var P = window.KD_PRICING;
+  var out = document.getElementById('scaleSeatsV');
+  var asideT = document.getElementById('scaleAsideT');
+  var asideP = document.getElementById('scaleAsideP');
+  var rows = chart.querySelectorAll('.sc-row');
+
+  function paint() {
+    var n = parseInt(input.value, 10);
+    var data = P.scaleRows(n);
+    if (out) out.textContent = data.seats;
+
+    for (var i = 0; i < rows.length && i < data.rows.length; i++) {
+      var r = data.rows[i];
+      var el = rows[i];
+      var bars = el.querySelectorAll('.sc-bar b');
+      for (var k = 0; k < bars.length; k++) bars[k].style.width = r.widths[k].toFixed(2) + '%';
+      var ys = el.querySelectorAll('.sc-yr');
+      for (var j = 0; j < ys.length; j++) ys[j].textContent = P.money(r.years[j]);
+      var v = el.querySelector('.sc-total');
+      if (v) v.textContent = P.money(r.total);
+      var yrs = el.querySelector('.sc-yrs');
+      if (yrs) {
+        yrs.textContent = 'Yr 1 ' + P.money(r.years[0]) + ' \u00b7 Yr 2 ' +
+          P.money(r.years[1]) + ' \u00b7 Yr 3 ' + P.money(r.years[2]);
+      }
+      /* Only our row's tag moves — it names the infrastructure step, which is
+         the one number on our side that is not flat. */
+      var tag = el.querySelector('.sc-tag');
+      if (tag && r.tag) tag.textContent = r.tag;
+      /* The tier line carries the glue's task tier, which steps with headcount. */
+      var tier = el.querySelector('.sc-name i');
+      if (tier) tier.innerHTML = r.tier + (r.per ? ' \u00b7 ' + r.per : '');
+    }
+
+    var a = P.scaleAside(n);
+    if (asideT) asideT.textContent = a.title;
+    /* a.html is our own copy from content/pricing.js and carries <b> only —
+       there is no user input anywhere in this path. */
+    if (asideP) asideP.innerHTML = a.html;
+  }
+
+  input.addEventListener('input', paint);
+  /* Repaint once on load: if the browser restored a dragged slider position
+     across a soft reload, the server-rendered numbers are for ten people and
+     the thumb is somewhere else. */
+  if (parseInt(input.value, 10) !== P.SCALE_DEFAULT_SEATS) paint();
+})();

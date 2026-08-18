@@ -360,6 +360,76 @@ function rentPanel() {
       </aside>`;
 }
 
+/**
+ * The scale comparison. Seven CRMs, the automation layer that has to sit on top
+ * of any of them, and one row for owning it instead — three years, at the
+ * visitor's own headcount.
+ *
+ * SERVER-RENDERED AT THE DEFAULT HEADCOUNT, deliberately. The picker above it
+ * is drawn by script.js because it is a control; this is an argument made of
+ * numbers, so it has to be in the HTML for a reader with no JS, for a crawler,
+ * and for anyone who screenshots the page before touching the slider. script.js
+ * then MUTATES these nodes rather than rebuilding them — one markup generator,
+ * so the two can never drift.
+ *
+ * Every figure comes from content/pricing.js. Nothing here computes a price.
+ */
+function scaleChart() {
+  const P = PRICING;
+  const seats = P.SCALE_DEFAULT_SEATS;
+  const data = P.scaleRows(seats);
+  const aside = P.scaleAside(seats);
+  const lo = P.SCALE_SEAT_RANGE[0];
+  const hi = P.SCALE_SEAT_RANGE[1];
+
+  const row = (r, i) => {
+    const bars = r.widths
+      .map((w, k) => '<b class="y' + (k + 1) + '" style="width:' + w.toFixed(2) + '%"></b>')
+      .join('');
+    const years = r.years.map((v) => '<div class="sc-yr">' + money(v) + '</div>').join('');
+    const yrs = r.years.map((v, k) => 'Yr ' + (k + 1) + ' ' + money(v)).join(' &middot; ');
+    const tag = r.tag ? '<div class="sc-tag">' + esc(r.tag) + '</div>' : '';
+    return `<div class="sc-row${r.kind === 'them' ? '' : ' ' + r.kind}" data-i="${i}">
+            <div class="sc-name">${esc(r.name)}<i>${esc(r.tier)}${r.per ? ' &middot; ' + esc(r.per) : ''}</i></div>
+            <div class="sc-bar">${bars}<span class="rest"></span></div>
+            ${years}
+            <div class="sc-total">${money(r.total)}</div>
+            <div class="sc-yrs">${yrs}</div>
+            ${tag}
+          </div>`;
+  };
+
+  return `<div class="scale rv" id="scale">
+        <div class="scale-head">
+          <div class="scale-ask">
+            <p class="eyebrow">Three years, at your headcount</p>
+            <h2 class="sec scale-h2">What will it cost you to scale?</h2>
+            <div class="scale-pick">
+              <div class="scale-pick-head">
+                <label for="scaleSeats">People who need a login</label>
+                <b id="scaleSeatsV">${seats}</b>
+              </div>
+              <input type="range" id="scaleSeats" min="${lo}" max="${hi}" step="1" value="${seats}"
+                     aria-label="People who need a login" aria-describedby="scaleAside">
+              <div class="scale-ends"><span>${lo}</span><span>${hi}</span></div>
+            </div>
+          </div>
+          <aside class="scale-aside" id="scaleAside" aria-live="polite">
+            <h3 id="scaleAsideT">${esc(aside.title)}</h3>
+            <p id="scaleAsideP">${aside.html}</p>
+            <p class="scale-prov">${esc(P.SCALE_CHECKED)} list prices.</p>
+          </aside>
+        </div>
+        <div class="scale-chead" aria-hidden="true">
+          <div>System</div><div>By year</div><div>Year 1</div><div>Year 2</div><div>Year 3</div><div>Total</div>
+        </div>
+        <div class="scale-chart" id="scaleChart" role="img"
+             aria-label="Three-year cost of seven CRMs, an automation layer, and one system you own, at your team size">
+          ${data.rows.map(row).join('\n          ')}
+        </div>
+      </div>`;
+}
+
 /* Unused since the hero changed on 2026-08-16: the fleet panel was the hero
    graphic and rentPanel took that slot. Kept because the same board still
    renders in #running below, so nothing about it is stale, and it is the
@@ -767,6 +837,7 @@ module.exports = {
   homeSections,
   fleetPanel,
   rentPanel,
+  scaleChart,
   liveCount: () => String(STATS.LIVE.running),
   caseStudyPage,
   workIndexPage,

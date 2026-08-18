@@ -196,6 +196,14 @@
            second pricing surface. Filled by script.js. -->
       <div class="ask-all rv" id="askAll"></div>
 
+      <!-- The scale comparison. It sits AFTER the estimate on purpose: "is that
+           good?" only arrives once somebody has seen a number, so arguing before
+           the picker would be arguing early. Server-rendered at ten people by
+           scaleChart() in server/render.js; script.js mutates those nodes when
+           the slider moves. Remove this token and the whole block silently
+           vanishes - only server/index.js logs it. -->
+      <!--{{SCALE}}-->
+
       <p class="ask-fine rv"><b>An estimate, not a quote.</b> Nothing is booked and you owe nothing. <b>What moves it from there:</b> an app in the stores, connecting the systems you already run, logins for your own customers, more than one location, bringing your old data across, a second language, SSO and audit. We price those on the call.</p>
       <p class="fine rv">Overflow beyond the monthly is $125/hr. Nonprofits get 25% off, publicly and without asking. Sometimes the answer is that you should not build anything yet, and we will say so.</p>
     </div>

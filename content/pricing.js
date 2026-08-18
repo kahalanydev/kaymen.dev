@@ -269,10 +269,180 @@ function routes() {
   }]);
 }
 
+/* --- what it costs to scale --------------------------------------------------
+   The homepage comparison chart, added 2026-08-18. It answers the one question
+   the picker below it cannot: "against what?".
+
+   EVERY LIST PRICE HERE WAS CHECKED ON 2026-08-18, and each carries its source
+   beside it. This is the second place on the site making a claim about somebody
+   else's pricing (RENT_STACK is the first), so it gets the same treatment:
+   mid-of-range, monthly billing where the vendor publishes one, annual where
+   that is the only option and said so on screen.
+
+   These rot. QuickBooks raised Plus 41% on 1 August 2026 while this was being
+   built, which is the argument for keeping the check date on the page rather
+   than in a comment nobody reads.
+
+   THREE THINGS THAT ARE NOT OBVIOUS, all three got wrong on the first pass:
+
+   1. monday sells SEATS IN BLOCKS - 3 minimum, then multiples of 5. A team of
+      six pays for ten. Modelled in blockSeats(). Drawing it as a smooth
+      per-head slope understates it at exactly the sizes most visitors are.
+   2. HubSpot Professional carries a MANDATORY one-time $1,500 onboarding fee.
+      They have a build fee too. Ours is the only one anybody prints.
+   3. OUR OWN ROW IS NOT FLAT EITHER. At forty people the server really does
+      have to get bigger, and pretending otherwise would make this chart exactly
+      as dishonest as the ones it argues with. INFRA is that cost, it steps four
+      times, and it is stated separately because it is paid to the client's own
+      provider with no markup from us.
+
+   The chart is priced at the TOOL rung, not stack. A CRM is "one part of the
+   business, on software you own"; comparing our whole-toolset price against
+   their single product compares the wrong things, and that was the only reason
+   we looked expensive at small headcounts. */
+
+const SCALE_MONTHS = 36;
+const SCALE_DEFAULT_SEATS = 10;
+const SCALE_SEAT_RANGE = [3, 40];
+const SCALE_CHECKED = 'August 2026';
+/** The rung the comparison row is priced at: like-for-like with a single CRM. */
+const SCALE_RUNG = 'tool';
+
+/** monday: 3-seat minimum, then multiples of 5. A team of six pays for ten. */
+const blockSeats = (n) => (n <= 3 ? 3 : Math.ceil(n / 5) * 5);
+
+const CRMS = [
+  /* salesforce.com/sales/pricing - Enterprise, annual billing only */
+  { name: 'Salesforce Sales Cloud', tier: 'Enterprise', seat: 175, once: 0, blocks: false,
+    note: '$175 per user, annual billing only' },
+  /* Dynamics 365 Sales Enterprise, annual commitment, quoted through a partner */
+  { name: 'Microsoft Dynamics 365 Sales', tier: 'Enterprise', seat: 105, once: 0, blocks: false,
+    note: '$105 per user, annual commitment' },
+  /* HubSpot Sales Hub Professional - $90 annual, $100 monthly, +$1,500 onboarding */
+  { name: 'HubSpot Sales Hub', tier: 'Professional', seat: 100, once: 1500, blocks: false,
+    note: '$100 per user monthly, plus $1,500 onboarding' },
+  { name: 'Salesforce Sales Cloud', tier: 'Pro Suite', seat: 100, once: 0, blocks: false,
+    note: '$100 per user' },
+  /* Zoho CRM Enterprise - $40 annual, $50 monthly */
+  { name: 'Zoho CRM', tier: 'Enterprise', seat: 50, once: 0, blocks: false,
+    note: '$50 per user monthly' },
+  /* Pipedrive renamed every plan in 2025: Professional and Power both folded
+     into Premium. Anything quoting "Pipedrive Professional" is pricing a tier
+     that no longer exists. */
+  { name: 'Pipedrive', tier: 'Premium', seat: 49, once: 0, blocks: false,
+    note: '$49 per user, annual billing' },
+  /* monday CRM Pro - $28 annual, $41 monthly, 3-seat min then blocks of 5 */
+  { name: 'monday CRM', tier: 'Pro', seat: 41, once: 0, blocks: true,
+    note: '$41 per seat monthly, 3-seat minimum then blocks of 5' },
+];
+
+/* The glue. NOT an alternative to the rows above - it sits ON TOP of whichever
+   one you pick, because none of them talks to your books, forms or storage on
+   its own. Zapier Professional, monthly billing, PUBLISHED tiers only; the
+   in-between tiers are interpolations, and interpolations are guesses. */
+const GLUE_TIERS = [
+  { upTo: 5,   tasks: '2,000',  mo: 73.50 },
+  { upTo: 25,  tasks: '10,000', mo: 193.50 },
+  { upTo: 50,  tasks: '20,000', mo: 283.50 },
+  { upTo: 999, tasks: '50,000', mo: 433.50 },
+];
+const glueTier = (n) => GLUE_TIERS.filter((t) => n <= t.upTo)[0];
+
+/* Our infrastructure. Hetzner-class compute is genuinely small - 4 vCPU/8GB is
+   about EUR 8.50 a month - so these figures are the whole bill around it:
+   backups, object storage for documents, transactional email, TLS, domain.
+   PAID TO THE CLIENT'S OWN PROVIDER, not to us, which is why it is a separate
+   line rather than folded into the monthly. */
+const INFRA = [
+  { upTo: 10,  mo: 35,  spec: '2-4 vCPU, backups, storage, mail' },
+  { upTo: 25,  mo: 55,  spec: '4 vCPU / 8GB, backups, storage, mail' },
+  { upTo: 50,  mo: 90,  spec: '8 vCPU / 16GB, backups, storage, mail' },
+  { upTo: 999, mo: 150, spec: 'dedicated, backups, storage, mail' },
+];
+const infraAt = (n) => INFRA.filter((t) => n <= t.upTo)[0];
+
+const crmMonthly = (row, n) => row.seat * (row.blocks ? blockSeats(n) : n);
+const oursMonthly = (n) => BASES.find((b) => b.id === SCALE_RUNG).mo + infraAt(n).mo;
+
+/** Every row of the chart at a given headcount. ONE function, two renderers:
+ *  server/render.js turns it into HTML, script.js mutates that same DOM from
+ *  it. Neither of them owns the arithmetic. */
+function scaleRows(seats) {
+  const n = Math.max(SCALE_SEAT_RANGE[0], Math.min(SCALE_SEAT_RANGE[1], Math.round(seats) || SCALE_DEFAULT_SEATS));
+  const base = BASES.find((b) => b.id === SCALE_RUNG);
+  const glue = glueTier(n);
+  const glueYear = glue.mo * 12;
+  const oursYear = oursMonthly(n) * 12;
+  const inf = infraAt(n);
+
+  const rows = CRMS.map((c) => {
+    const year = crmMonthly(c, n) * 12;
+    return {
+      kind: 'them', name: c.name, tier: c.tier, note: c.note,
+      per: money(c.seat) + '/user',
+      years: [year + c.once, year, year],
+    };
+  }).sort((a, b) => (b.years[0] + b.years[1] + b.years[2]) - (a.years[0] + a.years[1] + a.years[2]));
+
+  rows.push({
+    kind: 'glue', name: 'Zapier, to glue them together', tier: glue.tasks + ' tasks a month',
+    note: 'overage bills at 1.25x, and Zaps halt at 3x', per: '',
+    years: [glueYear, glueYear, glueYear],
+    tag: 'on top of whichever you pick',
+  });
+  rows.push({
+    kind: 'ours', name: 'Your own system',
+    tier: money(base.from) + ' once, then ' + money(base.mo) + '/mo',
+    note: 'no per-seat licence, ever', per: '$0/user',
+    years: [base.from + oursYear, oursYear, oursYear],
+    tag: money(inf.mo) + '/mo of that is infrastructure, paid to your provider - no markup',
+  });
+
+  rows.forEach((r) => { r.total = r.years[0] + r.years[1] + r.years[2]; });
+  const top = Math.max.apply(null, rows.map((r) => r.total));
+  rows.forEach((r) => { r.widths = r.years.map((v) => (v / top) * 100); });
+  return { seats: n, rows, ours: rows[rows.length - 1].total, oursYear };
+}
+
+/** The note beside the chart. It concedes when the numbers say to concede,
+ *  which is the only reason anybody believes it when it does not. */
+function scaleAside(seats) {
+  const r = scaleRows(seats);
+  const n = r.seats;
+  const under = CRMS.filter((c) => c.once + crmMonthly(c, n) * 12 * 3 < r.ours);
+  if (under.length) {
+    let cross = null;
+    for (let k = n + 1; k <= 200 && !cross; k++) {
+      const at = scaleRows(k);
+      const cheapest = Math.min.apply(null, CRMS.map((c) => c.once + crmMonthly(c, k) * 12 * 3));
+      if (cheapest > at.ours) cross = k;
+    }
+    const names = under.map((c) => c.name);
+    return {
+      title: 'Why the cheap rows win here',
+      html: '<b>' + names.join(', ') + '</b> ' + (names.length === 1 ? 'comes' : 'come') +
+        ' in under us at ' + n + ' people, and we are not going to pretend otherwise. They are licences, ' +
+        'not systems: they stop the day you stop paying, and you cannot take them anywhere. Under about <b>' +
+        (cross ? cross + ' people' : 'any size we build for') +
+        '</b> that trade is usually the right one, and we will say so on a call.',
+    };
+  }
+  const dearest = CRMS[0];
+  return {
+    title: 'Why year one looks expensive',
+    html: 'Ours is the only row with a build fee, so <b>year one is the only year we cost more</b>. After it, <b>' +
+      money(r.oursYear) + ' a year</b> against ' + money(crmMonthly(dearest, n) * 12) +
+      ' &mdash; every year, at any headcount, and at the end of it the system is yours rather than rented back to you.',
+  };
+}
+
 const API = {
   OVERFLOW_HOURLY, PILOT, PARTNER_AT, PARTNER,
   BASES, ADDONS, UNSURE, COMPARE, quote, routes,
   RENT_STACK, rentTotal, reconcileMonthly, reconcileBreakEven,
+  CRMS, GLUE_TIERS, INFRA, SCALE_MONTHS, SCALE_DEFAULT_SEATS, SCALE_SEAT_RANGE,
+  SCALE_CHECKED, SCALE_RUNG, blockSeats, glueTier, infraAt, crmMonthly, oursMonthly,
+  scaleRows, scaleAside, money,
 };
 
 /* Dual export. require()d by server/render.js, and served as a plain script to

@@ -137,7 +137,7 @@ app.use('/portal', express.static(path.join(__dirname, '..', 'portal'), {
 // per-page OG tags. Templates are cached in production and re-read in dev so
 // editing content doesn't need a restart.
 const fs = require('fs');
-const { homeSections, rentPanel, liveCount, caseStudyPage, workIndexPage, notFoundPage } = require('./render');
+const { homeSections, rentPanel, scaleChart, liveCount, caseStudyPage, workIndexPage, notFoundPage } = require('./render');
 
 const IS_DEV = process.env.NODE_ENV !== 'production';
 const HOME_TEMPLATE_PATH = path.join(__dirname, '..', 'index.html');
@@ -150,6 +150,8 @@ const PLACEHOLDERS = [
   { token: '<!--{{WORK}}-->', render: homeSections, required: true },
   // hero panel: the subscription stack vs owning one system, from content/pricing.js
   { token: '<!--{{RENT}}-->', render: rentPanel, required: true },
+  // three years against seven CRMs, at the visitor's headcount
+  { token: '<!--{{SCALE}}-->', render: scaleChart, required: true },
   // live-systems count, from the Coolify API at last stats refresh
   { token: '<!--{{LIVE}}-->', render: liveCount, required: false },
 ];
