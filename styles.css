@@ -398,8 +398,23 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
 
 /* what they get — the offer, not a second complaint about the competition */
 .gets{display:grid;gap:8px;margin-top:22px;list-style:none}
-@media (min-width:560px){.gets{grid-template-columns:1fr 1fr}}
+/* TWO COLUMNS FROM 380px, not 560. One per row cost 369px on a 390px phone —
+   35% of the hero — for six blocks that are four words and a hint each. Two up
+   is 232px, and the blocks are short enough to take the narrower measure: the
+   longest title, "Everything in one system", wraps to two lines and that reads
+   fine because the tick and the bold already carry the scanning. */
+@media (min-width:380px){.gets{grid-template-columns:1fr 1fr}}
 @media (min-width:1040px){.gets{grid-template-columns:1fr 1fr 1fr}}
+/* Tighter chrome on a phone. The card treatment is doing less work at this size
+   — nothing is being compared across columns — so the padding and type come
+   down and the border stays only to keep the group readable as a group. */
+@media (max-width:559px){
+  .gets{gap:6px;margin-top:18px}
+  .gets li{padding:8px 10px;gap:6px}
+  .gets b{font-size:12.5px}
+  .gets span span{font-size:11px;line-height:1.3}
+  .gets svg{width:12px;height:12px;margin-top:2px}
+}
 .gets li{
   display:flex;align-items:flex-start;gap:8px;
   border:1px solid rgba(43,188,179,.3);background:var(--accent-soft);
@@ -980,6 +995,27 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
   content:"";position:absolute;width:420px;height:420px;border-radius:50%;
   background:rgba(43,188,179,.16);filter:blur(80px);top:-160px;right:-120px;pointer-events:none;
 }
+/* Two columns: a person on the left, the invitation on the right. The contact
+   column is fixed rather than fractional so the name and the phone number never
+   wrap — a number that breaks across two lines stops reading as a number. */
+@media (min-width:820px){
+  .talk{display:grid;grid-template-columns:270px 1fr;gap:48px;align-items:center}
+}
+.talk-who{position:relative}
+@media (max-width:819px){
+  .talk-who{padding-bottom:24px;margin-bottom:26px;border-bottom:1px solid rgba(255,255,255,.14)}
+}
+.talk-say{position:relative}
+.tw-k{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:rgba(255,255,255,.45);margin:0}
+.tw-name{font-family:var(--display);font-size:19px;font-weight:700;letter-spacing:-.02em;color:#fff;margin:7px 0 14px;max-width:none}
+.tw-line{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,.82);font-size:14.5px;padding:7px 0;transition:color .2s var(--ease)}
+.tw-line svg{width:15px;height:15px;flex:none;opacity:.6}
+.tw-line:hover{color:var(--accent)}
+.tw-line:hover svg{opacity:1}
+/* tel: and mailto: are the one place on this page where a tap target has to be
+   comfortable — a mistyped phone number is a lost enquiry, not a bad pixel */
+@media (max-width:819px){.tw-line{padding:10px 0;font-size:15.5px}}
+
 .talk h2{font-size:clamp(1.6rem,3.2vw,2.1rem);position:relative;font-weight:700}
 .talk p{color:rgba(255,255,255,.62);margin-top:14px;font-size:15px;max-width:44ch;position:relative;line-height:1.7}
 .talk .actions{position:relative}
