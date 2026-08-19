@@ -155,7 +155,10 @@ const check = (name, ok, detail) => {
   check('no-JS: both figures are in the served HTML', (html.match(/class="shot(?: on)?"/g) || []).length >= 5,
     (html.match(/class="shot(?: on)?"/g) || []).length + ' figures');
 
-  chrome.kill();
   console.log(`\n${pass} passed, ${fails.length} failed`);
-  process.exit(fails.length ? 1 : 0);
+  /* finish(), not chrome.kill() + process.exit() — see finish() above. Exiting
+     on a live websocket handle makes libuv assert on Windows, which crashed the
+     run AFTER every check had passed and made this useless as a gate. It was
+     defined for exactly this and then not used here. */
+  finish(fails.length ? 1 : 0);
 })().catch((e) => { console.error('FAILED: ' + e.message); process.exit(1); });

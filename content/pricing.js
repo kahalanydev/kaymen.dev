@@ -64,7 +64,37 @@ const PARTNER = { monthly: 3500, months: 12 };
      name  — the full line, used in the picker list
      chip  — three or four words, used in the pill row
      say   — how it reads inside "I need ___", so it must start mid-sentence
-   ticks are the three differentiators the old #need section hid behind a click. */
+
+   `axes` replaced `ticks` on 2026-08-19, same cause as `product`. The old ticks
+   were three FREELY CHOSEN attributes per rung — twelve different lines across
+   four cards — so there was nothing to read across and no way to tell the rungs
+   apart. Worse, most of them were true of every rung, so listing backups on the
+   first card alone implied the other three had none, and "no per-seat fee"
+   appeared on two cards as though it distinguished them. Everything universal
+   now lives in UNIVERSAL, said once above the row; each card answers the same
+   four questions in AXES, in the same order.
+
+   THE RULE THAT KEEPS IT HONEST, and the one scripts/verify-ask.js enforces: an
+   axis whose answer is identical on ALL FOUR rungs is a universal wearing a
+   label, and belongs in UNIVERSAL. Two rungs coinciding is fine and is often the
+   point — `running` and `stack` both include small changes and `tool` does not,
+   which is a real difference and half the reason $450 sits above $300. */
+
+/* True of every rung, so said once rather than scattered through the cards as
+   though it were a difference. The last line is not marketing: clause 5 of
+   legal/CLIENT-AGREEMENT.md is what makes it enforceable. */
+const UNIVERSAL = [
+  'You own the code, the data and the servers',
+  'Logins for everyone, no per-seat fee',
+  'Backups verified, patched, monitored',
+  'A person answers when it breaks',
+  'Take it elsewhere any time, no exit fee',
+];
+
+/* The four questions every card answers, in this order. Named here so a rung
+   cannot quietly grow a fifth or answer them in a different order. */
+const AXES = ['Covers', 'Replaces', 'Reporting', 'Changes'];
+
 const BASES = [
   {
     id: 'running', from: 0, mo: 450,
@@ -73,8 +103,12 @@ const BASES = [
     name: 'Keep alive something that already works',
     say: 'someone to keep a system alive that already works',
     note: 'It exists and it runs. The person who built it is leaving, or already has.',
-    ticks: ['Backups verified, not assumed', 'Patches and dependency updates', 'Someone who answers when it breaks'],
-    plan: 'Patched, backed up, monitored, and small changes as they come up.',
+    axes: [
+      'A system you already have',
+      'Nothing — we take it as it is',
+      'Whatever it already does',
+      'Small changes, as they come',
+    ],
   },
   {
     /* THE ENTRY RUNG, AND THE DEFAULT. It has been reworded twice and both
@@ -84,8 +118,7 @@ const BASES = [
        worth $2,500 to anyone. What is actually being sold is a system — a real
        database with logins, that they own — for one part of the business. Price
        a system at $2,500 and it reads as cheap, which is the truth. So this rung
-       names the thing, not the task, and the ticks answer "why not a
-       spreadsheet" rather than describing how we work.
+       names the thing, not the task.
 
        THE MONTHLY WENT $200 to $300 on 2026-08-16 (Ariel: "$200 a month is
        low"). He is right, and the ladder's own evidence says so: a light live
@@ -110,8 +143,17 @@ const BASES = [
     name: 'One part of the business, on software you own',
     say: 'a real system for the part of the business still running on spreadsheets',
     note: 'Quotes, jobs, bookings, stock, who owes what. A real database with logins for your people, not a spreadsheet that breaks when two of them open it at once.',
-    ticks: ['A real database behind it, not a spreadsheet', 'Logins for everyone who needs one, no per-seat fee', 'Yours, on your infrastructure and in your accounts'],
-    plan: 'Patched, backed up, monitored, and we answer.',
+    /* CHANGES SAYS "QUOTED", NOT "INCLUDED", AND THAT IS NOT AN OVERSIGHT. This
+       is the only rung whose monthly never promised change work — the other
+       three do. Writing "small changes as they come up" here to make the four
+       cards look even would be inventing a commercial term, and it would also
+       erase the only reason $300 sits below $450 for a comparable system. */
+    axes: [
+      'One workflow, end to end',
+      'A tool or a spreadsheet',
+      'That one part only',
+      'Quoted as they come',
+    ],
   },
   {
     id: 'stack', from: 6500, mo: 450,
@@ -120,8 +162,12 @@ const BASES = [
     name: 'Work spread across tools that do not talk to each other',
     say: 'one place where the answer lives, not six tools that do not talk',
     note: 'You have the software. What you do not have is one place where the answer lives, so somebody reconciles it by hand.',
-    ticks: ['One source of truth, not six exports', 'No per-seat licence, add who you like', 'Yours to take elsewhere at any time'],
-    plan: 'Kept running, plus the small changes as they come up.',
+    axes: [
+      'Several tools that do not talk',
+      'Three to six tools',
+      'The whole business',
+      'Small changes, as they come',
+    ],
   },
   {
     id: 'platform', from: 15000, mo: 1200,
@@ -130,8 +176,12 @@ const BASES = [
     name: 'Several systems, several teams, and the reporting across all of it',
     say: 'several systems, several teams, and reporting that crosses all of them',
     note: 'Questions that can only be answered today by exporting everything and merging it by hand.',
-    ticks: ['Ten hours of development a month', 'Reporting across every team', 'Rolls over one month if unused'],
-    plan: '10 hours of development a month, rolling over one month.',
+    axes: [
+      'Multiple teams and locations',
+      'A whole stack',
+      'Every team, every location',
+      '10 dev hours a month, rolls over',
+    ],
   },
 ];
 
@@ -263,12 +313,16 @@ const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
  */
 function routes() {
   return BASES.map((b) => ({
-    id: b.id, chip: b.chip, name: b.name, say: b.say, note: b.note, ticks: b.ticks,
-    /* `plan` is what the MONTHLY buys, and it is the answer to the question the
-       picker could not answer: "what does each of these actually include?" Only
-       the rungs have one — the pilot is not a plan, which is why the comparison
-       grid keys off its presence rather than filtering on id. */
-    plan: b.plan,
+    id: b.id, chip: b.chip, product: b.product, name: b.name, say: b.say, note: b.note,
+    /* Paired with their labels HERE rather than in script.js, so the questions
+       and the answers cannot drift apart and a rung that grows a fifth answer is
+       loud about it instead of rendering an unlabelled row. Only the rungs have
+       `axes` — the pilot is not a package, which is why the comparison grid keys
+       off their presence rather than filtering on id. */
+    axes: b.axes.map((v, i) => {
+      if (!AXES[i]) throw new Error(`pricing: rung "${b.id}" has more answers than AXES has questions`);
+      return [AXES[i], v];
+    }),
     price: b.from ? 'from ' + money(b.from) : 'no build',
     n1: b.from ? money(b.from) : 'No build fee',
     s1: b.from ? 'to build, once' : 'we take it as it is',
@@ -458,7 +512,7 @@ function scaleAside(seats) {
 
 const API = {
   OVERFLOW_HOURLY, PILOT, PARTNER_AT, PARTNER,
-  BASES, ADDONS, UNSURE, COMPARE, quote, routes,
+  BASES, ADDONS, UNSURE, COMPARE, quote, routes, UNIVERSAL, AXES,
   RENT_STACK, rentTotal, reconcileMonthly, reconcileBreakEven,
   CRMS, GLUE_TIERS, INFRA, SCALE_MONTHS, SCALE_DEFAULT_SEATS, SCALE_SEAT_RANGE,
   SCALE_CHECKED, SCALE_RUNG, blockSeats, glueTier, infraAt, crmMonthly, oursMonthly,

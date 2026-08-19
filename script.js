@@ -156,9 +156,20 @@
        and the pills were already two, and this follows the same rule: nothing
        here owns askSel, so none of them can drift apart.
 
-       Only rungs with a `plan` are shown. The pilot is not a package and quote()
+       Only rungs with `axes` are shown. The pilot is not a package and quote()
        does not know about it either, so putting it in a row of things you get
        for a monthly fee would be the one card that lies about what it is.
+
+       THE HEADING IS `product`, NOT `chip`. A chip names the PROBLEM, which is
+       right in the pill row answering "which of these are you" and inverts the
+       moment it sits above a price — "Tools that do not talk · from $6,500"
+       reads as paying $6,500 for tools that do not talk.
+
+       THE BAND ABOVE CARRIES EVERYTHING UNIVERSAL, and it is what lets the cards
+       be comparable without becoming a table: each one now answers the same four
+       questions with a different answer, and nothing true of all four is stated
+       inside any of them. See the rule beside UNIVERSAL in content/pricing.js
+       before adding a row here.
 
        Money is a single muted line at the FOOT of each card, never the heading.
        The moment the price becomes the column header this stops being "what
@@ -166,17 +177,19 @@
        is the frame the whole page argues against, and it would put $15,000 on
        screen before anyone has read a word. */
     var askAll = document.getElementById('askAll');
-    var askPkgs = ASK.filter(function (r) { return r.plan; });
+    var askPkgs = ASK.filter(function (r) { return r.axes; });
     if (askAll) {
       askAll.innerHTML =
         '<p class="ask-hint">or see what each one includes</p>' +
+        '<div class="ask-uni"><b>Every one of them includes</b><ul>' +
+          window.KD_PRICING.UNIVERSAL.map(function (u) { return '<li>' + askEsc(u) + '</li>'; }).join('') +
+        '</ul></div>' +
         '<div class="ask-grid">' + askPkgs.map(function (r) {
           return '<button class="ask-card" data-id="' + r.id + '" aria-pressed="false">' +
-            '<b>' + askEsc(r.chip) + '</b>' +
-            '<ul>' + r.ticks.map(function (t) {
-              return '<li>' + askEsc(t) + '</li>';
+            '<b>' + askEsc(r.product) + '</b>' +
+            '<ul>' + r.axes.map(function (a) {
+              return '<li><em>' + askEsc(a[0]) + '</em>' + askEsc(a[1]) + '</li>';
             }).join('') + '</ul>' +
-            '<i class="pl"><span>The monthly covers</span>' + askEsc(r.plan) + '</i>' +
             '<i class="mn">' + askEsc(r.money) + '</i>' +
           '</button>';
         }).join('') + '</div>';

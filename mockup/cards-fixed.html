@@ -1,4 +1,13 @@
-/* ============================================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kaymen.dev — the cards, fixed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>/* ============================================================================
    kaymen.dev — "Quiet"
 
    Ported from mockup/v3-quiet.html (2026-08-15). Palette lifted verbatim from
@@ -806,35 +815,6 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
    the page argues against — and it would put $15,000 in front of somebody before
    they had read what any of it is for. */
 .ask-all{margin-top:6px}
-
-/* Everything true of all four rungs, said ONCE, above the row.
-   Added 2026-08-19. Without it the cards had to carry the universals, and a
-   card that lists "backups verified" makes the other three look like they have
-   none — which is how four packages ended up indistinguishable while repeating
-   each other. See the rule beside UNIVERSAL in content/pricing.js.
-
-   DELIBERATELY NOT --accent-soft. That is the selected-card treatment, and a
-   teal panel sitting directly above four cards reads as a fifth, already-chosen
-   one. Neutral panel, teal ticks — the same check chip .ask-ticks uses, so this
-   is the site's existing vocabulary rather than a new one. */
-.ask-uni{
-  margin-top:14px;padding:14px 18px 15px;background:var(--bg-alt);
-  border:1px solid var(--line);border-radius:14px;
-}
-.ask-uni > b{
-  display:block;font-size:9.5px;font-weight:700;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--muted);opacity:.85;margin-bottom:10px;
-}
-.ask-uni ul{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px 24px}
-/* Same 1000px break as .ask-grid below it, so the band and the cards change
-   shape together rather than 60px apart. */
-@media (max-width:1000px){.ask-uni ul{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:560px){.ask-uni ul{grid-template-columns:1fr}}
-.ask-uni li{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--ink);line-height:1.45}
-.ask-uni li::before{
-  content:'';flex:none;width:14px;height:14px;margin-top:2px;border-radius:50%;
-  background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23229e96' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/9px no-repeat;
-}
 /* position:relative so the cards measure their offsetLeft against the strip and
    script.js can centre the chosen one by setting scrollLeft. No visual effect. */
 .ask-grid{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px;align-items:stretch}
@@ -854,34 +834,31 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
 }
 .ask-card{
   display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;
-  padding:16px 17px 15px;background:#fff;cursor:pointer;text-align:left;
+  padding:15px 16px 14px;background:#fff;cursor:pointer;text-align:left;
   transition:border-color .2s var(--ease),background .2s var(--ease);
 }
 .ask-card:hover{border-color:#d0d3d9}
 .ask-card.on{border-color:rgba(43,188,179,.55);background:var(--accent-soft)}
-/* `product`, never `chip` — a chip names the problem, and above a price that
-   inverts. The type went up a step at the same time: with the universals gone,
-   each card carries four short answers instead of three long claims plus a
-   paragraph, so the room was already there. */
-.ask-card > b{font-size:14.5px;font-weight:700;letter-spacing:-.015em;line-height:1.3}
-/* The same four labelled rows on every card, in the same order, so the eye can
-   travel ACROSS the row and compare like with like. That is what makes these
-   comparable without becoming a tier table.
-   The tick glyph came off with the old ticks and should stay off: a check
-   asserts "you get this", which is true of a universal and plainly wrong above
-   an answer like "quoted as they come".
-   margin-bottom:auto absorbs the uneven row heights, so the money still lands
-   on one baseline across all four however long the answers run. */
-.ask-card ul{list-style:none;margin-top:13px;margin-bottom:auto;display:flex;flex-direction:column;gap:9px}
-.ask-card li{font-size:13px;color:var(--ink);line-height:1.45}
-.ask-card li em{
-  display:block;font-style:normal;font-size:9.5px;font-weight:700;letter-spacing:.13em;
-  text-transform:uppercase;color:var(--muted);opacity:.75;margin-bottom:2px;
+.ask-card > b{font-size:13.5px;font-weight:700;letter-spacing:-.01em;line-height:1.35}
+.ask-card ul{list-style:none;margin-top:11px;display:flex;flex-direction:column;gap:7px}
+.ask-card li{position:relative;padding-left:17px;font-size:12px;color:var(--muted);line-height:1.5}
+.ask-card li::before{
+  content:'';position:absolute;left:0;top:4px;width:11px;height:11px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23229e96' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/11px no-repeat;
 }
-.ask-card.on li em{color:var(--accent-dark);opacity:1}
+/* margin-top:auto pins the two footer lines to the bottom, so the money sits on
+   one baseline across all four cards however uneven the tick lists are */
+.ask-card .pl{
+  display:block;font-style:normal;font-size:12px;color:var(--muted);line-height:1.5;
+  margin-top:auto;padding-top:12px;
+}
+.ask-card .pl span{
+  display:block;font-size:9.5px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);opacity:.75;margin-bottom:3px;
+}
 .ask-card .mn{
-  display:block;font-style:normal;font-family:var(--display);font-size:13px;font-weight:700;
-  letter-spacing:-.01em;color:var(--muted);margin-top:15px;padding-top:11px;
+  display:block;font-style:normal;font-family:var(--display);font-size:12px;font-weight:700;
+  letter-spacing:-.01em;color:var(--muted);margin-top:10px;padding-top:10px;
   border-top:1px solid var(--line);font-variant-numeric:tabular-nums;
 }
 .ask-card.on .mn{color:var(--accent-dark);border-top-color:rgba(43,188,179,.3)}
@@ -1429,3 +1406,151 @@ footer{padding:36px 0 46px;border-top:1px solid var(--line);margin-top:80px}
   .rail-brand{background-image:url("/assets/brand/kaymen-lockup.svg")}
   .brandbar{background-image:url("/assets/brand/kaymen-lockup.svg")}
 }
+
+
+/* The ONE new rule. Each tick becomes a labelled row so the same three
+   questions line up across all four cards — which is what makes them
+   comparable without turning them into a table. */
+.ask-card ul.axl li{display:block;padding-left:0}
+.ask-card ul.axl li::before{content:none}
+.ask-card ul.axl li em{
+  display:block;font-style:normal;font-size:10.5px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;
+}
+.ask-card.on ul.axl li em{color:var(--accent-dark)}
+
+.uni{border:1px solid rgba(43,188,179,.3);background:var(--accent-soft);border-radius:14px;padding:15px 20px;margin-top:14px}
+.uni b{display:block;font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:9px}
+.uni ul{list-style:none;display:flex;flex-wrap:wrap;gap:6px 26px}
+.uni li{font-size:13px;color:var(--ink);display:flex;gap:7px}
+.uni li::before{content:"✓";color:var(--accent-dark);font-weight:700}
+@media (max-width:700px){.uni ul{flex-direction:column}}
+
+
+body{margin:0;background:var(--bg-alt)}
+.mk{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.mk-in{max-width:1240px;margin:0 auto;padding:11px 22px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.mk h1{font-family:var(--display);font-size:13.5px;font-weight:600;margin:0}
+.mk h1 span{color:var(--muted);font-weight:400}
+.seg{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:9px;border:1px solid var(--line)}
+.seg button{font:inherit;font-size:12.5px;font-weight:500;border:0;background:transparent;color:var(--muted);padding:6px 12px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.mk .sp{flex:1}
+.note{max-width:1240px;margin:0 auto;padding:20px 22px 0}
+.note .pane{display:none}.note .pane.on{display:block}
+.note h2{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.02em;margin:0 0 6px}
+.note p{font-size:14.5px;color:var(--muted);max-width:84ch;margin:0 0 8px}
+.note p b{color:var(--ink);font-weight:600}
+.note .risk{font-size:13.5px;border-left:2px solid var(--rent);padding-left:12px}
+.note .risk b{color:var(--rent-dark);font-weight:600}
+.stagewrap{padding:18px 0 70px}
+.stage{margin:0 auto;background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 40px -22px rgba(0,0,0,.18);transition:width .28s var(--ease)}
+.stage.w-desk{width:1160px}.stage.w-tab{width:860px}.stage.w-phone{width:390px}
+.stage .wrap{padding:34px 30px}
+.v{display:none}.v.on{display:block}
+</style>
+</head>
+<body>
+<div class="mk"><div class="mk-in">
+  <h1>The cards, fixed <span>— same design, different words</span></h1>
+  <div class="seg" id="dseg" role="group" aria-label="Version">
+    <button data-d="now" aria-pressed="true">What ships today</button>
+    <button data-d="fix" aria-pressed="false">Proposed</button>
+  </div>
+  <div class="sp"></div>
+  <div class="seg" id="wseg" role="group" aria-label="Width">
+    <button data-w="w-desk" aria-pressed="true">1160</button>
+    <button data-w="w-tab" aria-pressed="false">860</button>
+    <button data-w="w-phone" aria-pressed="false">390</button>
+  </div>
+</div></div>
+
+<div class="note">
+  <div class="pane on" data-p="now">
+    <h2>What ships today</h2>
+    <p>The design is right — cards, weight, the selected one obvious. The <b>contents</b> are the problem, and it is three separate faults at once.</p>
+    <p class="risk"><b>Heading names the problem, not the product:</b> "Tools that do not talk · from $6,500" reads as paying $6,500 for tools that do not talk. <b>Ticks are not parallel:</b> four cards, twelve different attributes, nothing to read across. <b>Universals masquerade as differences:</b> only card one mentions backups, so the other three look like they lack them — and "no per-seat fee" is claimed twice, on two different cards, as though it distinguished them.</p>
+  </div>
+  <div class="pane" data-p="fix">
+    <h2>Proposed — same cards, three content fixes</h2>
+    <p><b>1.</b> Headings are product names. <b>2.</b> Every card answers the same three questions — covers, replaces, reporting — so you can read across without a table. <b>3.</b> The six universals lift into the band above, said once, which is what frees the cards to carry only what differs.</p>
+    <p class="risk">Nothing about <code>.ask-card</code>, <code>.ask-grid</code>, the highlight, the swipe below 560px or <code>askSel</code> changes. One new CSS rule for the labelled rows. This is a content change wearing the design that already works — which is why it is the suggestion instead of the matrix.</p>
+  </div>
+</div>
+
+<div class="stagewrap"><div class="stage w-desk" id="stage">
+  <div class="wrap">
+    <div class="v on" data-v="now">
+      <p class="ask-hint">or see what each one includes</p>
+      <div class="ask-grid">
+  <button class="ask-card" aria-pressed="false">
+    <b>Something that exists</b>
+    <ul><li>Backups verified, not assumed</li><li>Patches and dependency updates</li><li>Someone who answers when it breaks</li></ul>
+    <i class="pl"><span>The monthly covers</span>Patched, backed up, monitored, and small changes as they come up.</i>
+    <i class="mn">no build fee · $450/mo</i>
+  </button>
+  <button class="ask-card on" aria-pressed="true">
+    <b>Your first real system</b>
+    <ul><li>A real database behind it, not a spreadsheet</li><li>Logins for everyone who needs one, no per-seat fee</li><li>Yours, on your infrastructure and in your accounts</li></ul>
+    <i class="pl"><span>The monthly covers</span>Patched, backed up, monitored, and we answer.</i>
+    <i class="mn">from $2,500 · $300/mo</i>
+  </button>
+  <button class="ask-card" aria-pressed="false">
+    <b>Tools that do not talk</b>
+    <ul><li>One source of truth, not six exports</li><li>No per-seat licence, add who you like</li><li>Yours to take elsewhere at any time</li></ul>
+    <i class="pl"><span>The monthly covers</span>Kept running, plus the small changes as they come up.</i>
+    <i class="mn">from $6,500 · $450/mo</i>
+  </button>
+  <button class="ask-card" aria-pressed="false">
+    <b>Several systems at once</b>
+    <ul><li>Ten hours of development a month</li><li>Reporting across every team</li><li>Rolls over one month if unused</li></ul>
+    <i class="pl"><span>The monthly covers</span>10 hours of development a month, rolling over one month.</i>
+    <i class="mn">from $15,000 · $1,200/mo</i>
+  </button></div>
+    </div>
+    <div class="v" data-v="fix">
+      <p class="ask-hint">or see what each one includes</p>
+      <div class="uni"><b>Every one of them includes</b><ul><li>You own the code, the data and the servers</li><li>Logins for everyone — no per-seat fee, ever</li><li>Backups verified, patched, monitored</li><li>A person answers when it breaks</li><li>Yours to take elsewhere any time, no exit fee</li></ul></div>
+      <div class="ask-grid" style="margin-top:16px">
+  <button class="ask-card" aria-pressed="false">
+    <b>Keep it running</b>
+    <ul class="axl"><li><em>Covers</em>A system you already have</li><li><em>Replaces</em>Nothing — we take it as it is</li><li><em>Reporting</em>Whatever it already does</li></ul>
+    <i class="mn">no build fee · $450/mo</i>
+  </button>
+  <button class="ask-card on" aria-pressed="true">
+    <b>One part of the business</b>
+    <ul class="axl"><li><em>Covers</em>One workflow, end to end</li><li><em>Replaces</em>A tool or a spreadsheet</li><li><em>Reporting</em>For that one part</li></ul>
+    <i class="mn">from $2,500 · $300/mo</i>
+  </button>
+  <button class="ask-card" aria-pressed="false">
+    <b>The whole toolset</b>
+    <ul class="axl"><li><em>Covers</em>Work spread across several tools</li><li><em>Replaces</em>Three to six tools</li><li><em>Reporting</em>One source of truth, across the business</li></ul>
+    <i class="mn">from $6,500 · $450/mo</i>
+  </button>
+  <button class="ask-card" aria-pressed="false">
+    <b>Several teams, one platform</b>
+    <ul class="axl"><li><em>Covers</em>Multiple teams and locations</li><li><em>Replaces</em>A whole stack</li><li><em>Reporting</em>Across every team, plus 10 dev hours a month</li></ul>
+    <i class="mn">from $15,000 · $1,200/mo</i>
+  </button></div>
+    </div>
+  </div>
+</div></div>
+
+<script>
+var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+$$('#dseg button').forEach(function (b) { b.addEventListener('click', function () {
+  $$('#dseg button').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+  $$('.v').forEach(function (v) { v.classList.toggle('on', v.dataset.v === b.dataset.d); });
+  $$('.note .pane').forEach(function (p) { p.classList.toggle('on', p.dataset.p === b.dataset.d); });
+}); });
+$$('#wseg button').forEach(function (b) { b.addEventListener('click', function () {
+  $$('#wseg button').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+  document.getElementById('stage').className = 'stage ' + b.dataset.w;
+}); });
+$$('.ask-card').forEach(function (c) { c.addEventListener('click', function () {
+  var sibs = $$('.ask-card', c.parentElement);
+  sibs.forEach(function (s) { s.classList.toggle('on', s === c); s.setAttribute('aria-pressed', String(s === c)); });
+}); });
+</script>
+</body>
+</html>

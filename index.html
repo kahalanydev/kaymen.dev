@@ -194,7 +194,14 @@
            includes". This is deliberately NOT a tier table: it is ordered by the
            situation you are in, the money is a small line at the foot of each
            card, and it is a third way into the same askSel state rather than a
-           second pricing surface. Filled by script.js. -->
+           second pricing surface.
+
+           Rebuilt 2026-08-19, still not a table. A band of everything true of
+           all four sits above, and each card answers the same four questions
+           with a different answer — so the row can be read ACROSS without the
+           cards becoming columns. Filled by script.js; the words and the rule
+           that keeps them honest are in content/pricing.js, and
+           scripts/verify-ask.js fails if either drifts. -->
       <div class="ask-all rv" id="askAll"></div>
 
       <!-- The scale comparison. It sits AFTER the estimate on purpose: "is that
