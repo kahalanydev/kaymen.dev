@@ -434,6 +434,25 @@ function scaleChart() {
       </div>`;
 }
 
+/* THE RENT PANEL CAME OUT OF THE HERO on 2026-08-18. Two reasons, and the
+   second decided it:
+
+     1. It argued the same thing as the comparison chart in #price, less well -
+        one static stack against seven named CRMs at the visitor own headcount.
+     2. Its numbers had gone wrong. The books line was built on QuickBooks
+        Essentials, which caps at THREE users, so a team of five could not
+        legally be on it - and that tier rose on 1 August 2026. The line items
+        summed to ~$34/head while afterHires implied $38. A claim about
+        somebody else pricing, wrong, above the fold.
+
+   rentPanel() below is kept, not deleted: the slot is expected to be refilled,
+   most likely by a per-hire teaser reading off scaleRows() so it can never
+   drift from the chart the way this did.
+
+   This reasoning lives HERE rather than in index.html because index.html ships
+   to the browser - a comment reciting the wrong competitor price puts it back
+   into view-source on the page that removed it. */
+
 /* Unused since the hero changed on 2026-08-16: the fleet panel was the hero
    graphic and rentPanel took that slot. Kept because the same board still
    renders in #running below, so nothing about it is stale, and it is the

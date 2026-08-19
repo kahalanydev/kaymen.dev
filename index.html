@@ -147,25 +147,13 @@
         </div>
       </div>
 
-      <!-- THE PANEL SLOT IS EMPTY, 2026-08-18, and the hero is single column.
+      <!-- The hero panel slot is empty since 2026-08-18 and the hero is single
+           column. Reasoning lives beside rentPanel() in server/render.js.
 
-           What used to sit here was the rent panel: five subscription lines and
-           a $290 total. It went for two reasons, and the second is the one that
-           decided it.
-
-           1. It argued the same thing as the comparison chart in #price, less
-              well — one static stack against seven named CRMs at the visitor's
-              own headcount.
-           2. Its numbers had gone wrong. "Invoicing & books $70" was built on
-              QuickBooks Essentials, which caps at THREE users — a team of five
-              cannot legally be on it — and Essentials rose to $85 on 1 August.
-              The line items summed to ~$34/head while afterHires implied $38.
-              A claim about somebody else's pricing, wrong, above the fold.
-
-           rentPanel() is still in server/render.js and .stack is still in
-           styles.css, both annotated. This is "for now" — the slot is expected
-           to be filled again, most likely by a per-hire teaser reading off
-           scaleRows() so it can never drift from the chart the way this did. -->
+           COMMENTS SHIP. Keep explanation that quotes old copy, competitor
+           prices or removed figures on the SERVER side — this file is delivered
+           to every visitor, and three separate comments here have had to be
+           trimmed for reciting exactly the thing their change removed. -->
     </div>
   </section>
 
