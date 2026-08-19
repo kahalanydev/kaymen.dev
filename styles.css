@@ -605,16 +605,23 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
    changes length per row and a column would leave a ragged gap on the short
    one. */
 .pair-badge{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-dark);background:var(--accent-soft);border:1px solid rgba(43,188,179,.3);padding:4px 10px;border-radius:20px}
+/* NARROWED RATHER THAN CROPPED, 2026-08-18 — and the narrowing is what removes
+   the crop, which is the part worth understanding before anyone widens it back.
+
+   These are 900x562 shots. At half of a 1120px column each box was 503px wide,
+   so object-fit:cover scaled the image to 503x314 and discarded the bottom
+   quarter: Horse & Harmony lost its Book-a-Session button, Olami lost the
+   second line of its own headline, Richmount lost "Request the deck". Every
+   one of those is the thing the screenshot exists to show.
+
+   The image is 1.6:1, so a box 390px wide is 244px tall and the shot fits
+   EXACTLY. Same vertical space as the crop it replaces, whole page visible.
+   The pair is capped so the row header stays aligned with the shots under it
+   rather than the badge drifting off to the far right of an empty measure. */
+.pair{max-width:796px}
 .pair-shots{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-/* Cropped, not scaled. At half of a 1120px column a 900x562 shot is ~337px
-   tall, and three rows of that took #running from 1,309px to 2,475px — the
-   proof got longer than the argument it supports. object-fit:cover anchored to
-   the TOP keeps the masthead, the nav and the first screenful, which is the
-   part that identifies what you are looking at; the bottom of a page is where
-   the footer lives and proves nothing. The intrinsic width/height attributes
-   stay on the img so the box is still reserved before the JPEG lands. */
-.pair-shots .shot img,.pair-solo .shot img{height:236px;object-fit:cover;object-position:top center}
-.pair-solo{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:center;border-top:1px solid var(--line);padding-top:28px;margin-top:4px}
+.pair-shots .shot img,.pair-solo .shot img{height:auto}
+.pair-solo{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:center;border-top:1px solid var(--line);padding-top:28px;margin-top:4px;max-width:796px}
 .pair-solo h3{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
 .pair-solo .pair-host{display:block;margin-bottom:10px}
 .pair-solo p{font-size:14px;color:var(--muted);line-height:1.65}
@@ -631,7 +638,6 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
      to 3,726px on a phone — longer than the entire page used to be. A shorter
      crop is the right trade here: at 390px the image is already only ever an
      identifying glance, and the caption is doing the explaining. */
-  .pair-shots .shot img,.pair-solo .shot img{height:184px}
   .proof{margin-top:26px}
   .pair{margin-bottom:22px}
 }
