@@ -29,7 +29,13 @@ const os = require('os');
 const path = require('path');
 const { spawn } = require('child_process');
 
-const OUT_W = 900, OUT_H = 562;
+/* 1440x900, NOT 900x562, and the aspect is identical (1.6) so these still drop
+   straight into the pair boxes. Shot at 900 the sites were being rendered in a
+   browser window narrower than they are designed for: Horse & Harmony's nav
+   overflowed and clipped its own Book-a-Session button, which is the single
+   most important thing in that screenshot. A portfolio shot must show the site
+   at the width its layout was built for, not at whatever fits the frame. */
+const OUT_W = 1440, OUT_H = 900;
 const M_W = 390, M_H = 620;
 
 /* The public front ends, and what sits behind each. Kept here rather than in

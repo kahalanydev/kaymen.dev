@@ -630,10 +630,31 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
    answer rather than shrinking: two 900px screenshots side by side inside a
    390px phone are two illegible smudges, and the whole point of the section is
    that you can see what each one is. */
+/* Hidden at every width by default. It only appears on a phone, and only once
+   script.js has added .flip-on — see the comment on the control in
+   server/render.js for why that order matters. */
+.pair-flip{display:none}
+
 @media (max-width:860px){
   .pair-shots{grid-template-columns:1fr}
   .pair-solo{grid-template-columns:1fr;gap:16px}
   .pair-badge{margin-left:0}
+
+  /* ONE AT A TIME ON A PHONE. Stacked, three pairs are six full-width
+     screenshots and #running ran to 3,879px — a third of the page, and nobody
+     scrolls past their third identical-looking box. The toggle keeps both
+     halves reachable in one screen's worth of space, and the act of flipping
+     is itself the argument: same project, twice. */
+  .flip-on .pair-flip{display:inline-flex;gap:2px;background:var(--bg-alt);border:1px solid var(--line);padding:3px;border-radius:9px;margin-bottom:12px}
+  .flip-on .pair-flip button{
+    font:inherit;font-size:12.5px;font-weight:500;border:0;background:transparent;
+    color:var(--muted);padding:6px 12px;border-radius:6px;cursor:pointer;
+    transition:background .16s var(--ease),color .16s var(--ease);
+  }
+  .flip-on .pair-flip button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(22,48,61,.1)}
+  .flip-on .pair-flip button:focus-visible{outline:2px solid var(--accent-dark);outline-offset:1px}
+  .flip-on .pair-shots .shot{display:none}
+  .flip-on .pair-shots .shot.on{display:block}
   /* Stacking turns three pairs into six full-width images, which took #running
      to 3,726px on a phone — longer than the entire page used to be. A shorter
      crop is the right trade here: at 390px the image is already only ever an

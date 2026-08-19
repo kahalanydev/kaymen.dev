@@ -777,3 +777,44 @@
      the thumb is somewhere else. */
   if (parseInt(input.value, 10) !== P.SCALE_DEFAULT_SEATS) paint();
 })();
+
+/* ==========================================================================
+   The proof pairs — one shot at a time on a phone.
+
+   Side by side is the right answer on a desktop and the wrong one on a phone:
+   stacked, three pairs are six full-width screenshots and #running ran to
+   3,879px, a third of the page. Below 860px each pair shows one shot with a
+   Front / Back toggle instead.
+
+   PROGRESSIVE ENHANCEMENT, and the order matters. The CSS that hides the
+   second figure is scoped to .flip-on, which is added HERE — so a phone with
+   no JS keeps both figures stacked (the old behaviour) rather than getting a
+   dead toggle and a back office it can never reach. Nothing is hidden until
+   something can un-hide it.
+
+   The class is added at every width. The CSS only acts on it under 860px, so
+   resizing across the breakpoint mid-flip needs no listener: on a wide screen
+   both figures show regardless of which one carries .on.
+   ========================================================================== */
+(function () {
+  var pairs = document.querySelectorAll('.proof .pair');
+  if (!pairs.length) return;
+  var proof = document.querySelector('.proof');
+  if (proof) proof.classList.add('flip-on');
+
+  Array.prototype.forEach.call(pairs, function (pair) {
+    var buttons = pair.querySelectorAll('.pair-flip button');
+    var shots = pair.querySelectorAll('.pair-shots .shot');
+    if (buttons.length !== 2 || shots.length !== 2) return;
+
+    Array.prototype.forEach.call(buttons, function (btn) {
+      btn.addEventListener('click', function () {
+        var want = Number(btn.dataset.side);
+        Array.prototype.forEach.call(shots, function (s, i) { s.classList.toggle('on', i === want); });
+        Array.prototype.forEach.call(buttons, function (b) {
+          b.setAttribute('aria-pressed', String(Number(b.dataset.side) === want));
+        });
+      });
+    });
+  });
+})();

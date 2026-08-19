@@ -546,10 +546,22 @@ function proofLabel(row) {
   return { ...(named ? row.named : row.anon), link: named && fe.url ? fe.url : null };
 }
 
-function shotFigure(src, host, capTitle, cap) {
-  return `<figure class="shot">
+/* Front ends are shot at 1440x900 — the width their layouts are actually
+   designed for. At 900 the browser window was narrower than the sites expect
+   and they clipped their own chrome: Horse & Harmony lost the Book-a-Session
+   button out of its nav, which is the one thing that screenshot exists to show.
+   Back offices stay at 900x562 because they are ours and they fit.
+
+   Both are 1.6:1, so they drop into the same box and the CSS aspect-ratio
+   holds — but the intrinsic attributes must be the REAL ones, or the browser
+   reserves the wrong box before the JPEG lands. */
+function shotFigure(src, host, capTitle, cap, extra) {
+  const front = /-front\.jpg$/.test(src);
+  const w = front ? 1440 : 900;
+  const h = front ? 900 : 562;
+  return `<figure class="shot${extra ? ' ' + extra : ''}">
             <div class="shot-bar"><i></i><i></i><i></i><em>${esc(host)}</em></div>
-            <img src="${esc(src)}" alt="" loading="lazy" decoding="async" width="900" height="562">
+            <img src="${esc(src)}" alt="" loading="lazy" decoding="async" width="${w}" height="${h}">
             <figcaption><b>${esc(capTitle)}</b>${esc(cap)}</figcaption>
           </figure>`;
 }
@@ -560,10 +572,24 @@ function proofStrip() {
     const host = l.link
       ? `<a href="${esc(l.link)}" target="_blank" rel="noopener">${esc(l.host)}</a>`
       : esc(l.host);
+    /* The flip control is rendered on every pair but only ever VISIBLE below
+       860px, and only once script.js has added .flip-on. Two halves of one
+       decision: side by side is the right answer on desktop, but stacking
+       three pairs on a phone means six full-width screenshots and a third of
+       the page. On a phone you get one at a time and a toggle.
+
+       PROGRESSIVE ENHANCEMENT, deliberately. The CSS hides the second figure
+       only under .flip-on, which script.js adds. Without JS a phone still gets
+       both figures stacked — the old behaviour — rather than a toggle that
+       does nothing and a back office that can never be reached. */
     return `<div class="pair">
           <div class="pair-head"><h3>${esc(l.title)}</h3><span class="pair-host">${host}</span><span class="pair-badge">${esc(p.badge)}</span></div>
+          <div class="pair-flip" role="group" aria-label="Which side to show">
+            <button type="button" data-side="0" aria-pressed="true">What they see</button>
+            <button type="button" data-side="1" aria-pressed="false">What you run</button>
+          </div>
           <div class="pair-shots">
-            ${shotFigure(p.front, l.host, 'What they see', p.frontCap)}
+            ${shotFigure(p.front, l.host, 'What they see', p.frontCap, 'on')}
             ${shotFigure(p.back, 'the back office', 'What you run', p.backCap)}
           </div>
         </div>`;
