@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>kaymen.dev — telling the packages apart, three ways</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>/* ============================================================================
+   kaymen.dev — "Quiet"
+
+   Ported from mockup/v3-quiet.html (2026-08-15). Palette lifted verbatim from
+   Kaymen Group LLC/styles.css; glass recipe from Kartov/mockups/tabbar-glass.html.
+   One accent, lots of air, contained measure.
+
+   LOCKED decisions live in HANDOFF-REDESIGN-2026-08-15.md §1 — palette, the
+   always-labelled 224px glass rail, the wide measure, the page structure.
+   Do not re-open them here.
+
+   Layout:
+     1. Tokens (+ a legacy bridge for assets/demos.css)
+     2. Base, ambience, the rail, the mobile tabbar
+     3. Homepage sections — hero/fleet, routing, board, shots, band, cases,
+        plans, terms, talk
+     4. Sub-pages — /work index, /work/<slug> case studies, long tail, 404
+   ============================================================================ */
+
+:root{
+  /* --- Kaymen Group palette, unchanged --- */
+  --bg:#ffffff;
+  --bg-alt:#f4f5f7;
+  --ink:#1a1b1e;
+  --muted:#5f6368;
+  --accent:#2bbcb3;
+  --accent-dark:#229e96;
+  --accent-soft:rgba(43,188,179,.08);
+  --accent-glow:rgba(43,188,179,.18);
+  --line:#e2e4e8;
+  /* the deep tone from the Kaymen Group card gradients — used once */
+  --deep:#16303d;
+
+  /* The one warm tone on the site, added 2026-08-18 for the scale comparison:
+     it is what "money leaving the building" is drawn in, against --accent for
+     "money that buys you something". Validated as a two-series categorical
+     pair — deutan ΔE 11.4, tritan 29.9, normal-vision ΔE 24.5, all passes.
+     It does NOT clear 3:1 against white on its own, so anything drawn in it
+     must carry a direct value label. Do not reuse it as a decorative accent. */
+  --rent:#e07a5f;
+  --rent-dark:#b8563a;
+  --deep-2:#1c2333;
+
+  --display:'Sora',-apple-system,BlinkMacSystemFont,sans-serif;
+  --body:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+
+  /* contained measure — the site does NOT run to the screen edge.
+     LOCKED 2026-08-15: the "wide" setting. */
+  --w-prose:760px;   /* headings + paragraphs */
+  --w-page:1120px;   /* grids, boards, cards */
+
+  /* LOCKED 2026-08-15: the rail is always labelled, so --rail-w is the
+     only width it ever has. Hover-to-collapse was dropped deliberately. */
+  --rail-w:224px;
+  --rail-gap:40px;   /* clearance between the rail and the content column */
+  --rail-off:clamp(26px,3.4vw,68px);   /* minimum clearance from the screen edge */
+  --page-pr:clamp(36px,4vw,80px);
+  --wrap-pad:22px;
+  --page-pl:calc(var(--rail-off) + var(--rail-w) + var(--rail-gap));
+
+  /* --- where the text actually starts, and therefore where the rail belongs ---
+     The rail used to be pinned at --rail-off while .wrap auto-centres inside the
+     padded column, so the gap grew on the content side only: near-centred at
+     1440px, ~97px too far left at 1920px. Deriving the rail's left from the same
+     expression as the text edge is the whole fix.
+
+     100vw includes the scrollbar, so this formula lands a few px off on Windows;
+     script.js measures the real text edge and overwrites --text-left on load and
+     on resize. This is the no-JS fallback, and it is close enough to look right. */
+  --text-left:calc(
+    var(--page-pl)
+    + max(0px, (100vw - var(--page-pl) - var(--page-pr) - var(--w-page)) / 2)
+    + var(--wrap-pad)
+  );
+
+  /* The rail sits level with the top of the page title rather than floating in
+     the middle of the viewport. Vertical centring meant its position depended on
+     the window height, so it landed somewhere different on every screen and
+     lined up with nothing. This is the fallback; script.js measures the real
+     title and overwrites it, so it stays correct if the hero padding changes. */
+  --rail-top:171px;
+
+  --ease:cubic-bezier(.4,0,.2,1);
+  --spring:cubic-bezier(.34,1.4,.64,1);
+
+  /* --- legacy token bridge ------------------------------------------------
+     assets/demos.css is loaded only on case studies that carry a playable
+     demo, and it is written against the previous dark theme's variable names.
+     Rather than rewrite a file this port does not otherwise touch, map the old
+     names onto the new palette. Delete this block if demos.css is ever
+     rewritten against the tokens above. */
+  --text:var(--ink);
+  --text-secondary:#42464c;
+  --text-muted:var(--muted);
+  --bg-card:#ffffff;
+  --bg-card-hover:var(--bg-alt);
+  --bg-elevated:var(--bg-alt);
+  --border:var(--line);
+  --border-light:#eceef1;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --radius:16px;
+  --radius-sm:11px;
+  --radius-xs:6px;
+  --transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:40px;overflow-x:clip}
+body{
+  font-family:var(--body);
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+ul{list-style:none}
+h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.03em;line-height:1.1;font-weight:700}
+
+/* ---------------------------------------------------------------- ambience
+   Glass needs something to refract. Three very soft washes, fixed, so the
+   rail always has colour passing behind it as you scroll.                  */
+.ambient{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.ambient i{position:absolute;border-radius:50%;filter:blur(90px);display:block}
+.ambient .g1{width:640px;height:640px;top:-330px;left:-220px;background:rgba(43,188,179,.055)}
+.ambient .g2{width:520px;height:520px;top:40%;right:-280px;background:rgba(43,188,179,.04)}
+.ambient .g3{width:480px;height:480px;bottom:-280px;left:20%;background:rgba(28,35,51,.03)}
+
+/* ================================================================ THE RAIL
+   Floating, glass, always labelled, and level with the top of the page title.
+   Never pushes the page: it floats over it.                               */
+.rail{
+  position:fixed;
+  top:var(--rail-top);
+  /* a short window must scroll the rail rather than let it run off the bottom */
+  max-height:calc(100vh - var(--rail-top) - 24px);
+  overflow-y:auto;
+  z-index:80;
+  width:var(--rail-w);
+  padding:10px 9px;
+  border-radius:26px;
+  display:flex;flex-direction:column;gap:2px;
+  transition:box-shadow .38s var(--ease);
+  /* overflow-x only: a plain overflow:hidden here would override the
+     overflow-y:auto above and clip the rail on a short window instead of
+     letting it scroll */
+  overflow-x:hidden;
+
+  /* --- the glass itself --- */
+  background:rgba(255,255,255,.55);
+  backdrop-filter:blur(30px) saturate(190%);
+  -webkit-backdrop-filter:blur(30px) saturate(190%);
+  box-shadow:
+    0 24px 54px -18px rgba(22,48,61,.22),
+    0 8px 20px -8px rgba(22,48,61,.10),
+    0 0 0 .5px rgba(255,255,255,.70),
+    0 0 0 1px rgba(226,228,232,.75),
+    inset 0 1px 0 rgba(255,255,255,.90),
+    inset 0 -1px 0 rgba(22,48,61,.04);
+}
+/* held well off the screen edge — it should read as floating, not docked */
+/* midway between the screen edge and the text edge — but never nearer the edge
+   than --rail-off, which is what holds the layout together below ~1300px where
+   .wrap fills the column and there is no slack to centre in */
+.rail.left{left:max(var(--rail-off),calc((var(--text-left) - var(--rail-w)) / 2))}
+.rail.right{right:max(var(--rail-off),calc((var(--text-left) - var(--rail-w)) / 2))}
+/* specular catch across the top — the light-catching bit */
+.rail::before{
+  content:"";position:absolute;inset:0;border-radius:26px;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.65) 0%,rgba(255,255,255,.14) 22%,rgba(255,255,255,0) 48%);
+  mix-blend-mode:screen;
+}
+.rail:hover,.rail:focus-within{
+  box-shadow:
+    0 34px 70px -20px rgba(22,48,61,.28),
+    0 10px 24px -8px rgba(22,48,61,.12),
+    0 0 0 .5px rgba(255,255,255,.75),
+    0 0 0 1px rgba(226,228,232,.8),
+    inset 0 1px 0 rgba(255,255,255,.92);
+}
+
+/* brand mark */
+/* The lockup: arch with the name under it. The rail's inner width is 206px, so
+   this lands at ~169px wide — comfortably inside the display cut's 140px-and-up
+   band, which is the nine-segment drawing. Do not shrink it past 140px here;
+   below that the gaps fall under a physical pixel and the arch fuses into a
+   solid band, which is what the text cut exists to solve. */
+/* `lockup-live.svg`, not the one in assets/brand: same geometry, plus the light
+   that runs down the course from the keystone out. The keyframes are inside the
+   file because page CSS cannot reach into an SVG loaded as an image — which
+   also means the global prefers-reduced-motion rule at the foot of this file
+   cannot silence it. The file carries its own media query for that, and the
+   background-image swaps back to the static lockup as well, since a preference
+   query inside an SVG-as-image is not something to bet the behaviour on. */
+.rail-brand{
+  display:block;flex:none;position:relative;z-index:2;
+  height:88px;margin:0 4px 8px;
+  background:url("/assets/lockup-live.svg") no-repeat center/contain;
+}
+/* .mark (the 30px tile) and .rail-wordmark (the text beside it) were the brand
+   before the lockup replaced it on 2026-08-16. Nothing on the marketing site
+   draws either any more. admin/ and portal/ keep their own copies of .mark in
+   their own stylesheets; this is only the marketing site's. */
+
+/* nav */
+.rail-nav{position:relative;display:flex;flex-direction:column;gap:2px;z-index:2}
+/* the sliding lozenge — this is the thing that "moves along the scroll" */
+.lozenge{
+  position:absolute;left:0;right:0;height:42px;border-radius:14px;
+  background:var(--accent-soft);
+  box-shadow:inset 0 0 0 1px rgba(43,188,179,.22),inset 0 1px 0 rgba(255,255,255,.7);
+  transition:transform .5s var(--spring),opacity .3s var(--ease);
+  pointer-events:none;z-index:-1;
+}
+.rail-link{
+  display:flex;align-items:center;gap:14px;height:42px;padding:0 9px;
+  border-radius:14px;color:var(--muted);position:relative;flex:none;
+  transition:color .2s var(--ease);
+}
+.rail-link svg{width:19px;height:19px;flex:none;stroke-width:1.6;transition:transform .3s var(--spring)}
+.rail-link span{
+  font-size:13.5px;font-weight:500;white-space:nowrap;letter-spacing:-.005em;
+}
+.rail-link:hover{color:var(--ink)}
+.rail-link.on{color:var(--accent-dark);font-weight:600}
+.rail-link.on svg{transform:scale(1.06)}
+.rail-link.on span{font-weight:600}
+
+/* Client login. Deliberately OUTSIDE .rail-nav, and it has to stay outside for
+   two reasons. The lozenge is positioned against .rail-nav's children, so a
+   seventh child would give it a link to park on that never becomes current; and
+   the rail's grammar is "where am I on this page", which a login is not — it is
+   the one item that leaves the page. Bordered rather than plain so it does not
+   read as a section that simply never lights up.
+   There is no top bar to put it in: this design replaced the header with the
+   rail, and inventing a fixed top-right control for one link would fight that
+   and crowd a mobile hero the handoff already calls cramped. Under 900px the
+   rail is hidden, so the footer carries it instead. */
+.rail-login{
+  display:flex;align-items:center;gap:12px;margin-top:10px;padding:0 9px;height:38px;
+  border:1px solid var(--line);border-radius:12px;color:var(--muted);flex:none;
+  transition:color .2s var(--ease),border-color .2s var(--ease),background .2s var(--ease);
+}
+.rail-login svg{width:17px;height:17px;flex:none;stroke-width:1.7}
+.rail-login span{font-size:12.5px;font-weight:600;white-space:nowrap;letter-spacing:-.005em}
+.rail-login:hover{color:var(--accent-dark);border-color:rgba(43,188,179,.5);background:var(--accent-soft)}
+
+/* live footer — the status ribbon idea, demoted to a quiet corner */
+.rail-foot{
+  margin-top:8px;padding-top:10px;border-top:1px solid rgba(226,228,232,.9);
+  display:flex;align-items:center;gap:13px;padding-left:9px;padding-right:9px;
+  height:38px;flex:none;position:relative;z-index:2;
+}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none;position:relative}
+.pulse::after{
+  content:"";position:absolute;inset:-4px;border-radius:50%;
+  border:1.5px solid var(--accent);opacity:0;animation:ping 2.6s var(--ease) infinite;
+}
+@keyframes ping{0%{transform:scale(.6);opacity:.7}70%{transform:scale(1.5);opacity:0}100%{opacity:0}}
+.rail-foot em{
+  font-style:normal;font-size:11.5px;font-weight:600;color:var(--muted);
+  white-space:nowrap;letter-spacing:.01em;
+}
+
+/* scroll progress — a hairline down the outer edge of the rail */
+.rail-prog{
+  position:absolute;top:14px;bottom:14px;width:2px;border-radius:2px;
+  background:rgba(226,228,232,.8);overflow:hidden;z-index:3;
+}
+.rail.left .rail-prog{right:3px}
+.rail.right .rail-prog{left:3px}
+.rail-prog i{
+  position:absolute;top:0;left:0;right:0;height:0;display:block;border-radius:2px;
+  background:linear-gradient(180deg,var(--accent) 0%,var(--accent-dark) 100%);
+}
+
+/* ============================================================ PAGE CONTENT */
+.page{position:relative;z-index:1}
+/* The rail is always 224px, so the content column must clear
+   rail-offset + rail-width + gap or it slides underneath at ~1440px. */
+@media (min-width:900px){
+  .page{
+    padding-left:var(--page-pl);
+    padding-right:var(--page-pr);
+  }
+  body.rail-right .page{
+    padding-left:var(--page-pr);
+    padding-right:var(--page-pl);
+  }
+}
+.wrap{max-width:var(--w-page);margin:0 auto;padding:0 22px}
+.prose{max-width:var(--w-prose)}
+
+section{padding:74px 0}
+@media (max-width:900px){section{padding:56px 0}}
+
+.eyebrow{
+  font-size:11px;font-weight:700;letter-spacing:.17em;text-transform:uppercase;
+  color:var(--accent-dark);margin-bottom:14px;
+}
+h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
+.sec-sub{color:var(--muted);font-size:15.5px;margin-top:14px;max-width:56ch;line-height:1.7}
+/* -44px so the rule lines up with .wrap's inner edge rather than overhanging it */
+.rule{height:1px;background:var(--line);border:0;max-width:calc(var(--w-page) - 44px);margin:0 auto}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(14px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
+.rv.in{opacity:1;transform:none}
+
+/* ------------------------------------------------------------------- hero */
+/* NO overflow:hidden here. .hero-fx cancels the page padding with negative
+   left/right to reach the screen edges, and overflow:hidden on the parent
+   clips exactly that back off — the canvas element still measures 0..1920, so
+   it reports full bleed while painting nothing outside the hero box. That is
+   why three earlier attempts at this measured clean and still looked wrong.
+   body already carries overflow-x:hidden, so nothing escapes sideways. */
+.hero{padding-top:104px;padding-bottom:82px;position:relative}
+@media (max-width:900px){.hero{padding-top:118px;padding-bottom:60px}}
+/* SINGLE COLUMN since 2026-08-18, when the rent panel came out of the hero.
+   The two-column rule that lived here — `minmax(0,1.15fr) 360px` above 1280 —
+   existed only to seat that panel, so it went with it. 1280 was chosen because
+   the rail takes 224px plus gaps before the grid gets a look in, and at 1040
+   the text column fell to 247px and the headline ran to four lines. With the
+   panel gone the copy has the full 1120px measure at every width and none of
+   that applies. Put both back together if the slot is ever refilled. */
+.hero-grid{display:grid;gap:44px;align-items:center;position:relative;z-index:1}
+
+/* The mesh sits behind everything and must never touch legibility.
+
+   FULL BLEED, and this is the whole reason it looked like it stopped short.
+   .page carries --page-pl (the rail's 224px plus its gaps) and --page-pr, so
+   .hero itself only spans 329..1843 of a 1920px viewport. A canvas at inset:0
+   inherits that and can never reach the screen edges — no amount of extra nodes
+   fixes it, because the canvas is the wrong width. Cancelling the padding is
+   the fix. Below 900px .page has no padding, so inset:0 is already full bleed. */
+.hero-fx{position:absolute;inset:0;z-index:0;pointer-events:none}
+@media (min-width:900px){
+  .hero-fx{left:calc(-1 * var(--page-pl));right:calc(-1 * var(--page-pr))}
+  body.rail-right .hero-fx{left:calc(-1 * var(--page-pr));right:calc(-1 * var(--page-pl))}
+}
+.hero-fx canvas{display:block;width:100%;height:100%}
+/* Below the two-column breakpoint the copy fills the full width, so the mesh
+   crosses every line of it and the source node lands on top of a benefit
+   block. It is a desktop flourish; on a phone it costs legibility and battery
+   for nothing. The ambient blooms stay, so the hero is still not flat. */
+/* Faded rather than removed. Hiding it outright was too blunt — it is the
+   one thing giving the hero life. At 45% the lines read as texture behind the
+   copy instead of crossing it, and script.js moves the source into the top
+   corner when the layout stacks so it can no longer land on a benefit block. */
+@media (max-width:900px){.hero-fx{opacity:.45}}
+/* two soft blooms, the site's own ambient treatment brought up enough to see */
+.hero::before,.hero::after{
+  content:"";position:absolute;pointer-events:none;z-index:0;border-radius:50%;
+}
+.hero::before{width:900px;height:900px;top:-380px;left:-160px;background:radial-gradient(circle,rgba(43,188,179,.13),transparent 62%)}
+.hero::after{width:760px;height:760px;bottom:-420px;right:-200px;background:radial-gradient(circle,rgba(43,188,179,.10),transparent 64%)}
+.chip{
+  display:inline-flex;align-items:center;gap:9px;
+  background:rgba(255,255,255,.7);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border:1px solid var(--line);border-radius:100px;
+  padding:7px 15px 7px 12px;font-size:12.5px;font-weight:600;color:var(--muted);
+  box-shadow:0 2px 10px rgba(22,48,61,.05);margin-bottom:30px;
+}
+.chip b{color:var(--ink);font-weight:700}
+/* 4rem, not 4.1: "Own your software." measures 596px at 64px inside the 668px
+   column. At 70px it was 652px — a 16px margin that font rendering ate, and the
+   line wrapped to make three. Verified 2 lines at 1040 through 2560px. */
+.hero h1{
+  font-size:clamp(2.2rem,5.2vw,4rem);font-weight:800;letter-spacing:-.045em;line-height:1.05;
+}
+/* The 1280–1400 shrink that used to live here is GONE with the panel, and
+   removing it is the point rather than tidying: it dropped the headline to
+   ~46px in that band because the panel left the text column at ~469px, and
+   64px type needs 596px. With the hero single column the column is the full
+   1120px measure at 1280, so the headline runs at its intended size there for
+   the first time. Restore this rule if the panel ever comes back. */
+.hero h1 span{color:var(--accent)}
+/* the struck word: the one moment of motion, on the word the headline turns on */
+.hero h1 s{text-decoration:none;position:relative;color:var(--muted);opacity:.55}
+.hero h1 s::after{
+  content:"";position:absolute;left:-2px;right:-2px;top:54%;height:5px;
+  background:var(--accent);border-radius:3px;
+  transform-origin:left center;animation:strike .62s cubic-bezier(.65,0,.35,1) .45s both;
+}
+@keyframes strike{from{transform:rotate(-1.6deg) scaleX(0)}to{transform:rotate(-1.6deg) scaleX(1)}}
+@media (prefers-reduced-motion:reduce){
+  .hero h1 s::after{animation:none;transform:rotate(-1.6deg)}
+}
+.hero .lead{
+  font-size:clamp(1rem,1.6vw,1.15rem);color:var(--muted);margin-top:24px;
+  max-width:50ch;line-height:1.75;
+}
+.hero .lead b{color:var(--ink);font-weight:600}
+.hero .lead-2{margin-top:14px}
+
+/* what they get — the offer, not a second complaint about the competition */
+.gets{display:grid;gap:8px;margin-top:22px;list-style:none}
+/* TWO COLUMNS FROM 380px, not 560. One per row cost 369px on a 390px phone —
+   35% of the hero — for six blocks that are four words and a hint each. Two up
+   is 232px, and the blocks are short enough to take the narrower measure: the
+   longest title, "Everything in one system", wraps to two lines and that reads
+   fine because the tick and the bold already carry the scanning. */
+@media (min-width:380px){.gets{grid-template-columns:1fr 1fr}}
+@media (min-width:1040px){.gets{grid-template-columns:1fr 1fr 1fr}}
+/* Tighter chrome on a phone. The card treatment is doing less work at this size
+   — nothing is being compared across columns — so the padding and type come
+   down and the border stays only to keep the group readable as a group. */
+@media (max-width:559px){
+  .gets{gap:6px;margin-top:18px}
+  .gets li{padding:8px 10px;gap:6px}
+  .gets b{font-size:12.5px}
+  .gets span span{font-size:11px;line-height:1.3}
+  .gets svg{width:12px;height:12px;margin-top:2px}
+}
+.gets li{
+  display:flex;align-items:flex-start;gap:8px;
+  border:1px solid rgba(43,188,179,.3);background:var(--accent-soft);
+  border-radius:12px;padding:10px 12px;
+}
+.gets svg{
+  width:14px;height:14px;flex:none;margin-top:2px;stroke:var(--accent-dark);
+  stroke-width:3.2;fill:none;stroke-linecap:round;stroke-linejoin:round;
+}
+.gets b{display:block;font-size:13px;font-weight:700;letter-spacing:-.015em;line-height:1.25}
+.gets span span{display:block;font-size:11.5px;color:var(--muted);margin-top:1px;line-height:1.35}
+
+/* UNUSED SINCE 2026-08-18 — the hero panel slot is empty and rentPanel() is
+   no longer rendered. Kept, not deleted: the slot is expected to be refilled,
+   and .sown (the white block breaking out of the dark) is the visual device
+   any replacement should reuse. Delete this block if the slot is ever declared
+   permanently empty.
+
+   the panel: renting it, inverted to deep so the money argument has weight, and
+   the way out of it rendered as a white block breaking the dark. The metaphor
+   does the work — locked in is dark, owning it is not. */
+.stack{border:1px solid rgba(255,255,255,.1);border-radius:20px;overflow:hidden;background:var(--deep);box-shadow:0 22px 60px rgba(22,48,61,.28)}
+.stack .sh{
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  padding:15px 22px 12px;border-bottom:1px solid rgba(255,255,255,.12);
+  font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:rgba(255,255,255,.5);
+}
+.stack .sh i{font-style:normal;letter-spacing:0;text-transform:none;font-size:11.5px;font-weight:500}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 22px;font-size:13.5px}
+.srow b{font-weight:400;color:rgba(255,255,255,.82)}
+.srow span{font-family:var(--display);font-weight:700;font-size:13.5px;color:rgba(255,255,255,.55);font-variant-numeric:tabular-nums}
+.stot{padding:13px 22px 14px;border-top:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
+.stot b{font-family:var(--display);font-size:30px;font-weight:800;letter-spacing:-.045em;font-variant-numeric:tabular-nums;display:block;color:#fff}
+.stot b span{font-family:var(--body);font-size:13px;font-weight:500;letter-spacing:0;color:rgba(255,255,255,.55)}
+.stot > span{display:block;font-size:12.5px;color:rgba(255,255,255,.55);margin-top:3px;line-height:1.5}
+/* The labour line: brighter and a shade larger than .sgrow on purpose. It is the
+   panel's argument — the licences are the small number and the person is the big
+   one — where .sgrow below it is a footnote about growth. Styling them the same
+   would bury the point in the fine print. */
+.swork{padding:12px 22px 13px;font-size:12.5px;color:rgba(255,255,255,.74);border-top:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);line-height:1.6}
+.swork b{color:#fff;font-weight:600}
+.sgrow{padding:11px 22px;font-size:12px;color:rgba(255,255,255,.55);border-top:1px solid rgba(255,255,255,.12);line-height:1.55}
+.sgrow b{color:#fff;font-weight:600}
+.sown{padding:18px 20px 20px;background:#fff;margin:10px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.22)}
+.sown .k{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-dark)}
+.sown .v{font-family:var(--display);font-size:28px;font-weight:800;letter-spacing:-.045em;color:var(--accent-dark);margin-top:5px;line-height:1.1}
+.sown .v small{font-family:var(--body);font-size:13px;font-weight:500;color:var(--muted);letter-spacing:0}
+.sown .n{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.6}
+.sown .n b{color:var(--ink);font-weight:600}
+.actions{display:flex;gap:12px;margin-top:38px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:13px 24px;border-radius:11px;font-family:var(--body);
+  font-size:14px;font-weight:600;transition:all .3s var(--ease);
+}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 16px var(--accent-glow)}
+.btn-primary:hover{background:var(--accent-dark);transform:translateY(-1px);box-shadow:0 8px 26px var(--accent-glow)}
+.btn-primary:disabled{opacity:.55;cursor:default;transform:none;box-shadow:none}
+.btn-ghost{border:1.5px solid var(--line);color:var(--ink);background:rgba(255,255,255,.6)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent-dark)}
+
+/* ------------------------------------------------------------ fleet panel
+   The pricing evidence, drawn. Each row is a live system; the bars are
+   active days per month over the last twelve — the measured series the
+   retainer ladder was derived from. Same glass language as the rail.      */
+.fleet{
+  border-radius:22px;padding:18px 18px 14px;position:relative;overflow:hidden;
+  background:rgba(255,255,255,.62);
+  backdrop-filter:blur(26px) saturate(180%);
+  -webkit-backdrop-filter:blur(26px) saturate(180%);
+  box-shadow:
+    0 26px 60px -20px rgba(22,48,61,.24),
+    0 8px 20px -8px rgba(22,48,61,.09),
+    0 0 0 .5px rgba(255,255,255,.7),
+    0 0 0 1px rgba(226,228,232,.8),
+    inset 0 1px 0 rgba(255,255,255,.9);
+}
+.fleet::before{
+  content:"";position:absolute;inset:0;border-radius:22px;pointer-events:none;mix-blend-mode:screen;
+  background:linear-gradient(180deg,rgba(255,255,255,.6) 0%,rgba(255,255,255,.1) 26%,rgba(255,255,255,0) 52%);
+}
+.fleet-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-bottom:12px;margin-bottom:6px;border-bottom:1px solid rgba(226,228,232,.85);
+  position:relative;z-index:2;
+}
+.fleet-head b{font-family:var(--display);font-size:12.5px;font-weight:700;letter-spacing:-.01em}
+.fleet-head span{font-size:10.5px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.frow{
+  display:grid;grid-template-columns:8px 1fr auto;gap:11px;align-items:center;
+  padding:9px 2px;position:relative;z-index:2;border-radius:8px;
+  transition:background .25s var(--ease);
+}
+.frow:hover{background:rgba(43,188,179,.06)}
+.frow .fn{font-size:12.5px;font-weight:600;letter-spacing:-.01em;line-height:1.25}
+.frow .fn i{font-style:normal;display:block;font-size:9.5px;font-weight:600;color:var(--muted);letter-spacing:.09em;text-transform:uppercase;margin-top:3px}
+/* the sparkline */
+.spark{display:flex;align-items:flex-end;gap:2.5px;height:26px}
+.spark b{
+  width:4px;border-radius:1.5px;background:var(--accent);opacity:.32;display:block;
+  transform-origin:bottom;animation:breathe 4.5s var(--ease) infinite;
+}
+.spark b.hi{opacity:.85}
+/* a month with no commits is a flat tick, not a short bar — otherwise "nothing
+   happened" and "one day of work" draw almost identically */
+.spark b.z{opacity:.14;animation:none;background:var(--muted)}
+@keyframes breathe{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.13)}}
+.fleet-foot{
+  margin-top:8px;padding-top:11px;border-top:1px solid rgba(226,228,232,.85);
+  font-size:10.5px;color:var(--muted);line-height:1.45;position:relative;z-index:2;
+}
+.fleet-foot b{color:var(--ink);font-weight:600}
+
+/* ----------------------------------------------------------------- board */
+.board{margin-top:26px;border-top:1px solid var(--line)}
+/* mobile: dot in its own narrow column, everything else stacked beside it */
+.brow{
+  display:grid;grid-template-columns:10px 1fr;gap:6px 13px;
+  padding:15px 4px;border-bottom:1px solid var(--line);align-items:start;
+  transition:background .25s var(--ease);
+}
+.brow .nm,.brow .wt,.brow .yr{grid-column:2}
+@media (min-width:760px){
+  .brow{grid-template-columns:10px 1.1fr 1.9fr auto;gap:20px;align-items:center;padding:16px 10px}
+  .brow .nm,.brow .wt,.brow .yr{grid-column:auto}
+}
+.brow:hover{background:rgba(244,245,247,.7)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none;margin-top:7px;box-shadow:0 0 0 3px var(--accent-soft)}
+@media (min-width:760px){.dot{margin-top:0}}
+.brow .nm{font-size:14.5px;font-weight:600;letter-spacing:-.01em}
+.brow .nm i{
+  font-style:normal;display:block;color:var(--muted);font-weight:600;font-size:10px;
+  letter-spacing:.11em;text-transform:uppercase;margin-top:4px;
+}
+.brow .wt{color:var(--muted);font-size:13.5px;line-height:1.5}
+.brow .yr{font-size:11.5px;font-weight:700;color:var(--accent-dark);white-space:nowrap;letter-spacing:.03em}
+
+/* ----------------------------------------------------------- shot strip
+   Real screenshots of live product, in browser chrome. Only our OWN
+   products here — no client shot goes in without the naming call.       */
+.shots{display:grid;gap:16px;margin-top:34px}
+@media (min-width:820px){.shots{grid-template-columns:repeat(3,1fr)}}
+/* Below the three-up breakpoint these were three 900x562 DESKTOP captures
+   stacked at phone width — 963px of screenshot at 390px, 1,671px at 768px, and
+   not a word of any of them readable. Swipe instead: same pattern as .ask-grid.
+   It does not make a back office legible at 320px and is not meant to — the job
+   of these on a phone is to show that real systems with real interfaces exist,
+   and one card plus a peek says that in a third of the height. Genuine
+   legibility would need mobile-specific crops, i.e. a second set of assets.
+   overflow-x lives on this element alone: `html` carries overflow-x:clip, and
+   making a second scroll container out of anything taller breaks sticky. */
+@media (max-width:819px){
+  .shots{
+    display:flex;overflow-x:auto;overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory;padding-bottom:6px;scrollbar-width:none;
+  }
+  .shots::-webkit-scrollbar{display:none}
+  .shot{flex:0 0 82%;scroll-snap-align:start}
+  /* The lift is a pointer affordance. Inside a swipe strip it only ever fires
+     from a stray touch and leaves one card sitting proud of its neighbours. */
+  .shot:hover{transform:none;box-shadow:none;border-color:var(--line)}
+}
+.shot{
+  border-radius:14px;overflow:hidden;background:#fff;border:1px solid var(--line);
+  transition:all .35s var(--ease);
+}
+.shot:hover{transform:translateY(-4px);box-shadow:0 22px 50px rgba(22,48,61,.13);border-color:rgba(43,188,179,.4)}
+.shot-bar{
+  height:28px;background:var(--bg-alt);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:5px;padding:0 11px;
+}
+.shot-bar i{width:7px;height:7px;border-radius:50%;background:#d3d6dc;display:block}
+.shot-bar em{
+  font-style:normal;font-size:9.5px;color:var(--muted);font-weight:600;
+  margin-left:8px;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* height:auto is load-bearing — the img's `height` attribute is a
+   presentational hint, and without this it wins over aspect-ratio. */
+.shot img{display:block;width:100%;height:auto;aspect-ratio:16/10;object-fit:cover;object-position:top center;background:var(--bg-alt)}
+.shot figcaption{padding:13px 15px;font-size:12px;color:var(--muted);line-height:1.45}
+.shot figcaption b{display:block;color:var(--ink);font-size:13px;font-weight:600;margin-bottom:3px;letter-spacing:-.01em}
+
+/* ------------------------------------------------- front-and-back pairs
+   Replaced the three-shot strip 2026-08-18. Reuses .shot/.shot-bar below
+   verbatim — the frame, the fake browser chrome and the caption are unchanged,
+   only the arrangement is new — so there is one screenshot treatment on the
+   site rather than two that drift.
+
+   The left image is a PUBLIC page shot from production; the right is a back
+   office shot from a seeded local instance. That asymmetry is invisible here
+   and deliberate: see PROOF in server/render.js before re-taking either.
+   -------------------------------------------------------------------------- */
+.proof{margin-top:34px}
+.proof-lead{font-size:14.5px;color:var(--muted);max-width:66ch;margin-bottom:26px;line-height:1.6}
+.proof-lead b{color:var(--ink);font-weight:600}
+.pair{margin-bottom:30px}
+.pair-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.pair-head h3{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:-.02em}
+.pair-host{font-size:12.5px;color:var(--muted)}
+.pair-host a{color:var(--accent-dark);border-bottom:1px solid rgba(43,188,179,.35)}
+.pair-host a:hover{border-bottom-color:var(--accent)}
+/* Pushed right on its own rather than given a fixed column: the badge text
+   changes length per row and a column would leave a ragged gap on the short
+   one. */
+.pair-badge{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-dark);background:var(--accent-soft);border:1px solid rgba(43,188,179,.3);padding:4px 10px;border-radius:20px}
+/* NARROWED RATHER THAN CROPPED, 2026-08-18 — and the narrowing is what removes
+   the crop, which is the part worth understanding before anyone widens it back.
+
+   These are 900x562 shots. At half of a 1120px column each box was 503px wide,
+   so object-fit:cover scaled the image to 503x314 and discarded the bottom
+   quarter: Horse & Harmony lost its Book-a-Session button, Olami lost the
+   second line of its own headline, Richmount lost "Request the deck". Every
+   one of those is the thing the screenshot exists to show.
+
+   The image is 1.6:1, so a box 390px wide is 244px tall and the shot fits
+   EXACTLY. Same vertical space as the crop it replaces, whole page visible.
+   The pair is capped so the row header stays aligned with the shots under it
+   rather than the badge drifting off to the far right of an empty measure. */
+.pair{max-width:796px}
+.pair-shots{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pair-shots .shot img,.pair-solo .shot img{height:auto}
+.pair-solo{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:center;border-top:1px solid var(--line);padding-top:28px;margin-top:4px;max-width:796px}
+.pair-solo h3{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
+.pair-solo .pair-host{display:block;margin-bottom:10px}
+.pair-solo p{font-size:14px;color:var(--muted);line-height:1.65}
+
+/* Below the two-up breakpoint the pair stacks, and stacking is the right
+   answer rather than shrinking: two 900px screenshots side by side inside a
+   390px phone are two illegible smudges, and the whole point of the section is
+   that you can see what each one is. */
+/* Hidden at every width by default. It only appears on a phone, and only once
+   script.js has added .flip-on — see the comment on the control in
+   server/render.js for why that order matters. */
+.pair-flip{display:none}
+
+@media (max-width:860px){
+  .pair-shots{grid-template-columns:1fr}
+  .pair-solo{grid-template-columns:1fr;gap:16px}
+  .pair-badge{margin-left:0}
+
+  /* ONE AT A TIME ON A PHONE. Stacked, three pairs are six full-width
+     screenshots and #running ran to 3,879px — a third of the page, and nobody
+     scrolls past their third identical-looking box. The toggle keeps both
+     halves reachable in one screen's worth of space, and the act of flipping
+     is itself the argument: same project, twice. */
+  .flip-on .pair-flip{display:inline-flex;gap:2px;background:var(--bg-alt);border:1px solid var(--line);padding:3px;border-radius:9px;margin-bottom:12px}
+  .flip-on .pair-flip button{
+    font:inherit;font-size:12.5px;font-weight:500;border:0;background:transparent;
+    color:var(--muted);padding:6px 12px;border-radius:6px;cursor:pointer;
+    transition:background .16s var(--ease),color .16s var(--ease);
+  }
+  .flip-on .pair-flip button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(22,48,61,.1)}
+  .flip-on .pair-flip button:focus-visible{outline:2px solid var(--accent-dark);outline-offset:1px}
+  .flip-on .pair-shots .shot{display:none}
+  .flip-on .pair-shots .shot.on{display:block}
+  /* Stacking turns three pairs into six full-width images, which took #running
+     to 3,726px on a phone — longer than the entire page used to be. A shorter
+     crop is the right trade here: at 390px the image is already only ever an
+     identifying glance, and the caption is doing the explaining. */
+  .proof{margin-top:26px}
+  .pair{margin-bottom:22px}
+}
+
+/* ------------------------------------------------------------ stats band */
+.band{background:var(--deep);color:#fff;border-radius:22px;overflow:hidden;margin-top:36px}
+.stats{display:grid;grid-template-columns:1fr 1fr}
+@media (min-width:760px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stat{padding:26px 22px;border-right:1px solid rgba(255,255,255,.09);border-bottom:1px solid rgba(255,255,255,.09)}
+@media (min-width:760px){.stat{padding:32px 26px;border-bottom:0}}
+.stat:last-child{border-right:0}
+.stat .n{
+  font-family:var(--display);font-size:34px;font-weight:800;letter-spacing:-.045em;
+  color:var(--accent);line-height:1;font-variant-numeric:tabular-nums;
+}
+.stat .l{font-size:12.5px;margin-top:9px;line-height:1.4;color:rgba(255,255,255,.66)}
+.stat .l i{font-style:normal;display:block;margin-top:4px;color:rgba(255,255,255,.42);font-size:11.5px}
+
+/* ------------------------------------------------------------------ work
+   `.case` is scoped under `.cases` on purpose: the case-study PAGE also
+   uses `<article class="case">` as its root, and must not inherit the
+   teaser card's border, padding and background.                          */
+.cases{display:grid;gap:14px;margin-top:32px}
+@media (min-width:820px){.cases{grid-template-columns:repeat(2,1fr)}}
+.cases .case{
+  border:1px solid var(--line);border-radius:18px;padding:26px 24px;background:#fff;
+  transition:all .3s var(--ease);display:flex;flex-direction:column;
+}
+.cases .case:hover{transform:translateY(-3px);box-shadow:0 18px 46px rgba(22,48,61,.09);border-color:rgba(43,188,179,.45)}
+.cases .case .tag{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-dark)}
+.cases .case h3{font-size:17.5px;font-weight:700;margin-top:11px;letter-spacing:-.025em;line-height:1.25;transition:color .3s var(--ease)}
+.cases .case:hover h3{color:var(--accent-dark)}
+.cases .case .tl{font-size:13.5px;color:var(--muted);margin-top:10px;line-height:1.55;flex-grow:1}
+.cases .hard{
+  margin-top:18px;padding:14px 16px;border-radius:12px;
+  background:var(--bg-alt);border-left:2px solid var(--accent);
+}
+.cases .hard b{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px}
+.cases .hard p{font-size:13px;line-height:1.5;font-weight:500}
+.cases .case .meta{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);font-weight:600}
+.cases .case .meta .live{display:flex;align-items:center;gap:7px;color:var(--accent-dark)}
+.cases .case .meta .rd{display:flex;align-items:center;gap:5px;color:var(--accent-dark);transition:gap .25s var(--ease)}
+.cases .case:hover .meta .rd{gap:9px}
+.cases .case .meta .rd svg{width:12px;height:12px}
+
+/* -------------------------------------------------------------- the picker
+   Replaced BOTH #need (the three routing cards) and #price (the eleven-row
+   estimate builder) on 2026-08-16. They asked the same question — "which of
+   these are you" — and both ended in a price, so the homepage asked it twice
+   for 2,046px, 29% of the page. This is one section in their place at ~835px.
+
+   Two controls, one state. The sentence is the one to notice; the pills are the
+   fallback for anyone who does not, and they mirror each other because both
+   read from the same `askSel` in script.js. */
+.ask-say{
+  font-family:var(--display);font-size:clamp(1.5rem,3vw,2.1rem);font-weight:700;
+  letter-spacing:-.035em;line-height:1.34;max-width:26ch;margin-top:2px;
+}
+/* the phrase is a <button> inside the heading. Underline + chevron is the
+   standard "this is editable" signal; without it the line reads as decoration
+   and the whole mechanism goes undiscovered. */
+.ask-say .pick{
+  display:inline;font:inherit;letter-spacing:inherit;color:var(--accent-dark);
+  background:none;border:0;border-bottom:2px solid var(--accent);border-radius:3px;
+  padding:0 3px;margin:0 -1px;cursor:pointer;text-align:left;
+  transition:background .2s var(--ease);
+}
+.ask-say .pick:hover{background:var(--accent-soft)}
+.ask-say .pick:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.ask-say .pick::after{content:'⌄';font-size:.62em;margin-left:7px;opacity:.7;position:relative;top:-.2em}
+
+.ask-note{color:var(--muted);font-size:14.5px;margin-top:12px;max-width:64ch;line-height:1.65;min-height:48px}
+
+/* the three differentiators #need used to hide behind a click, flattened to one
+   row so they cost ~26px instead of ~80px */
+.ask-ticks{list-style:none;display:flex;flex-wrap:wrap;gap:7px 20px;margin-top:12px}
+.ask-ticks li{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted)}
+.ask-ticks li::before{
+  content:'';width:13px;height:13px;flex:none;border-radius:50%;
+  background:var(--accent-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23229e96' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/9px no-repeat;
+}
+
+.ask-hint{
+  display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-top:22px;
+}
+.ask-hint::after{content:'';flex:1;height:1px;background:var(--line)}
+
+.ask-chips{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-top:14px}
+@media (max-width:1000px){.ask-chips{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){.ask-chips{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ask-chip{
+  border:1px solid var(--line);border-radius:13px;padding:12px 15px;background:#fff;
+  cursor:pointer;text-align:left;transition:all .2s var(--ease);
+}
+.ask-chip:hover{border-color:#d0d3d9}
+.ask-chip.on{border-color:rgba(43,188,179,.55);background:var(--accent-soft)}
+.ask-chip b{display:block;font-size:13.5px;font-weight:600;letter-spacing:-.01em;line-height:1.35}
+.ask-chip span{
+  display:block;font-family:var(--display);font-size:12.5px;font-weight:700;
+  letter-spacing:-.02em;color:var(--muted);margin-top:5px;font-variant-numeric:tabular-nums;
+}
+.ask-chip.on span{color:var(--accent-dark)}
+/* the escape hatch reads as a different kind of thing, not a fifth price tier */
+.ask-chip.alt{border-style:dashed}
+.ask-chip.alt.on{border-style:solid}
+
+/* build on the left, monthly on the right, split by a rule: the distinction the
+   whole section exists to make is that one is once and one is forever */
+.ask-out{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-top:26px;padding-top:22px;border-top:1px solid var(--line)}
+.ask-out .n{font-family:var(--display);font-size:36px;font-weight:800;letter-spacing:-.05em;font-variant-numeric:tabular-nums;line-height:1}
+.ask-out .sep{color:var(--line);font-size:24px}
+.ask-out .m{font-family:var(--display);font-size:25px;font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
+.ask-out .n span,.ask-out .m span{
+  display:block;font-family:var(--body);font-size:12.5px;font-weight:500;
+  color:var(--muted);letter-spacing:0;margin-top:5px;max-width:34ch;
+}
+.ask-out .btn{margin-left:auto}
+@media (max-width:700px){.ask-out .btn{margin-left:0;width:100%;justify-content:center}}
+
+/* The comparison grid — four rungs side by side, so "what does each include?"
+   stops needing a click and a memory.
+
+   FOUR COLUMNS, NEVER FIVE. The pilot is not a package and is not in here, so
+   this row does not line up with .ask-chips above it. That is correct and worth
+   leaving alone: the chips are ways to pick, these are things you can buy.
+
+   The money is the LAST line of each card and muted on purpose. Promote it to
+   the heading and this becomes a SaaS tier table, which is the frame the rest of
+   the page argues against — and it would put $15,000 in front of somebody before
+   they had read what any of it is for. */
+.ask-all{margin-top:6px}
+/* position:relative so the cards measure their offsetLeft against the strip and
+   script.js can centre the chosen one by setting scrollLeft. No visual effect. */
+.ask-grid{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px;align-items:stretch}
+@media (max-width:1000px){.ask-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Stacked, these four cards are 949px on a 390px phone — longer than the whole
+   section was before they existed. So below 560px they swipe instead, which is
+   the same answer the shots strip needs and does not exist yet.
+   overflow-x on THIS element only: `html` carries overflow-x:clip and making a
+   second scroll container out of anything taller would break sticky. */
+@media (max-width:560px){
+  .ask-grid{
+    display:flex;grid-template-columns:none;overflow-x:auto;overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory;padding-bottom:6px;scrollbar-width:none;
+  }
+  .ask-grid::-webkit-scrollbar{display:none}
+  .ask-card{flex:0 0 79%;scroll-snap-align:start}
+}
+.ask-card{
+  display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;
+  padding:15px 16px 14px;background:#fff;cursor:pointer;text-align:left;
+  transition:border-color .2s var(--ease),background .2s var(--ease);
+}
+.ask-card:hover{border-color:#d0d3d9}
+.ask-card.on{border-color:rgba(43,188,179,.55);background:var(--accent-soft)}
+.ask-card > b{font-size:13.5px;font-weight:700;letter-spacing:-.01em;line-height:1.35}
+.ask-card ul{list-style:none;margin-top:11px;display:flex;flex-direction:column;gap:7px}
+.ask-card li{position:relative;padding-left:17px;font-size:12px;color:var(--muted);line-height:1.5}
+.ask-card li::before{
+  content:'';position:absolute;left:0;top:4px;width:11px;height:11px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23229e96' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E") center/11px no-repeat;
+}
+/* margin-top:auto pins the two footer lines to the bottom, so the money sits on
+   one baseline across all four cards however uneven the tick lists are */
+.ask-card .pl{
+  display:block;font-style:normal;font-size:12px;color:var(--muted);line-height:1.5;
+  margin-top:auto;padding-top:12px;
+}
+.ask-card .pl span{
+  display:block;font-size:9.5px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--muted);opacity:.75;margin-bottom:3px;
+}
+.ask-card .mn{
+  display:block;font-style:normal;font-family:var(--display);font-size:12px;font-weight:700;
+  letter-spacing:-.01em;color:var(--muted);margin-top:10px;padding-top:10px;
+  border-top:1px solid var(--line);font-variant-numeric:tabular-nums;
+}
+.ask-card.on .mn{color:var(--accent-dark);border-top-color:rgba(43,188,179,.3)}
+
+.ask-fine{font-size:12.5px;color:var(--muted);margin-top:18px;line-height:1.7;max-width:72ch}
+.ask-fine b{color:var(--ink);font-weight:600}
+
+.ask-veil{position:fixed;inset:0;z-index:55}
+.ask-pop{
+  position:fixed;z-index:60;background:#fff;border:1px solid var(--line);border-radius:15px;
+  box-shadow:0 18px 50px rgba(22,48,61,.16);padding:8px;width:min(430px,calc(100vw - 36px));
+  max-height:70vh;overflow-y:auto;
+}
+.ask-pop button{
+  display:block;width:100%;padding:11px 13px;border-radius:10px;border:0;background:none;
+  font:inherit;font-size:13.5px;font-weight:500;line-height:1.45;color:inherit;
+  text-align:left;cursor:pointer;transition:background .15s;
+}
+.ask-pop button:hover{background:var(--bg-alt)}
+.ask-pop button.on{background:var(--accent-soft);color:var(--accent-dark);font-weight:600}
+.ask-pop button i{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:2px}
+.ask-pop button.on i{color:var(--accent-dark);opacity:.8}
+.ask-pop .hd{
+  font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);padding:9px 13px 6px;
+}
+
+.fine{font-size:12.5px;color:var(--muted);margin-top:26px;line-height:1.65;max-width:64ch}
+
+/* -------------------------------------------------- the scale comparison
+   Seven CRMs, the glue on top of any of them, and one row for owning it —
+   three years at the visitor's own headcount. Server-rendered by scaleChart()
+   in server/render.js; script.js only mutates the numbers and bar widths.
+
+   The form is EMPHASIS, not categorical: every vendor bar is the same warm
+   tone at one weight and ours is the accent, so the eye is told where to look
+   instead of decoding seven hues. #e07a5f against #2bbcb3 clears CVD
+   separation (deutan dE 11.4) and the normal-vision floor (dE 24.5); it fails
+   contrast against white on its own, which is why every row carries a direct
+   value label rather than relying on colour.
+
+   The bar is STACKED BY YEAR — three segments, 2px gaps. That is the whole
+   argument in one mark: theirs is three equal blocks forever, ours is a fat
+   year one and two thin ones after it.
+   -------------------------------------------------------------------------- */
+.scale{margin-top:52px;padding-top:42px;border-top:1px solid var(--line)}
+.scale-head{display:grid;grid-template-columns:1fr 320px;gap:40px;align-items:start;margin-bottom:18px}
+.scale-h2{margin-bottom:18px}
+.scale-pick{max-width:460px}
+.scale-pick-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:6px}
+.scale-pick-head label{font-size:16px;font-weight:600;color:var(--ink)}
+.scale-pick-head b{font-family:var(--display);font-size:26px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+#scaleSeats{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:3px;background:var(--line);outline:none;cursor:pointer;margin:6px 0}
+#scaleSeats::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:2px solid var(--accent);box-shadow:0 1px 5px rgba(0,0,0,.17);cursor:grab;transition:transform .14s var(--ease)}
+#scaleSeats::-webkit-slider-thumb:active{transform:scale(1.12);cursor:grabbing}
+#scaleSeats::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:2px solid var(--accent);box-shadow:0 1px 5px rgba(0,0,0,.17);cursor:grab}
+#scaleSeats:focus-visible::-webkit-slider-thumb{outline:2px solid var(--accent-dark);outline-offset:2px}
+.scale-ends{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* The aside. It concedes when the numbers say to concede — beside the chart,
+   because the same sentence underneath reads as a retraction. */
+.scale-aside{border-left:1px solid var(--line);padding-left:32px;align-self:stretch}
+.scale-aside h3{font-family:var(--display);font-size:13.5px;font-weight:600;letter-spacing:-.01em;margin-bottom:8px}
+.scale-aside p{font-size:13px;color:var(--muted);line-height:1.62}
+.scale-aside p b{color:var(--ink);font-weight:600}
+.scale-prov{margin-top:12px;font-size:11px;opacity:.8}
+
+.scale-chead,.sc-row{display:grid;grid-template-columns:212px 1fr 72px 72px 72px 96px;gap:14px;align-items:center}
+.scale-chead{padding-bottom:6px;border-bottom:1px solid var(--line)}
+.scale-chead div{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;text-align:right}
+.scale-chead div:first-child,.scale-chead div:nth-child(2){text-align:left}
+.sc-row{padding:5px 0;border-bottom:1px solid var(--line)}
+.sc-row .sc-name{font-family:var(--display);font-size:13px;font-weight:600;letter-spacing:-.012em;line-height:1.25;min-width:0}
+.sc-row .sc-name i{display:block;font-style:normal;font-family:var(--body);font-size:10.5px;font-weight:400;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-row .sc-bar{height:8px;display:flex;gap:2px;align-items:stretch}
+.sc-row .sc-bar b{display:block;border-radius:2px;background:var(--rent);transition:width .26s var(--ease)}
+.sc-row .sc-bar b:first-child{border-radius:6px 2px 2px 6px}
+.sc-row .sc-bar b.y2{background:rgba(224,122,95,.72)}
+.sc-row .sc-bar b.y3{background:rgba(224,122,95,.46);border-radius:2px 6px 6px 2px}
+.sc-row .sc-bar .rest{flex:1}
+.sc-row .sc-yr{font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.sc-row .sc-total{font-family:var(--display);font-size:15px;font-weight:600;letter-spacing:-.02em;text-align:right;font-variant-numeric:tabular-nums}
+.sc-row .sc-tag{grid-column:1/-1;font-size:11px;color:var(--muted);margin-top:-3px}
+.sc-row .sc-yrs{display:none}
+.sc-row.glue{border-top:1px dashed rgba(224,122,95,.5);border-bottom:0;margin-top:4px}
+.sc-row.glue .sc-name{font-weight:500}
+.sc-row.glue .sc-bar b{background:repeating-linear-gradient(45deg,rgba(224,122,95,.5) 0 5px,rgba(224,122,95,.2) 5px 10px)}
+.sc-row.glue .sc-total{color:var(--rent-dark);font-size:13.5px}
+.sc-row.ours{border-top:2px solid var(--accent);border-bottom:0;margin-top:5px;padding-top:10px}
+.sc-row.ours .sc-bar b{background:var(--accent-dark)}
+.sc-row.ours .sc-bar b.y2{background:var(--accent)}
+.sc-row.ours .sc-bar b.y3{background:rgba(43,188,179,.5)}
+.sc-row.ours .sc-total{color:var(--accent-dark);font-size:17px}
+.sc-row.ours .sc-name i{color:var(--accent-dark)}
+.sc-row.ours .sc-yr{color:var(--ink);font-weight:500}
+
+@media (max-width:1040px){
+  .scale-head{grid-template-columns:1fr 260px;gap:30px}
+  .scale-aside{padding-left:24px}
+  .scale-chead,.sc-row{grid-template-columns:150px 1fr 58px 58px 58px 80px;gap:9px}
+}
+
+/* PHONE: one line per row, and the stacked bar carries the annual story on its
+   own. Stacking name / bar / year run / tag made every row four lines deep, and
+   nine rows of that is a column nobody scrolls. Dropping the numeric year run
+   costs nothing here — the bar IS the year breakdown. */
+@media (max-width:720px){
+  .scale{margin-top:40px;padding-top:32px}
+  .scale-head{grid-template-columns:1fr;gap:22px}
+  .scale-aside{border-left:0;border-top:1px solid var(--line);padding-left:0;padding-top:20px}
+  .scale-chead{grid-template-columns:1fr 74px 76px;gap:9px;padding-bottom:5px}
+  .scale-chead div:nth-child(3),.scale-chead div:nth-child(4),.scale-chead div:nth-child(5){display:none}
+  .sc-row{grid-template-columns:1fr 74px 76px;gap:9px;padding:6px 0}
+  .sc-row .sc-name{font-size:12.5px;line-height:1.2}
+  .sc-row .sc-name i{font-size:10px;margin-top:1px}
+  .sc-row .sc-yr,.sc-row .sc-tag{display:none}
+  .sc-row .sc-total{font-size:13.5px}
+  .sc-row.ours{padding-top:9px;margin-top:4px}
+  .sc-row.ours .sc-total{font-size:15px}
+}
+
+/* ----------------------------------------------------------------- terms */
+.terms{display:grid;gap:2px;margin-top:30px;border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+.term{display:flex;gap:15px;padding:18px 22px;background:#fff;align-items:flex-start;transition:background .25s var(--ease)}
+.term:nth-child(even){background:var(--bg-alt)}
+.term:hover{background:var(--accent-soft)}
+.term .tick{
+  width:20px;height:20px;border-radius:50%;flex:none;margin-top:1px;
+  background:var(--accent-soft);color:var(--accent-dark);
+  display:flex;align-items:center;justify-content:center;
+}
+.term .tick svg{width:11px;height:11px;stroke-width:3}
+.term p{font-size:14px;line-height:1.55}
+.term p b{font-weight:600}
+
+/* --------------------------------------------------------------- contact */
+/* The .talk dark bubble was deleted on 2026-08-18 — it asked the same
+   question the form beneath it asked. Its contact column lives in .tf-who
+   inside .talk-form now. .btn-light and .btn-outline survive because
+   server/render.js's closing CTA band still uses them. */
+.btn-light{background:#fff;color:var(--deep)}
+.btn-light:hover{background:var(--accent);color:#fff;transform:translateY(-1px)}
+.btn-outline{border:1.5px solid rgba(255,255,255,.24);color:#fff}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+
+/* The idea form. Not in the mockup — the mockup's two buttons were
+   placeholders (href="#") and the site has a working, spam-protected
+   /api/contact endpoint behind this form. Kept in the page's language
+   rather than dropped. */
+/* ONE CARD, TWO COLUMNS since 2026-08-18. The dark "Tell us what is not
+   working" bubble above this is gone — it asked the same question the form
+   asks, immediately above the form. The contact column moved in here instead.
+
+   The contact side is a fixed 260px rather than fractional so the name and the
+   phone number never wrap; a number broken across two lines stops reading as a
+   number. It sits on the tinted panel so the form keeps the white. */
+.talk-form{
+  margin-top:18px;border:1px solid var(--line);border-radius:20px;background:#fff;
+  box-shadow:0 14px 40px rgba(22,48,61,.05);overflow:hidden;
+  display:grid;grid-template-columns:1fr;
+}
+@media (min-width:860px){.talk-form{grid-template-columns:260px 1fr}}
+.tf-who{padding:30px 28px;background:var(--bg-alt);border-bottom:1px solid var(--line)}
+@media (min-width:860px){.tf-who{border-bottom:0;border-right:1px solid var(--line)}}
+.tf-main{padding:30px 32px}
+@media (max-width:700px){.tf-who{padding:24px 20px}.tf-main{padding:24px 20px}}
+.tf-who .tw-k{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin:0}
+.tf-who .tw-name{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--ink);margin:7px 0 14px}
+.tf-who .tw-line{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:14px;padding:7px 0;transition:color .2s var(--ease)}
+.tf-who .tw-line svg{width:15px;height:15px;flex:none;color:var(--muted)}
+.tf-who .tw-line:hover{color:var(--accent-dark)}
+.tf-who .tw-line:hover svg{color:var(--accent-dark)}
+/* A mistyped phone number is a lost enquiry rather than a bad pixel, so the tap
+   target grows where fingers are the input device. */
+@media (max-width:859px){.tf-who .tw-line{padding:10px 0;font-size:15px}}
+.tf-who-note{font-size:12px;color:var(--muted);line-height:1.55;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.talk-form h3{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.talk-form > p{font-size:13.5px;color:var(--muted);margin-top:7px;line-height:1.6;max-width:52ch}
+.tf-grid{display:grid;gap:14px;margin-top:20px}
+@media (min-width:700px){.tf-grid{grid-template-columns:1fr 1fr}}
+.tf-field{display:flex;flex-direction:column;gap:6px}
+.tf-field.full{grid-column:1/-1}
+.tf-field label{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.tf-field label i{font-style:normal;font-weight:500;opacity:.7}
+.tf-field input,.tf-field textarea{
+  font-family:var(--body);font-size:14px;color:var(--ink);
+  border:1px solid var(--line);border-radius:10px;padding:11px 13px;
+  background:var(--bg-alt);transition:all .25s var(--ease);resize:vertical;
+}
+.tf-field input:focus,.tf-field textarea:focus{
+  outline:0;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft);
+}
+.tf-field input::placeholder,.tf-field textarea::placeholder{color:#a3a8b0}
+.tf-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:20px}
+.tf-alt{font-size:12.5px;color:var(--muted)}
+.tf-alt a{color:var(--accent-dark);font-weight:600;border-bottom:1px solid rgba(43,188,179,.35)}
+.tf-alt a:hover{border-color:var(--accent)}
+.success-msg,.error-msg{margin-top:14px;padding:11px 14px;border-radius:10px;font-size:13px;font-weight:500}
+.success-msg{background:var(--accent-soft);color:var(--accent-dark);border:1px solid rgba(43,188,179,.3)}
+.error-msg{background:rgba(214,69,69,.07);color:#b23b3b;border:1px solid rgba(214,69,69,.25)}
+
+footer{padding:36px 0 46px;border-top:1px solid var(--line);margin-top:80px}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.foot nav{display:flex;gap:20px;flex-wrap:wrap}
+.foot nav a{transition:color .2s var(--ease)}
+.foot nav a:hover{color:var(--accent-dark)}
+.foot .fm b{color:var(--ink);font-weight:700}
+.foot .fm span{color:var(--accent)}
+
+/* ========================================================= MOBILE TABBAR
+   Same glass, horizontal. Apple bottom-bar behaviour.                    */
+/* ------------------------------------------------------- the brand on mobile
+   The rail is display:none under 900px and it was the only element on the page
+   carrying the mark, so below that width the site showed no logo anywhere —
+   on the homepage and on every sub-page. This is the rail's brand block on its
+   own, in the tabbar's glass, pinned opposite it at the top of the screen.
+
+   Deliberately not a sixth tab: the bar has five slots, all of them
+   destinations, and a logo is not one. It reuses .mark, so the tile can never
+   drift from the rail's. */
+.brandbar{display:none}
+@media (max-width:900px){
+  /* The display cut — the same drawing the desktop rail uses, scaled down.
+     Ohav's call, 2026-08-17: he did not like the five-segment text cut here and
+     asked for the desktop one. This is a deliberate departure from the size
+     bands in assets/brand/README.md, which put 56–140px on the text cut, so do
+     not "fix" it back by matching the README. Change the README instead if this
+     sticks. The trade is real and known: at 118px the display cut's 3-degree
+     gaps land near 1.7–2.1 CSS px against the text cut's ~3.5, so the course
+     reads finer and starts to fuse on a 1x screen. Both cuts are viewBox
+     0 0 200 104, so the swap is the URL alone — no size or aspect change.
+     A rounded rect rather than a pill, because the lockup is 1.92:1 and
+     stacked, so it needs height a pill cannot give it. */
+  .brandbar{
+    display:block;
+    position:fixed;top:12px;left:12px;z-index:80;
+    width:148px;height:74px;padding:0;border-radius:22px;
+    /* one declaration: image over colour. Two `background:` lines would mean
+       the second silently wins and the lockup never paints. */
+    background:url("/assets/lockup-live.svg") no-repeat center/118px auto,
+               rgba(255,255,255,.55);
+    backdrop-filter:blur(34px) saturate(200%);
+    -webkit-backdrop-filter:blur(34px) saturate(200%);
+    box-shadow:
+      0 16px 34px -14px rgba(22,48,61,.24),
+      0 6px 14px -6px rgba(22,48,61,.10),
+      0 0 0 .5px rgba(255,255,255,.7),
+      0 0 0 1px rgba(226,228,232,.7),
+      inset 0 1px 0 rgba(255,255,255,.9);
+  }
+  /* Fixed means it covered whatever was under it for the entire page — it was
+     sitting on a case-study title and on the pricing eyebrow in Ohav's
+     screenshots. Retract on the way down, return on the way up. */
+  .brandbar{transition:transform .32s var(--ease),opacity .32s var(--ease)}
+  body.nav-down .brandbar{transform:translateY(-120%);opacity:0}
+  .brandbar::before{
+    content:"";position:absolute;inset:0;border-radius:22px;pointer-events:none;mix-blend-mode:screen;
+    background:linear-gradient(180deg,rgba(255,255,255,.6) 0%,rgba(255,255,255,.12) 30%,rgba(255,255,255,0) 58%);
+  }
+  /* The chip occupies 12–86px, so the hero needs more room than the 78px it had.
+     Sub-page heroes are set by .work-hero/.case-hero further down the file — a
+     padding-top here would be overridden by their shorthand. */
+  .hero{padding-top:118px}
+}
+
+.tabbar{display:none}
+@media (max-width:900px){
+  .rail{display:none}
+  .tabbar{
+    display:flex;position:fixed;left:12px;right:12px;bottom:14px;height:62px;z-index:80;
+    border-radius:999px;padding:0 6px;align-items:center;
+    background:rgba(255,255,255,.55);
+    backdrop-filter:blur(34px) saturate(200%);
+    -webkit-backdrop-filter:blur(34px) saturate(200%);
+    box-shadow:
+      0 20px 44px -16px rgba(22,48,61,.26),
+      0 8px 18px -6px rgba(22,48,61,.12),
+      0 0 0 .5px rgba(255,255,255,.7),
+      0 0 0 1px rgba(226,228,232,.7),
+      inset 0 1px 0 rgba(255,255,255,.9);
+  }
+  .tabbar::before{
+    content:"";position:absolute;inset:0;border-radius:999px;pointer-events:none;mix-blend-mode:screen;
+    background:linear-gradient(180deg,rgba(255,255,255,.6) 0%,rgba(255,255,255,.12) 30%,rgba(255,255,255,0) 58%);
+  }
+  .tab{
+    flex:1;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    color:var(--muted);position:relative;z-index:2;transition:color .2s var(--ease);
+  }
+  .tab svg{width:19px;height:19px;stroke-width:1.6}
+  .tab em{font-style:normal;font-size:9.5px;font-weight:600;letter-spacing:.01em}
+  .tab.on{color:var(--accent-dark)}
+  .tab.on::before{
+    content:"";position:absolute;width:52px;height:42px;border-radius:15px;z-index:-1;
+    background:var(--accent-soft);box-shadow:inset 0 0 0 1px rgba(43,188,179,.22),inset 0 1px 0 rgba(255,255,255,.7);
+  }
+  body{padding-bottom:84px}
+}
+
+/* ============================================================================
+   SUB-PAGES — /work and /work/<slug>
+
+   Same tokens, same measure, same rail. These sections have no counterpart in
+   the mockup (which is the homepage only), so they are written in its language
+   rather than lifted from it.
+   ============================================================================ */
+
+.case-narrow{max-width:var(--w-prose)}
+
+.work-hero,.case-hero{padding:118px 0 56px;position:relative;z-index:1}
+/* 118px, not 86px: the mobile brand chip occupies 12–86px and 86px left the
+   first line touching it. This is the rule that governs sub-page heroes — a
+   padding-top in the .brandbar block above would be overridden by this
+   shorthand. */
+@media (max-width:900px){.work-hero,.case-hero{padding:118px 0 44px}}
+.work-hero h1,.case-hero h1{
+  font-size:clamp(2.1rem,5vw,3.1rem);font-weight:800;letter-spacing:-.04em;
+  line-height:1.08;margin-top:6px;
+}
+.work-hero h1 em,.case-hero h1 em{font-style:normal;color:var(--accent)}
+.work-hero p{font-size:16px;color:var(--muted);line-height:1.75;max-width:60ch;margin-top:18px}
+.work-index{padding-top:34px}
+.notfound-hero .actions{margin-top:30px}
+
+/* --- case study page ------------------------------------------------------- */
+
+.case-back{
+  display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;
+  color:var(--muted);margin-bottom:26px;transition:color .2s var(--ease);
+}
+.case-back:hover{color:var(--accent-dark)}
+.case-meta{
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px;
+  font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
+}
+.case-meta .case-area{color:var(--accent-dark)}
+.case-dot{opacity:.4}
+.case-client{font-size:12.5px;color:var(--muted);margin-top:10px}
+.case-client b{color:var(--ink);font-weight:600}
+.case-tagline{font-size:19px;font-weight:500;line-height:1.5;margin-top:18px;max-width:52ch}
+.case-summary{font-size:15px;color:var(--muted);line-height:1.75;margin-top:16px;max-width:60ch}
+.case-live{margin-top:24px}
+.case-scale{
+  display:flex;flex-wrap:wrap;gap:36px;margin-top:38px;padding-top:26px;
+  border-top:1px solid var(--line);
+}
+.case-scale-item{display:flex;flex-direction:column;gap:4px}
+.case-scale-value{
+  font-family:var(--display);font-size:26px;font-weight:800;letter-spacing:-.04em;line-height:1;
+}
+.case-scale-label{font-size:12px;color:var(--muted)}
+
+.case-body{padding-bottom:20px}
+
+/* at-a-glance pair sitting above the fold of the write-up */
+.case-glance{display:grid;gap:26px;margin-top:44px}
+@media (min-width:760px){.case-glance{grid-template-columns:1fr 1fr;gap:34px}}
+.glance-col h2{font-size:15px;font-weight:700;letter-spacing:-.01em;margin-bottom:14px}
+.glance-list{display:grid;gap:11px}
+.glance-list li{position:relative;padding-left:20px;font-size:13.5px;color:var(--muted);line-height:1.6}
+.glance-list li::before{
+  content:"";position:absolute;left:0;top:8px;width:6px;height:6px;border-radius:2px;background:var(--line);
+}
+.glance-check li::before{background:var(--accent);opacity:.75}
+
+.case-outcome{margin-top:44px;padding:26px 28px;border-radius:18px;background:var(--bg-alt);border:1px solid var(--line)}
+@media (max-width:700px){.case-outcome{padding:22px 20px}}
+.case-outcome h2{font-size:15px;font-weight:700;margin-bottom:16px}
+.case-list{display:grid;gap:13px}
+.case-list li{position:relative;padding-left:22px;font-size:14px;color:var(--muted);line-height:1.65}
+.case-list li::before{
+  content:"";position:absolute;left:0;top:8px;width:7px;height:7px;border-radius:2px;background:var(--line);
+}
+.case-list-check li::before{background:var(--accent);opacity:.8}
+.case-list strong,.case-section strong{color:var(--ink);font-weight:600}
+.case-stack{display:flex;flex-wrap:wrap;gap:7px;margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+.case-stack span{
+  font-size:11px;font-weight:600;color:var(--muted);background:#fff;
+  border:1px solid var(--line);border-radius:100px;padding:5px 11px;
+}
+
+/* ------------------------------------------------- what this shape of work costs
+   Sits after Outcome and before the long write-up: by then the reader believes
+   the work, and cost is the next question they were going to ask anyway. It
+   quotes the same ladder as /#price, from content/pricing.js, so the two pages
+   cannot drift apart. */
+.case-cost{margin-top:34px;padding:26px 28px;border:1px solid var(--line);border-radius:18px;background:#fff}
+.case-cost h2{font-size:15px;font-weight:700;margin-bottom:12px}
+.cc-days{font-size:13.5px;color:var(--muted);line-height:1.6;max-width:60ch}
+.cc-days b{color:var(--ink);font-weight:600}
+.cc-rows{display:grid;gap:1px;margin-top:20px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+@media (min-width:640px){.cc-rows{grid-template-columns:1fr 1fr}}
+.cc-row{background:#fff;padding:16px 18px;display:flex;flex-direction:column;gap:7px}
+.cc-row.cc-us{background:var(--accent-soft)}
+.cc-who{
+  font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
+}
+.cc-us .cc-who{color:var(--accent-dark)}
+.cc-fig b{
+  display:block;font-family:var(--display);font-size:21px;font-weight:800;
+  letter-spacing:-.04em;line-height:1.15;font-variant-numeric:tabular-nums;
+}
+.cc-us .cc-fig b{color:var(--accent-dark)}
+.cc-fig span{display:block;font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+.cc-fine{font-size:11.5px;color:var(--muted);margin-top:16px;line-height:1.6;max-width:72ch}
+.cc-fine a{color:var(--accent-dark);font-weight:600}
+
+/* the long write-up, collapsed by default */
+.case-longform{margin-top:34px;border:1px solid var(--line);border-radius:18px;background:#fff;overflow:hidden}
+.case-longform summary{
+  list-style:none;cursor:pointer;padding:20px 24px;display:flex;flex-direction:column;gap:4px;
+  transition:background .25s var(--ease);
+}
+.case-longform summary::-webkit-details-marker{display:none}
+.case-longform summary:hover{background:var(--bg-alt)}
+.lf-title{font-family:var(--display);font-size:14.5px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+.lf-title::before{content:"+";color:var(--accent-dark);font-weight:800;font-size:15px}
+.case-longform[open] .lf-title::before{content:"\2212"}
+.lf-sub{font-size:12.5px;color:var(--muted);padding-left:20px}
+.lf-body{padding:6px 24px 28px;border-top:1px solid var(--line)}
+@media (max-width:700px){.case-longform summary{padding:18px 18px}.lf-body{padding:6px 18px 24px}}
+.case-section{margin-top:30px}
+.case-section h3{
+  display:flex;align-items:baseline;gap:12px;font-size:16px;font-weight:700;
+  letter-spacing:-.02em;margin-bottom:14px;
+}
+.case-num{font-size:10.5px;font-weight:700;letter-spacing:.13em;color:var(--accent-dark)}
+.case-section p{font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:14px}
+.case-section code{
+  font-family:var(--mono);font-size:.88em;padding:2px 6px;border-radius:5px;
+  background:var(--bg-alt);border:1px solid var(--line);color:var(--ink);
+}
+
+/* the hard part — deliberately the most distinct block on the page */
+.case-hard{
+  margin-top:34px;padding:26px 26px 22px;border-radius:16px;
+  background:var(--bg-alt);border:1px solid var(--line);border-left:3px solid var(--accent);
+}
+@media (max-width:700px){.case-hard{padding:20px 18px}}
+.case-hard-tag{
+  font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--accent-dark);margin-bottom:9px;
+}
+.case-hard h3{font-size:18px;font-weight:700;letter-spacing:-.025em;line-height:1.25;margin-bottom:16px;display:block}
+.case-hard p{color:#4a4e55}
+.case-lesson{
+  margin-top:18px;padding:16px 18px;border-radius:12px;background:#fff;border:1px solid var(--line);
+}
+.case-lesson-label{
+  display:block;font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:7px;
+}
+.case-lesson p{font-size:13.5px;line-height:1.65;color:var(--ink);margin:0;font-weight:500}
+
+.case-nav{padding:0 0 20px}
+.case-nav-inner{display:grid;gap:12px}
+@media (min-width:700px){.case-nav-inner{grid-template-columns:1fr 1fr}}
+.case-nav-item{
+  border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:#fff;
+  display:flex;flex-direction:column;gap:4px;transition:all .3s var(--ease);
+}
+.case-nav-item:hover{border-color:rgba(43,188,179,.45);box-shadow:0 12px 30px rgba(22,48,61,.07)}
+.case-nav-item.next{text-align:right}
+.case-nav-dir{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.case-nav-name{font-family:var(--display);font-size:14.5px;font-weight:700;letter-spacing:-.02em}
+
+/* --- legal pages -----------------------------------------------------------
+   Deliberately narrower than the rest of the site. Everything else here is set
+   to --w-page (1120px) because it is grids and boards; this is continuous prose
+   and the measure that works for a board is unreadable for a paragraph. */
+.legal{padding:80px 0 40px}
+@media (max-width:900px){.legal{padding:56px 0 30px}}
+.legal h1.sec{margin-bottom:12px}
+.legal-date{font-size:12.5px;color:var(--muted);margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.legal-body{max-width:var(--w-prose);margin-top:34px}
+.legal-sec{margin-bottom:34px}
+.legal-sec h2{font-family:var(--display);font-size:19px;font-weight:600;letter-spacing:-.02em;margin-bottom:10px}
+.legal-sec p{font-size:15px;color:var(--muted);line-height:1.75;margin-bottom:12px}
+.legal-sec p b{color:var(--ink);font-weight:600}
+.legal-sec p a{color:var(--accent-dark);border-bottom:1px solid rgba(43,188,179,.35)}
+.legal-sec p a:hover{border-bottom-color:var(--accent)}
+.legal-sec code{font-size:13px;background:var(--bg-alt);padding:1px 6px;border-radius:5px;color:var(--ink)}
+.legal-table{width:100%;border-collapse:collapse;margin:6px 0 4px;font-size:14px}
+.legal-table th{text-align:left;font-weight:500;color:var(--ink);padding:9px 14px 9px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.legal-table td{text-align:right;color:var(--muted);padding:9px 0;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+.legal-nav{display:flex;gap:18px;flex-wrap:wrap;max-width:var(--w-prose);margin-top:10px;padding-top:24px;border-top:1px solid var(--line);font-size:14px}
+.legal-nav a{color:var(--accent-dark)}
+.legal-nav a:hover{text-decoration:underline;text-underline-offset:3px}
+
+/* --- long tail (kept on /work, not on the homepage) ------------------------ */
+
+.more-toggle{margin-top:8px;border:1px solid var(--line);border-radius:18px;background:#fff;overflow:hidden}
+.more-toggle summary{
+  list-style:none;cursor:pointer;padding:18px 22px;display:flex;align-items:center;
+  justify-content:space-between;gap:14px;flex-wrap:wrap;transition:background .25s var(--ease);
+}
+.more-toggle summary::-webkit-details-marker{display:none}
+.more-toggle summary:hover{background:var(--bg-alt)}
+.more-summary-text{font-family:var(--display);font-size:14.5px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+.more-summary-text::before{content:"+";color:var(--accent-dark);font-weight:800;font-size:15px}
+.more-toggle[open] .more-summary-text::before{content:"\2212"}
+.more-count{font-size:11.5px;font-weight:600;color:var(--muted)}
+.more-grid{display:grid;gap:26px;padding:6px 22px 24px;border-top:1px solid var(--line)}
+@media (min-width:760px){.more-grid{grid-template-columns:repeat(3,1fr);gap:30px;padding-top:22px}}
+.more-col h4{font-size:11px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:14px}
+.more-col ul{display:grid;gap:13px}
+.more-col li{display:flex;flex-direction:column;gap:2px}
+.more-name{font-size:13.5px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.more-name a{border-bottom:1px solid var(--line);transition:all .2s var(--ease)}
+.more-name a:hover{color:var(--accent-dark);border-color:var(--accent)}
+.more-badge{
+  font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent-dark);background:var(--accent-soft);border-radius:4px;padding:3px 6px;
+}
+.more-note{font-size:12.5px;color:var(--muted);line-height:1.5}
+.more-footnote{font-size:12px;color:var(--muted);line-height:1.6;padding:0 22px 22px;max-width:70ch}
+
+/* --- shared closing CTA band ---------------------------------------------- */
+
+.cta-band-inner{
+  border-radius:24px;background:var(--deep);color:#fff;padding:46px 40px;
+  position:relative;overflow:hidden;
+}
+@media (max-width:700px){.cta-band-inner{padding:34px 24px}}
+.cta-band-inner::after{
+  content:"";position:absolute;width:420px;height:420px;border-radius:50%;
+  background:rgba(43,188,179,.16);filter:blur(80px);top:-170px;right:-130px;pointer-events:none;
+}
+.cta-band-inner h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:700;position:relative}
+.cta-band-inner p{color:rgba(255,255,255,.62);margin-top:13px;font-size:14.5px;max-width:52ch;position:relative;line-height:1.7}
+.cta-band-actions{display:flex;gap:12px;margin-top:30px;flex-wrap:wrap;position:relative}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  html{scroll-behavior:auto}
+  /* The `*` above cannot reach inside an SVG loaded as an image, so the moving
+     lockup has to be swapped for the still one rather than stopped. Only the
+     image layer: .brandbar's shorthand carries a background-colour in its last
+     layer and a full `background:` here would drop it.
+
+     Both land on the same file now that the mobile chip carries the display cut
+     too — they are still written separately because they are two decisions, and
+     if the chip ever goes back to the text cut this is the second line that has
+     to move with it. */
+  .rail-brand{background-image:url("/assets/brand/kaymen-lockup.svg")}
+  .brandbar{background-image:url("/assets/brand/kaymen-lockup.svg")}
+}
+
+
+.pk{max-width:var(--w-page);margin:0 auto;padding:40px 22px 60px}
+.pk h2.sec{margin-bottom:12px}
+.pk .sec-sub{font-size:16.5px;color:var(--muted);max-width:62ch;margin-bottom:26px}
+
+/* the universals, said once */
+.pk-all{border:1px solid rgba(43,188,179,.3);background:var(--accent-soft);border-radius:14px;padding:18px 22px;margin-bottom:26px}
+.pk-all b{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:10px}
+.pk-all ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 22px}
+.pk-all li{font-size:13.5px;color:var(--ink);display:flex;gap:8px;align-items:flex-start}
+.pk-all li::before{content:"✓";color:var(--accent-dark);font-weight:700;flex:none}
+@media (max-width:760px){.pk-all ul{grid-template-columns:1fr}}
+
+/* A — compact matrix */
+.mx{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.mx th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:0 12px 12px 0;vertical-align:bottom}
+.mx thead th.col{font-family:var(--display);font-size:14px;font-weight:600;letter-spacing:-.01em;color:var(--ink);text-transform:none}
+.mx td{padding:11px 12px 11px 0;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted);vertical-align:top}
+.mx tr.money td{font-family:var(--display);font-size:15px;font-weight:600;color:var(--ink);letter-spacing:-.02em}
+.mx th.rowlab{font-weight:600;color:var(--ink);text-transform:none;letter-spacing:0;font-size:13px;padding-right:22px;border-top:1px solid var(--line);padding-top:11px}
+.mx .on{background:var(--accent-soft)}
+.mx td.dash{color:#c2c7ce}
+
+/* B — the ShipStation shape */
+.gate{width:100%;border-collapse:collapse}
+.gate th{font-family:var(--display);font-size:14px;font-weight:600;padding:0 10px 14px 0;text-align:center}
+.gate th:first-child{text-align:left}
+.gate th .price{display:block;font-family:var(--body);font-size:12px;font-weight:500;color:var(--muted);margin-top:3px}
+.gate td{padding:10px;border-top:1px solid var(--line);text-align:center;font-size:13.5px;color:var(--muted)}
+.gate td:first-child{text-align:left;color:var(--ink);font-size:13px}
+.gate .yes{color:var(--accent-dark);font-weight:700}
+.gate .no{color:#c2c7ce}
+
+/* C — one at a time with an explicit delta */
+.step{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.step button{font:inherit;font-size:13px;font-weight:500;border:1px solid var(--line);background:#fff;color:var(--muted);padding:9px 15px;border-radius:22px;cursor:pointer}
+.step button[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-dark);font-weight:600}
+.rung{border:1px solid var(--line);border-radius:16px;padding:24px 26px;background:#fff;max-width:720px}
+.rung h3{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.02em}
+.rung .note{font-size:14.5px;color:var(--muted);margin-top:8px;line-height:1.65}
+.rung .adds{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.rung .adds b{display:block;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-dark);margin-bottom:8px}
+.rung .adds li{list-style:none;font-size:13.5px;color:var(--ink);display:flex;gap:8px;margin-bottom:5px}
+.rung .adds li::before{content:"+";color:var(--accent-dark);font-weight:700}
+.rung .cost{display:flex;gap:26px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.rung .cost div b{display:block;font-family:var(--display);font-size:20px;font-weight:600;letter-spacing:-.02em}
+.rung .cost div span{font-size:12px;color:var(--muted)}
+
+
+body{margin:0;background:var(--bg-alt)}
+.mk{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.mk-in{max-width:1240px;margin:0 auto;padding:11px 22px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.mk h1{font-family:var(--display);font-size:13.5px;font-weight:600;margin:0}
+.mk h1 span{color:var(--muted);font-weight:400}
+.seg{display:flex;gap:2px;background:var(--bg-alt);padding:3px;border-radius:9px;border:1px solid var(--line)}
+.seg button{font:inherit;font-size:12.5px;font-weight:500;border:0;background:transparent;color:var(--muted);padding:6px 12px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.mk .sp{flex:1}
+.note{max-width:1240px;margin:0 auto;padding:20px 22px 0}
+.note .pane{display:none}.note .pane.on{display:block}
+.note h2{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.02em;margin:0 0 6px}
+.note p{font-size:14.5px;color:var(--muted);max-width:84ch;margin:0}
+.note p b{color:var(--ink);font-weight:600}
+.note .risk{margin-top:8px;font-size:13.5px;border-left:2px solid var(--rent);padding-left:12px}
+.note .risk b{color:var(--rent-dark);font-weight:600}
+.stagewrap{overflow-x:auto;padding:18px 0 70px}
+.stage{margin:0 auto;background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 40px -22px rgba(0,0,0,.18);transition:width .28s var(--ease)}
+.stage.w-desk{width:1160px}.stage.w-tab{width:860px}.stage.w-phone{width:390px}
+.dir{display:none}.dir.on{display:block}
+</style>
+</head>
+<body>
+<div class="mk"><div class="mk-in">
+  <h1>Telling the packages apart <span>— Ariel's note, three answers</span></h1>
+  <div class="seg" id="dseg" role="group" aria-label="Direction">
+    <button data-d="A" aria-pressed="true">A · Same rows</button>
+    <button data-d="B" aria-pressed="false">B · ShipStation shape</button>
+    <button data-d="C" aria-pressed="false">C · One at a time</button>
+  </div>
+  <div class="sp"></div>
+  <div class="seg" id="wseg" role="group" aria-label="Width">
+    <button data-w="w-desk" aria-pressed="true">1160</button>
+    <button data-w="w-tab" aria-pressed="false">860</button>
+    <button data-w="w-phone" aria-pressed="false">390</button>
+  </div>
+</div></div>
+<div class="note"><div class="pane on" data-p="A"><h2>A — same rows, different values</h2><p>The universals are stated <b>once</b>, above the table. Below it, six rows that every rung answers differently: what it covers, how many tools it replaces, reporting, development included, build, monthly. That is a comparison — you read across a row and see the difference.</p><p class="risk"><b>Risk:</b> it is a table, and the recorded decision was "deliberately not a tier table" because a table promotes the price. This keeps price as the last two rows rather than the heading, which is the compromise — but it is still closer to a pricing table than what is there now.</p></div><div class="pane" data-p="B"><h2>B — the ShipStation shape</h2><p>A literal feature matrix, ticks and all, exactly what Ariel pointed at. Nine rows, four columns, every cell answered.</p><p class="risk"><b>Risk, and it is fatal:</b> <b>five of the nine rows are ticked in every column</b>, because these tiers are not feature-gated — everyone gets ownership, unlimited logins, backups, patching and a human. ShipStation's matrix works because paying more unlocks things. Ours would advertise that the cheapest rung is missing almost nothing, and put $15,000 in a column heading on the page that argues against rental pricing.</p></div><div class="pane" data-p="C"><h2>C — one at a time, with the delta named</h2><p>Closest to what is there now, but each rung explicitly says <b>what it adds over the one before</b>. The comparison is sequential rather than side by side: no table, no price in a heading, and the ladder reads as a ladder.</p><p class="risk"><b>Risk:</b> it still needs a click to compare, which is the complaint Ariel actually made. It fixes "I cannot tell them apart" but not "show me everything at once".</p></div></div>
+<div class="stagewrap"><div class="stage w-desk" id="stage">
+  <div class="dir on" data-dir="A"><div class="pk">
+      <p class="eyebrow">What each one is</p>
+      <h2 class="sec">Four situations, one ladder.</h2>
+      <p class="sec-sub">They are not feature tiers — nothing is locked behind a bigger number. What changes is how much of the business the system covers.</p>
+      <div class="pk-all">
+        <b>Every one of them includes</b>
+        <ul><li>You own the code, the data and the servers</li><li>Logins for everyone who needs one — no per-seat fee, ever</li><li>Backups verified, not assumed</li><li>Patches and dependency updates</li><li>Monitored, and a person answers when it breaks</li><li>Yours to take elsewhere at any time, no exit fee</li></ul>
+      </div>
+  <table class="mx">
+    <thead><tr><th></th><th class="col">Something that exists</th><th class="col on">Your first real system</th><th class="col">Tools that do not talk</th><th class="col">Several systems at once</th></tr></thead>
+    <tbody>
+      <tr class="">
+        <th class="rowlab">What it covers</th>
+        <td class="">A system you already have</td><td class="on">One part of the business</td><td class="">Work spread across several tools</td><td class="">Several systems and several teams</td>
+      </tr>
+      <tr class="">
+        <th class="rowlab">Replaces</th>
+        <td class="dash ">—</td><td class="on">1 tool or spreadsheet</td><td class="">3–6 tools</td><td class="">A whole stack</td>
+      </tr>
+      <tr class="">
+        <th class="rowlab">Reporting across teams</th>
+        <td class="dash ">—</td><td class="dash on">—</td><td class="">One source of truth</td><td class="">Across every team</td>
+      </tr>
+      <tr class="">
+        <th class="rowlab">Development included</th>
+        <td class="">Small changes</td><td class="on">Small changes</td><td class="">Small changes</td><td class="">10 hours a month, rolls over</td>
+      </tr>
+      <tr class="money">
+        <th class="rowlab">Build</th>
+        <td class="">no build fee</td><td class="on">from $2,500</td><td class="">from $6,500</td><td class="">from $15,000</td>
+      </tr>
+      <tr class="money">
+        <th class="rowlab">Monthly</th>
+        <td class="">$450</td><td class="on">$300</td><td class="">$450</td><td class="">$1,200</td>
+      </tr>
+    </tbody>
+  </table>
+</div></div>
+  <div class="dir" data-dir="B"><div class="pk">
+      <p class="eyebrow">What each one is</p>
+      <h2 class="sec">Four situations, one ladder.</h2>
+      <p class="sec-sub">They are not feature tiers — nothing is locked behind a bigger number. What changes is how much of the business the system covers.</p>
+      <div class="pk-all">
+        <b>Every one of them includes</b>
+        <ul><li>You own the code, the data and the servers</li><li>Logins for everyone who needs one — no per-seat fee, ever</li><li>Backups verified, not assumed</li><li>Patches and dependency updates</li><li>Monitored, and a person answers when it breaks</li><li>Yours to take elsewhere at any time, no exit fee</li></ul>
+      </div>
+  <table class="gate">
+    <thead><tr><th></th><th>Something that exists<span class="price">no build fee · $450/mo</span></th><th>Your first real system<span class="price">from $2,500 · $300/mo</span></th><th>Tools that do not talk<span class="price">from $6,500 · $450/mo</span></th><th>Several systems at once<span class="price">from $15,000 · $1,200/mo</span></th></tr></thead>
+    <tbody><tr><td>Everything you own — code, data, servers</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+    <tr><td>Unlimited logins, no per-seat fee</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+    <tr><td>Backups, patching, monitoring</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+    <tr><td>A person answers when it breaks</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+    <tr><td>Take it elsewhere any time</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+    <tr><td>Replaces a tool or spreadsheet</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+    <tr><td>One source of truth across tools</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+    <tr><td>Reporting across every team</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr>
+    <tr><td>Ten hours of development a month</td><td class="no">—</td><td class="no">—</td><td class="no">—</td><td class="yes">✓</td></tr></tbody>
+  </table>
+  <p class="fine" style="margin-top:18px">Five of the nine rows are ticked in every column, which is the honest picture and also the problem with drawing it this way.</p>
+</div></div>
+  <div class="dir" data-dir="C"><div class="pk">
+      <p class="eyebrow">What each one is</p>
+      <h2 class="sec">Four situations, one ladder.</h2>
+      <p class="sec-sub">They are not feature tiers — nothing is locked behind a bigger number. What changes is how much of the business the system covers.</p>
+      <div class="pk-all">
+        <b>Every one of them includes</b>
+        <ul><li>You own the code, the data and the servers</li><li>Logins for everyone who needs one — no per-seat fee, ever</li><li>Backups verified, not assumed</li><li>Patches and dependency updates</li><li>Monitored, and a person answers when it breaks</li><li>Yours to take elsewhere at any time, no exit fee</li></ul>
+      </div>
+  <div class="step" id="stepseg"><button data-i="0" aria-pressed="false">Something that exists</button><button data-i="1" aria-pressed="true">Your first real system</button><button data-i="2" aria-pressed="false">Tools that do not talk</button><button data-i="3" aria-pressed="false">Several systems at once</button></div>
+  <div class="rung" id="rungbox"></div>
+  <script id="rungdata" type="application/json">[{"chip":"Something that exists","name":"Keep alive something that already works","note":"It exists and it runs. The person who built it is leaving, or already has.","adds":[],"build":"No build fee","mo":"$450/mo"},{"chip":"Your first real system","name":"One part of the business, on software you own","note":"Quotes, jobs, bookings, stock, who owes what. A real database with logins for your people, not a spreadsheet that breaks when two of them open it at once.","adds":["A real database instead of a spreadsheet","One part of the business, properly"],"build":"from $2,500","mo":"$300/mo"},{"chip":"Tools that do not talk","name":"Work spread across tools that do not talk to each other","note":"You have the software. What you do not have is one place where the answer lives, so somebody reconciles it by hand.","adds":["Several tools replaced by one system","One source of truth instead of six exports"],"build":"from $6,500","mo":"$450/mo"},{"chip":"Several systems at once","name":"Several systems, several teams, and the reporting across all of it","note":"Questions that can only be answered today by exporting everything and merging it by hand.","adds":["Reporting that crosses every team","Ten hours of development a month, rolling over"],"build":"from $15,000","mo":"$1,200/mo"}]</script>
+</div></div>
+</div></div>
+<script>
+var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+var RD = JSON.parse(document.getElementById('rungdata').textContent);
+function paintRung(i) {
+  var r = RD[i];
+  document.getElementById('rungbox').innerHTML =
+    '<h3>' + r.name + '</h3><p class="note">' + r.note + '</p>' +
+    (r.adds.length ? '<div class="adds"><b>What this adds over the one before</b><ul>' +
+      r.adds.map(function (a) { return '<li>' + a + '</li>'; }).join('') + '</ul></div>' : '') +
+    '<div class="cost"><div><b>' + r.build + '</b><span>to build, once</span></div>' +
+    '<div><b>' + r.mo + '</b><span>after that, flat</span></div></div>';
+  $$('#stepseg button').forEach(function (b) { b.setAttribute('aria-pressed', String(+b.dataset.i === i)); });
+}
+$$('#stepseg button').forEach(function (b) { b.addEventListener('click', function () { paintRung(+b.dataset.i); }); });
+paintRung(1);
+$$('#dseg button').forEach(function (b) { b.addEventListener('click', function () {
+  $$('#dseg button').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+  $$('.dir').forEach(function (d) { d.classList.toggle('on', d.dataset.dir === b.dataset.d); });
+  $$('.note .pane').forEach(function (p) { p.classList.toggle('on', p.dataset.p === b.dataset.d); });
+}); });
+$$('#wseg button').forEach(function (b) { b.addEventListener('click', function () {
+  $$('#wseg button').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+  document.getElementById('stage').className = 'stage ' + b.dataset.w;
+}); });
+</script>
+</body>
+</html>
