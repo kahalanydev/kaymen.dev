@@ -986,39 +986,10 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
 .term p b{font-weight:600}
 
 /* --------------------------------------------------------------- contact */
-.talk{
-  border-radius:24px;background:var(--deep);color:#fff;padding:52px 40px;margin-top:20px;
-  position:relative;overflow:hidden;
-}
-@media (max-width:700px){.talk{padding:38px 26px}}
-.talk::after{
-  content:"";position:absolute;width:420px;height:420px;border-radius:50%;
-  background:rgba(43,188,179,.16);filter:blur(80px);top:-160px;right:-120px;pointer-events:none;
-}
-/* Two columns: a person on the left, the invitation on the right. The contact
-   column is fixed rather than fractional so the name and the phone number never
-   wrap — a number that breaks across two lines stops reading as a number. */
-@media (min-width:820px){
-  .talk{display:grid;grid-template-columns:270px 1fr;gap:48px;align-items:center}
-}
-.talk-who{position:relative}
-@media (max-width:819px){
-  .talk-who{padding-bottom:24px;margin-bottom:26px;border-bottom:1px solid rgba(255,255,255,.14)}
-}
-.talk-say{position:relative}
-.tw-k{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:rgba(255,255,255,.45);margin:0}
-.tw-name{font-family:var(--display);font-size:19px;font-weight:700;letter-spacing:-.02em;color:#fff;margin:7px 0 14px;max-width:none}
-.tw-line{display:flex;align-items:center;gap:10px;color:rgba(255,255,255,.82);font-size:14.5px;padding:7px 0;transition:color .2s var(--ease)}
-.tw-line svg{width:15px;height:15px;flex:none;opacity:.6}
-.tw-line:hover{color:var(--accent)}
-.tw-line:hover svg{opacity:1}
-/* tel: and mailto: are the one place on this page where a tap target has to be
-   comfortable — a mistyped phone number is a lost enquiry, not a bad pixel */
-@media (max-width:819px){.tw-line{padding:10px 0;font-size:15.5px}}
-
-.talk h2{font-size:clamp(1.6rem,3.2vw,2.1rem);position:relative;font-weight:700}
-.talk p{color:rgba(255,255,255,.62);margin-top:14px;font-size:15px;max-width:44ch;position:relative;line-height:1.7}
-.talk .actions{position:relative}
+/* The .talk dark bubble was deleted on 2026-08-18 — it asked the same
+   question the form beneath it asked. Its contact column lives in .tf-who
+   inside .talk-form now. .btn-light and .btn-outline survive because
+   server/render.js's closing CTA band still uses them. */
 .btn-light{background:#fff;color:var(--deep)}
 .btn-light:hover{background:var(--accent);color:#fff;transform:translateY(-1px)}
 .btn-outline{border:1.5px solid rgba(255,255,255,.24);color:#fff}
@@ -1028,11 +999,33 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
    placeholders (href="#") and the site has a working, spam-protected
    /api/contact endpoint behind this form. Kept in the page's language
    rather than dropped. */
+/* ONE CARD, TWO COLUMNS since 2026-08-18. The dark "Tell us what is not
+   working" bubble above this is gone — it asked the same question the form
+   asks, immediately above the form. The contact column moved in here instead.
+
+   The contact side is a fixed 260px rather than fractional so the name and the
+   phone number never wrap; a number broken across two lines stops reading as a
+   number. It sits on the tinted panel so the form keeps the white. */
 .talk-form{
   margin-top:18px;border:1px solid var(--line);border-radius:20px;background:#fff;
-  padding:30px 32px;box-shadow:0 14px 40px rgba(22,48,61,.05);
+  box-shadow:0 14px 40px rgba(22,48,61,.05);overflow:hidden;
+  display:grid;grid-template-columns:1fr;
 }
-@media (max-width:700px){.talk-form{padding:24px 20px}}
+@media (min-width:860px){.talk-form{grid-template-columns:260px 1fr}}
+.tf-who{padding:30px 28px;background:var(--bg-alt);border-bottom:1px solid var(--line)}
+@media (min-width:860px){.tf-who{border-bottom:0;border-right:1px solid var(--line)}}
+.tf-main{padding:30px 32px}
+@media (max-width:700px){.tf-who{padding:24px 20px}.tf-main{padding:24px 20px}}
+.tf-who .tw-k{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin:0}
+.tf-who .tw-name{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;color:var(--ink);margin:7px 0 14px}
+.tf-who .tw-line{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:14px;padding:7px 0;transition:color .2s var(--ease)}
+.tf-who .tw-line svg{width:15px;height:15px;flex:none;color:var(--muted)}
+.tf-who .tw-line:hover{color:var(--accent-dark)}
+.tf-who .tw-line:hover svg{color:var(--accent-dark)}
+/* A mistyped phone number is a lost enquiry rather than a bad pixel, so the tap
+   target grows where fingers are the input device. */
+@media (max-width:859px){.tf-who .tw-line{padding:10px 0;font-size:15px}}
+.tf-who-note{font-size:12px;color:var(--muted);line-height:1.55;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
 .talk-form h3{font-size:17px;font-weight:700;letter-spacing:-.02em}
 .talk-form > p{font-size:13.5px;color:var(--muted);margin-top:7px;line-height:1.6;max-width:52ch}
 .tf-grid{display:grid;gap:14px;margin-top:20px}

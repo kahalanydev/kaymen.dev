@@ -296,14 +296,22 @@ outcome → stack. The hard-part block is the most visually distinct element on 
 left border, elevated card, its own "What it taught us" aside) because it is the section that
 does the selling. Each page carries prev/next navigation and a closing CTA band.
 
-### 6. Contact ("What Do You Want to Build?")
-- "Describe your idea" form: name, email, "What are you building?" (optional), message textarea
+### 6. Contact ("What do you want to build?")
+- ONE card, two columns (2026-08-18). Left: a named person — Ariel Ohry Kahalany,
+  tel +1 561 506 6729, elor@kaymengroup.com. Right: the form.
+- The dark "talk" bubble that used to sit above the form was removed: it asked
+  the same question the form asks, immediately above it.
+- Form fields: name, email, "The shape of it" (optional), "What you are picturing"
+- Copy is build-framed, not complaint-framed. The one blunt line kept is
+  "or an honest reason not to build it yet".
 - Honeypot + timing-based spam protection (invisible to users)
 - Submissions stored in DB + email notification sent to hello@kaymen.dev
 - Rate limited: 1 submission per minute per IP
-- "Or reach out directly" divider with:
-  - WhatsApp link (wa.me/18623005027)
-  - Email link: hello@kaymen.dev (tracked)
+- WhatsApp link under the submit button (wa.me/18623005027)
+  NOTE: that number predates the rebrand — added 2026-03-29 in 43340bc — and is
+  NOT the same number as the contact column above it. Unresolved.
+- hello@kaymen.dev is no longer shown anywhere on the public site; it survives
+  only as a placeholder in the admin SMTP form and as the contact-form recipient.
 
 ### 7. Footer
 - Logo, nav links, copyright

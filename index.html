@@ -260,17 +260,22 @@
   <!-- ================================================================ TALK -->
   <section id="talk">
     <div class="wrap">
-      <!-- Two columns since 2026-08-18. The card used to be the pitch alone with
-           its right half empty behind the glow; the left is now a person with a
-           phone number, which is the one thing a page full of systems arguments
-           cannot say for itself.
+      <!-- ONE CARD, TWO COLUMNS, 2026-08-18. The dark bubble that used to sit
+           above this is gone — it asked the same question the form asks,
+           immediately above the form, which is the mistake #need and #price
+           made before they were merged.
 
-           The generic hello@kaymen.dev button was REMOVED rather than kept
-           alongside: two different email addresses on one card makes the reader
-           pick, and a direct address beats a shared inbox on a card whose whole
-           job is "a real person answers". -->
-      <div class="talk rv">
-        <div class="talk-who">
+           The copy also moved from complaint-framing to build-framing: the old
+           labels asked a visitor to arrive already unhappy, and the rest of the
+           site sells building something rather than fixing something. The one
+           blunt line that stays is "or an honest reason not to build it yet" —
+           that is not negativity, it is the promise the page is built on.
+
+           Comments ship. The old strings are deliberately not quoted here; the
+           whole point was getting that language off the page, and a comment
+           reciting it puts it straight back into view-source. -->
+      <div class="talk-form rv">
+        <div class="tf-who">
           <p class="tw-k">Talk to</p>
           <p class="tw-name">Ariel Ohry Kahalany</p>
           <a class="tw-line" href="tel:+15615066729" data-track="contact-phone">
@@ -281,19 +286,12 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="m3 6.5 9 6.5 9-6.5"/></svg>
             <span>elor@kaymengroup.com</span>
           </a>
+          <p class="tf-who-note">A person, not a queue. Call, write, or use the form — whichever is easier.</p>
         </div>
-        <div class="talk-say">
-          <h2>Tell us what is not working.</h2>
-          <p>Not a brief, not a spec. The problem in your own words is enough. And we never show you one option.</p>
-          <div class="actions">
-            <a href="#ideaForm" class="btn btn-light" data-track="cta-start-conversation">Start a conversation</a>
-          </div>
-        </div>
-      </div>
 
-      <div class="talk-form rv">
-        <h3>Describe the problem</h3>
-        <p>Whatever detail you have. We reply within 24 hours, with a shape and a number, or the reason not to build it.</p>
+        <div class="tf-main">
+        <h3>What do you want to build?</h3>
+        <p>An idea, a sketch, or a half-formed thought is enough. We reply within 24 hours with a shape and a number — or an honest reason not to build it yet.</p>
         <form id="ideaForm">
           <div class="tf-grid">
             <div class="tf-field">
@@ -305,12 +303,12 @@
               <input type="email" id="ideaEmail" placeholder="you@company.com" required autocomplete="email">
             </div>
             <div class="tf-field full">
-              <label for="ideaProject">What are you building? <i>(optional)</i></label>
+              <label for="ideaProject">The shape of it <i>(optional)</i></label>
               <input type="text" id="ideaProject" placeholder="Booking system, client portal, an integration…">
             </div>
             <div class="tf-field full">
-              <label for="ideaText">What is not working</label>
-              <textarea id="ideaText" placeholder="Right now we track this in a spreadsheet and…" rows="5" required maxlength="2000"></textarea>
+              <label for="ideaText">What you are picturing</label>
+              <textarea id="ideaText" placeholder="We want one place where the whole team can…" rows="5" required maxlength="2000"></textarea>
             </div>
           </div>
           <!-- honeypot + timing gate: bots that fill this, or submit inside two
@@ -324,6 +322,7 @@
           </div>
           <div id="ideaMsg"></div>
         </form>
+        </div>
       </div>
     </div>
   </section>
