@@ -89,12 +89,25 @@ function check(name, ok, detail) {
   check('chart is server-rendered', rows === PRICING.CRMS.length + 2,
     'got ' + rows + ' rows, expected ' + (PRICING.CRMS.length + 2));
 
-  /* --- the hero rent panel used to own .srow; it must be untouched --- */
+  /* --- the .srow collision guard ---------------------------------------
+     The hero rent panel owns .srow; the chart's rows are sc-*. Applying the
+     chart's six-column grid to that panel would silently wreck it, which is
+     what nearly happened.
+
+     The panel was removed from the hero on 2026-08-18, so it is normally
+     absent now — but rentPanel() is still exported and the slot is expected to
+     be refilled, so this guard stays and simply skips when there is no panel.
+     Deleting it would mean the collision could come back unnoticed the day the
+     panel does. */
   const rent = await evalJs("document.querySelectorAll('.stack .srow').length");
-  check('hero rent panel intact', rent === PRICING.RENT_STACK.rows.length,
-    'got ' + rent + ' rows, expected ' + PRICING.RENT_STACK.rows.length);
-  const rentGrid = await evalJs("getComputedStyle(document.querySelector('.stack .srow')).gridTemplateColumns");
-  check('hero rent panel not caught by the chart grid', !/(\d+px\s+){4,}/.test(String(rentGrid)), String(rentGrid));
+  if (rent === 0) {
+    console.log('  --   hero rent panel absent (removed 2026-08-18) — collision guard skipped');
+  } else {
+    check('hero rent panel intact', rent === PRICING.RENT_STACK.rows.length,
+      'got ' + rent + ' rows, expected ' + PRICING.RENT_STACK.rows.length);
+    const rentGrid = await evalJs("getComputedStyle(document.querySelector('.stack .srow')).gridTemplateColumns");
+    check('hero rent panel not caught by the chart grid', !/(\d+px\s+){4,}/.test(String(rentGrid)), String(rentGrid));
+  }
 
   /* --- default state matches content/pricing.js exactly --- */
   const want = PRICING.scaleRows(PRICING.SCALE_DEFAULT_SEATS);

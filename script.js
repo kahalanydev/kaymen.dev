@@ -351,6 +351,36 @@
       var host = cv.closest ? cv.closest(".hero") : null;
       var col = host && host.querySelector(".hero-grid > div:first-child");
       var card = host && host.querySelector(".stack");
+
+      /* NO PANEL (single-column hero, since 2026-08-18). There is no corridor
+         to sit beside any more, and the old fallback — w*0.6, h*0.44 — put the
+         mark straight through the middle of the lead paragraph, because it was
+         written for a layout where the panel occupied that space.
+
+         The copy is capped at 50ch while .gets runs the full measure, so the
+         free pocket is the rectangle to the RIGHT of the paragraphs and ABOVE
+         the benefit blocks. Measure it; if it is too small to hold the mark
+         clear of the text, fall back to the top-right corner, which is the same
+         answer the stacked layout already uses. */
+      if (col && !card) {
+        var lead = host.querySelector(".lead-2") || host.querySelector(".lead");
+        var gets = host.querySelector(".gets");
+        if (lead && gets) {
+          var L = lead.getBoundingClientRect(), G = gets.getBoundingClientRect();
+          var T = col.getBoundingClientRect();
+          var free = T.right - L.right;
+          if (free > SOURCE_R * 2 + 56) {
+            srcX = (L.right - r.left) + free / 2;
+            srcY = ((L.top - r.top) + (G.top - r.top)) / 2;
+            srcX = Math.max(SOURCE_R + 20, Math.min(w - SOURCE_R - 20, srcX));
+            srcY = Math.max(SOURCE_R + 20, Math.min(h - SOURCE_R - 20, srcY));
+            return;
+          }
+        }
+        srcX = w - SOURCE_R - 18; srcY = SOURCE_R + 14;
+        return;
+      }
+
       if (!col || !card) { srcX = w * 0.6; srcY = h * 0.44; return; }
       var c = card.getBoundingClientRect(), t = col.getBoundingClientRect();
       var gap = (c.left - r.left) - (t.right - r.left);
