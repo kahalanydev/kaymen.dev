@@ -550,11 +550,21 @@ const FRONT_ENDS = {
   /* --- case studies --- */
   'mortgage-broker-client-portal': {
     url: 'http://bridgemtg.com/',
-    kind: 'marketing',
-    what: 'The brokerage\u2019s public site: who they are, and the form an enquiry arrives through.',
+    kind: 'not-ours',
+    /* CHECKED 2026-08-18 AND IT IS NOT OUR WORK. bridgemtg.com reports
+       generator: "Starfield Technologies; Go Daddy Website Builder 8.0.0000".
+       We built the back office; the public site is a rented builder template.
+       It must never appear in the portfolio as ours - which is exactly the
+       mistake a portfolio makes when it collects URLs instead of checking them.
+
+       Worth knowing commercially rather than just editorially: this is the
+       clearest example in the client list of the problem this site describes -
+       a custom system the client owns, behind a front end they rent and which
+       cannot talk to it. */
+    what: 'A GoDaddy Website Builder template. Not ours.',
     cms: false,
-    shot: 'bridgemtg',
-    publish: false, /* third party; naming, screenshots and linking all unasked */
+    shot: null,
+    publish: false,
   },
   'multi-campus-engagement-platform': {
     url: 'https://olamiherzliya.org/',
@@ -578,7 +588,7 @@ const FRONT_ENDS = {
     what: 'The app\u2019s public page and store links.',
     cms: false,
     shot: null,
-    publish: null, /* case study says named:true but records no client name */
+    publish: true, /* our own product, confirmed 2026-08-18 - free to name and link */
   },
   /* community-lending-ledger (PCG) and msp-time-compliance-portal: no public
      front end supplied yet. */
