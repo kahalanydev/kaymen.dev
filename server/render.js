@@ -21,6 +21,7 @@ const {
   areaById,
   clientName,
   mayLink,
+  FRONT_ENDS: PROJECT_FRONTS,
 } = require('../content/projects');
 const { demoFor } = require('../content/demos');
 const STATS = require('../content/stats');
@@ -475,6 +476,119 @@ function fleetPanel() {
  * for one section, not part of the case-study content model — move it if a
  * second surface ever needs it.
  */
+/* --- front-and-back pairs -----------------------------------------------
+   Replaced the three-shot strip on 2026-08-18. The strip showed three back
+   offices, which proved we build systems and said nothing about the other half
+   of every one of those jobs: the public site in front of it. That omission is
+   why "we also build websites" looked like a gap in the business when it was a
+   gap in the evidence.
+
+   ORDER IS THE ARGUMENT, strongest first:
+     1. ONE system running both  — Horse & Harmony. Its back office carries
+        Hero, Site Images, Website Texts, Gallery and Testimonials beside
+        Bookings and Clients, so the client edits their own public site from
+        the same login that runs the business. Nothing else here does that.
+     2. Public site + staff system — Olami Herzliya.
+     3. Website only — Richmount Capital. Deliberately last and deliberately
+        present: it is the answer to the buyer who wants a good site and
+        currently never gets in touch.
+
+   BRIDGEMORTGAGE IS NOT HERE and must not be added. bridgemtg.com reports
+   `Go Daddy Website Builder 8.0.0000` — we built its back office, not its site.
+   See FRONT_ENDS in content/projects.js.
+
+   TWO SOURCES OF SCREENSHOT, and the rule is opposite for each:
+     · `front` comes from PRODUCTION via scripts/shoot-front.js, because the
+       client published that page themselves.
+     · `back` comes from a LOCAL instance on a seeded database via
+       scripts/shoot-app.js, because those systems hold borrowers, riders and
+       students. Never production, never a dev copy synced from it.
+
+   `publish` is a CONSENT flag read from FRONT_ENDS, not a style choice. false
+   renders the anonymous label and does not link. The argument survives it
+   intact — "a therapeutic riding centre, a bilingual public site" names nobody
+   and proves the same thing — which is why none of this waited on the asks. */
+const PROOF = [
+  {
+    key: 'bilingual-booking-platform',
+    badge: 'One system, one login',
+    named: { title: 'Horse & Harmony', host: 'horseandharmonyil.com' },
+    anon: { title: 'A therapeutic riding centre', host: 'a bilingual public site' },
+    front: '/assets/shots/horseharmony-front.jpg',
+    back: '/assets/shots/horseharmony.jpg',
+    frontCap: 'What riders book through',
+    backCap: 'What the staff run — and where the site’s own hero, gallery and texts are edited',
+  },
+  {
+    key: 'multi-campus-engagement-platform',
+    badge: 'Public site and staff CRM',
+    named: { title: 'Olami Herzliya', host: 'olamiherzliya.org' },
+    anon: { title: 'A multi-campus student organisation', host: 'a public sign-up site' },
+    front: '/assets/shots/olami-front.jpg',
+    back: '/assets/shots/thrive.jpg',
+    frontCap: 'Events, tickets and sign-ups, in English and Spanish',
+    backCap: 'The same database, as the staff see it',
+  },
+];
+
+const PROOF_SOLO = {
+  key: 'Investment firm site',
+  named: { title: 'Richmount Capital', host: 'richmountcapital.com' },
+  anon: { title: 'An investment fund', host: 'a public marketing site' },
+  front: '/assets/shots/richmount-front.jpg',
+  cap: 'A fund’s public face: thesis, strategy, team, and a gated investor deck. No system behind it — sometimes the website is the whole job, and we take that as seriously as the rest.',
+};
+
+/** Name and host for a proof row, honouring the consent flag in FRONT_ENDS. */
+function proofLabel(row) {
+  const fe = PROJECT_FRONTS[row.key];
+  const named = fe && fe.publish === true;
+  return { ...(named ? row.named : row.anon), link: named && fe.url ? fe.url : null };
+}
+
+function shotFigure(src, host, capTitle, cap) {
+  return `<figure class="shot">
+            <div class="shot-bar"><i></i><i></i><i></i><em>${esc(host)}</em></div>
+            <img src="${esc(src)}" alt="" loading="lazy" decoding="async" width="900" height="562">
+            <figcaption><b>${esc(capTitle)}</b>${esc(cap)}</figcaption>
+          </figure>`;
+}
+
+function proofStrip() {
+  const rows = PROOF.map((p) => {
+    const l = proofLabel(p);
+    const host = l.link
+      ? `<a href="${esc(l.link)}" target="_blank" rel="noopener">${esc(l.host)}</a>`
+      : esc(l.host);
+    return `<div class="pair">
+          <div class="pair-head"><h3>${esc(l.title)}</h3><span class="pair-host">${host}</span><span class="pair-badge">${esc(p.badge)}</span></div>
+          <div class="pair-shots">
+            ${shotFigure(p.front, l.host, 'What they see', p.frontCap)}
+            ${shotFigure(p.back, 'the back office', 'What you run', p.backCap)}
+          </div>
+        </div>`;
+  }).join('\n        ');
+
+  const s = proofLabel(PROOF_SOLO);
+  const solo = `<div class="pair pair-solo">
+          <div>
+            <h3>${esc(s.title)}</h3>
+            <div class="pair-host">${s.link ? `<a href="${esc(s.link)}" target="_blank" rel="noopener">${esc(s.host)}</a>` : esc(s.host)}</div>
+            <p>${esc(PROOF_SOLO.cap)}</p>
+          </div>
+          ${shotFigure(PROOF_SOLO.front, s.host, 'Website only', 'No system behind it.')}
+        </div>`;
+
+  return `<div class="proof rv">
+        <p class="proof-lead"><b>Front and back, on the same project.</b> Most shops build one or the other. Each pair below is one job, seen twice.</p>
+        ${rows}
+        ${solo}
+      </div>`;
+}
+
+/* Retired 2026-08-18, replaced by PROOF above. Kept because the three JPEGs are
+   still in assets/shots/ and this is the definition that goes with them — if
+   the pairs are ever reverted, this is what to put back. */
 const SHOTS = [
   {
     img: '/assets/shots/bridgemtg.jpg',
@@ -526,15 +640,7 @@ function runningBoard() {
         ${CASE_STUDIES.map(boardRow).join('\n        ')}
       </div>
 
-      <div class="shots rv">
-        ${SHOTS.map(
-          (s) => `<figure class="shot">
-          <div class="shot-bar"><i></i><i></i><i></i><em>${esc(s.host)}</em></div>
-          <img src="${esc(s.img)}" alt="${esc(s.title)}" loading="lazy" decoding="async" width="900" height="562">
-          <figcaption><b>${esc(s.title)}</b>${esc(s.note)}</figcaption>
-        </figure>`
-        ).join('\n        ')}
-      </div>
+      ${proofStrip()}
 
       <div class="band rv">
         <div class="stats">

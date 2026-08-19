@@ -575,6 +575,60 @@ h2.sec{font-size:clamp(1.7rem,3.4vw,2.35rem);font-weight:700}
 .shot figcaption{padding:13px 15px;font-size:12px;color:var(--muted);line-height:1.45}
 .shot figcaption b{display:block;color:var(--ink);font-size:13px;font-weight:600;margin-bottom:3px;letter-spacing:-.01em}
 
+/* ------------------------------------------------- front-and-back pairs
+   Replaced the three-shot strip 2026-08-18. Reuses .shot/.shot-bar below
+   verbatim — the frame, the fake browser chrome and the caption are unchanged,
+   only the arrangement is new — so there is one screenshot treatment on the
+   site rather than two that drift.
+
+   The left image is a PUBLIC page shot from production; the right is a back
+   office shot from a seeded local instance. That asymmetry is invisible here
+   and deliberate: see PROOF in server/render.js before re-taking either.
+   -------------------------------------------------------------------------- */
+.proof{margin-top:34px}
+.proof-lead{font-size:14.5px;color:var(--muted);max-width:66ch;margin-bottom:26px;line-height:1.6}
+.proof-lead b{color:var(--ink);font-weight:600}
+.pair{margin-bottom:30px}
+.pair-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.pair-head h3{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:-.02em}
+.pair-host{font-size:12.5px;color:var(--muted)}
+.pair-host a{color:var(--accent-dark);border-bottom:1px solid rgba(43,188,179,.35)}
+.pair-host a:hover{border-bottom-color:var(--accent)}
+/* Pushed right on its own rather than given a fixed column: the badge text
+   changes length per row and a column would leave a ragged gap on the short
+   one. */
+.pair-badge{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-dark);background:var(--accent-soft);border:1px solid rgba(43,188,179,.3);padding:4px 10px;border-radius:20px}
+.pair-shots{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+/* Cropped, not scaled. At half of a 1120px column a 900x562 shot is ~337px
+   tall, and three rows of that took #running from 1,309px to 2,475px — the
+   proof got longer than the argument it supports. object-fit:cover anchored to
+   the TOP keeps the masthead, the nav and the first screenful, which is the
+   part that identifies what you are looking at; the bottom of a page is where
+   the footer lives and proves nothing. The intrinsic width/height attributes
+   stay on the img so the box is still reserved before the JPEG lands. */
+.pair-shots .shot img,.pair-solo .shot img{height:236px;object-fit:cover;object-position:top center}
+.pair-solo{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:center;border-top:1px solid var(--line);padding-top:28px;margin-top:4px}
+.pair-solo h3{font-family:var(--display);font-size:18px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
+.pair-solo .pair-host{display:block;margin-bottom:10px}
+.pair-solo p{font-size:14px;color:var(--muted);line-height:1.65}
+
+/* Below the two-up breakpoint the pair stacks, and stacking is the right
+   answer rather than shrinking: two 900px screenshots side by side inside a
+   390px phone are two illegible smudges, and the whole point of the section is
+   that you can see what each one is. */
+@media (max-width:860px){
+  .pair-shots{grid-template-columns:1fr}
+  .pair-solo{grid-template-columns:1fr;gap:16px}
+  .pair-badge{margin-left:0}
+  /* Stacking turns three pairs into six full-width images, which took #running
+     to 3,726px on a phone — longer than the entire page used to be. A shorter
+     crop is the right trade here: at 390px the image is already only ever an
+     identifying glance, and the caption is doing the explaining. */
+  .pair-shots .shot img,.pair-solo .shot img{height:184px}
+  .proof{margin-top:26px}
+  .pair{margin-bottom:22px}
+}
+
 /* ------------------------------------------------------------ stats band */
 .band{background:var(--deep);color:#fff;border-radius:22px;overflow:hidden;margin-top:36px}
 .stats{display:grid;grid-template-columns:1fr 1fr}
