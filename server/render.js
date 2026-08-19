@@ -26,6 +26,7 @@ const {
 const { demoFor } = require('../content/demos');
 const STATS = require('../content/stats');
 const PRICING = require('../content/pricing');
+const LEGAL = require('../content/legal');
 
 const SITE = 'https://kaymen.dev';
 
@@ -168,6 +169,8 @@ function footer() {
         <a href="/#price">Pricing</a>
         <a href="/#terms">No hostages</a>
         <a href="/#talk">Contact</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms-of-use">Terms</a>
         <!-- Under 900px the rail is hidden and the tabbar is full at five slots,
              so this is the only place a returning client can find the portal on
              a phone. Do not drop it from the footer without giving it a home. -->
@@ -911,6 +914,64 @@ function nextPrev(current) {
 
 /* --- work index ------------------------------------------------------------ */
 
+/**
+ * A legal page — privacy, terms of use, security.
+ *
+ * Content is data in content/legal.js so the wording is versioned and diffable
+ * rather than buried in markup, and so the retention table can be mirrored from
+ * the one real RETENTION constant instead of retyped. A policy that describes
+ * behaviour the code does not have is a written false statement, which is worse
+ * than having no policy at all.
+ */
+function legalPage(slug) {
+  const page = LEGAL.legalBySlug(slug);
+  if (!page) return null;
+
+  const block = (s) => {
+    const paras = (s.p || []).map((t) => `<p>${t}</p>`).join('\n            ');
+    const table = s.table
+      ? `<table class="legal-table"><tbody>${s.table
+          .map(([k, v]) => `<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`)
+          .join('')}</tbody></table>`
+      : '';
+    return `<section class="legal-sec">
+            <h2>${esc(s.h)}</h2>
+            ${paras}
+            ${table}
+          </section>`;
+  };
+
+  const others = LEGAL.LEGAL_PAGES.filter((p) => p.slug !== slug);
+
+  return layout({
+    title: `${page.title} — kaymen.dev`,
+    description: page.lede,
+    path: `/${page.slug}`,
+    ogType: 'article',
+    active: 'terms',
+    body: `
+  <main class="page">
+    <article class="legal">
+      <div class="wrap">
+        <div class="prose rv">
+          <p class="eyebrow">Legal</p>
+          <h1 class="sec">${esc(page.title)}</h1>
+          <p class="sec-sub">${esc(page.lede)}</p>
+          <p class="legal-date">Last updated ${esc(LEGAL.LEGAL_UPDATED)}. ${esc(LEGAL.LEGAL_ENTITY)}.</p>
+        </div>
+        <div class="legal-body rv">
+          ${page.sections.map(block).join('\n          ')}
+        </div>
+        <nav class="legal-nav rv" aria-label="Other legal pages">
+          ${others.map((p) => `<a href="/${p.slug}">${esc(p.title)}</a>`).join('\n          ')}
+          <a href="/">Back to the site</a>
+        </nav>
+      </div>
+    </article>
+  </main>`,
+  });
+}
+
 function workIndexPage() {
   const body = `
   <header class="work-hero">
@@ -970,6 +1031,7 @@ module.exports = {
   fleetPanel,
   rentPanel,
   scaleChart,
+  legalPage,
   liveCount: () => String(STATS.LIVE.running),
   caseStudyPage,
   workIndexPage,

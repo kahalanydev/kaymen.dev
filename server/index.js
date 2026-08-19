@@ -137,7 +137,7 @@ app.use('/portal', express.static(path.join(__dirname, '..', 'portal'), {
 // per-page OG tags. Templates are cached in production and re-read in dev so
 // editing content doesn't need a restart.
 const fs = require('fs');
-const { homeSections, scaleChart, liveCount, caseStudyPage, workIndexPage, notFoundPage } = require('./render');
+const { homeSections, scaleChart, liveCount, caseStudyPage, workIndexPage, legalPage, notFoundPage } = require('./render');
 
 const IS_DEV = process.env.NODE_ENV !== 'production';
 const HOME_TEMPLATE_PATH = path.join(__dirname, '..', 'index.html');
@@ -182,10 +182,27 @@ const sendHtml = (res, html) =>
 app.get('/', (req, res) => sendHtml(res, renderHome()));
 app.get('/work', (req, res) => sendHtml(res, workIndexPage()));
 
+/* Legal pages. Flat paths rather than /legal/* because the homepage already
+   has a #terms anchor for the commercial promises, and a visitor who lands on
+   /terms-of-use should not have to work out which 'terms' they are on. */
+const LEGAL_SLUGS = require('../content/legal').LEGAL_PAGES.map((p) => p.slug);
+for (const slug of LEGAL_SLUGS) {
+  app.get('/' + slug, (req, res) => sendHtml(res, legalPage(slug)));
+}
+
 app.get('/work/:slug', (req, res, next) => {
   const html = caseStudyPage(req.params.slug);
   if (!html) return next(); // falls through to the 404 handler
   sendHtml(res, html);
+});
+
+/* security.txt needs its own route: the static handler below denies
+   dotfiles, and .well-known starts with a dot, so it would 404 forever while
+   looking correct on disk. Served as text/plain because a browser shown
+   text/html renders it as one run-on line and researchers read it in a browser. */
+app.get('/.well-known/security.txt', (req, res) => {
+  res.type('text/plain; charset=utf-8')
+     .sendFile(path.join(__dirname, '..', '.well-known', 'security.txt'));
 });
 
 // Serve main site (static files from root, only allowed extensions)

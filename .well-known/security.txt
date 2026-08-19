@@ -1,0 +1,12 @@
+# https://securitytxt.org/ — how to tell us about a weakness.
+# Served from /.well-known/security.txt
+
+Contact: mailto:elor@kaymengroup.com
+Contact: https://kaymen.dev/security
+Preferred-Languages: en, he
+Canonical: https://kaymen.dev/.well-known/security.txt
+Policy: https://kaymen.dev/security
+
+# Expires must be updated. A stale security.txt is a signal that nobody is
+# reading the inbox behind it — which is worse than not publishing one.
+Expires: 2027-08-19T00:00:00.000Z

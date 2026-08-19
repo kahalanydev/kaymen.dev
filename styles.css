@@ -1316,6 +1316,29 @@ footer{padding:36px 0 46px;border-top:1px solid var(--line);margin-top:80px}
 .case-nav-dir{font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
 .case-nav-name{font-family:var(--display);font-size:14.5px;font-weight:700;letter-spacing:-.02em}
 
+/* --- legal pages -----------------------------------------------------------
+   Deliberately narrower than the rest of the site. Everything else here is set
+   to --w-page (1120px) because it is grids and boards; this is continuous prose
+   and the measure that works for a board is unreadable for a paragraph. */
+.legal{padding:80px 0 40px}
+@media (max-width:900px){.legal{padding:56px 0 30px}}
+.legal h1.sec{margin-bottom:12px}
+.legal-date{font-size:12.5px;color:var(--muted);margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.legal-body{max-width:var(--w-prose);margin-top:34px}
+.legal-sec{margin-bottom:34px}
+.legal-sec h2{font-family:var(--display);font-size:19px;font-weight:600;letter-spacing:-.02em;margin-bottom:10px}
+.legal-sec p{font-size:15px;color:var(--muted);line-height:1.75;margin-bottom:12px}
+.legal-sec p b{color:var(--ink);font-weight:600}
+.legal-sec p a{color:var(--accent-dark);border-bottom:1px solid rgba(43,188,179,.35)}
+.legal-sec p a:hover{border-bottom-color:var(--accent)}
+.legal-sec code{font-size:13px;background:var(--bg-alt);padding:1px 6px;border-radius:5px;color:var(--ink)}
+.legal-table{width:100%;border-collapse:collapse;margin:6px 0 4px;font-size:14px}
+.legal-table th{text-align:left;font-weight:500;color:var(--ink);padding:9px 14px 9px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.legal-table td{text-align:right;color:var(--muted);padding:9px 0;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+.legal-nav{display:flex;gap:18px;flex-wrap:wrap;max-width:var(--w-prose);margin-top:10px;padding-top:24px;border-top:1px solid var(--line);font-size:14px}
+.legal-nav a{color:var(--accent-dark)}
+.legal-nav a:hover{text-decoration:underline;text-underline-offset:3px}
+
 /* --- long tail (kept on /work, not on the homepage) ------------------------ */
 
 .more-toggle{margin-top:8px;border:1px solid var(--line);border-radius:18px;background:#fff;overflow:hidden}
