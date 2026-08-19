@@ -49,7 +49,7 @@ const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 const money = P.money;
 
 const RUNGS = P.BASES.map((b) => ({
-  id: b.id, chip: b.chip, name: b.name, note: b.note,
+  id: b.id, chip: b.chip, product: b.product, name: b.name, note: b.note,
   build: b.from, mo: b.mo,
 }));
 
@@ -163,7 +163,7 @@ const head = `
 
 const dirA = `<div class="pk">${head}
   <table class="mx">
-    <thead><tr><th></th>${RUNGS.map((r, i) => `<th class="col${i === 1 ? ' on' : ''}">${r.chip}</th>`).join('')}</tr></thead>
+    <thead><tr><th></th>${RUNGS.map((r, i) => `<th class="col${i === 1 ? ' on' : ''}">${r.product}</th>`).join('')}</tr></thead>
     <tbody>
       ${AXES.map((a) => `<tr class="${/Build|Monthly/.test(a.label) ? 'money' : ''}">
         <th class="rowlab">${a.label}</th>
@@ -187,7 +187,7 @@ const GATE_ROWS = [
 
 const dirB = `<div class="pk">${head}
   <table class="gate">
-    <thead><tr><th></th>${RUNGS.map((r) => `<th>${r.chip}<span class="price">${r.build ? 'from ' + money(r.build) : 'no build fee'} · ${money(r.mo)}/mo</span></th>`).join('')}</tr></thead>
+    <thead><tr><th></th>${RUNGS.map((r) => `<th>${r.product}<span class="price">${r.build ? 'from ' + money(r.build) : 'no build fee'} · ${money(r.mo)}/mo</span></th>`).join('')}</tr></thead>
     <tbody>${GATE_ROWS.map(([label, cells]) => `<tr><td>${label}</td>${cells.map((c) => `<td class="${c ? 'yes' : 'no'}">${c ? '✓' : '—'}</td>`).join('')}</tr>`).join('\n    ')}</tbody>
   </table>
   <p class="fine" style="margin-top:18px">Five of the nine rows are ticked in every column, which is the honest picture and also the problem with drawing it this way.</p>
@@ -201,10 +201,10 @@ const ADDS = [
 ];
 
 const dirC = `<div class="pk">${head}
-  <div class="step" id="stepseg">${RUNGS.map((r, i) => `<button data-i="${i}" aria-pressed="${i === 1}">${r.chip}</button>`).join('')}</div>
+  <div class="step" id="stepseg">${RUNGS.map((r, i) => `<button data-i="${i}" aria-pressed="${i === 1}">${r.product}</button>`).join('')}</div>
   <div class="rung" id="rungbox"></div>
   <script id="rungdata" type="application/json">${JSON.stringify(RUNGS.map((r, i) => ({
-    chip: r.chip, name: r.name, note: r.note, adds: ADDS[i],
+    chip: r.product, name: r.name, note: r.note, adds: ADDS[i],
     build: r.build ? 'from ' + money(r.build) : 'No build fee',
     mo: money(r.mo) + '/mo',
   })))}</script>

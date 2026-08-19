@@ -52,6 +52,15 @@ const PARTNER = { monthly: 3500, months: 12 };
 
 /* Each tier carries three shapes of the same idea, because the homepage says it
    three times in three widths:
+     product — WHAT YOU GET, and the one to use anywhere a label sits next to
+               money. Added 2026-08-19 after Ariel could not tell the rungs
+               apart, and the cause was this: `chip` describes the PROBLEM. That
+               reads correctly in a pill row answering "which of these are you"
+               and INVERTS the moment it sits above a price — the live card
+               headed "Tools that do not talk · from $6,500" reads as paying
+               $6,500 FOR tools that do not talk, and "Something that exists ·
+               $450/mo" is worse. Same class of mistake as the ticks: copy
+               written for one context reused in another.
      name  — the full line, used in the picker list
      chip  — three or four words, used in the pill row
      say   — how it reads inside "I need ___", so it must start mid-sentence
@@ -59,6 +68,7 @@ const PARTNER = { monthly: 3500, months: 12 };
 const BASES = [
   {
     id: 'running', from: 0, mo: 450,
+    product: 'Keep it running',
     chip: 'Something that exists',
     name: 'Keep alive something that already works',
     say: 'someone to keep a system alive that already works',
@@ -95,6 +105,7 @@ const BASES = [
        Still deliberately the cheapest thing on the page, and still a clear step
        below `stack` at $450. */
     id: 'tool', from: 2500, mo: 300,
+    product: 'One part of the business',
     chip: 'Your first real system',
     name: 'One part of the business, on software you own',
     say: 'a real system for the part of the business still running on spreadsheets',
@@ -104,6 +115,7 @@ const BASES = [
   },
   {
     id: 'stack', from: 6500, mo: 450,
+    product: 'The whole toolset',
     chip: 'Tools that do not talk',
     name: 'Work spread across tools that do not talk to each other',
     say: 'one place where the answer lives, not six tools that do not talk',
@@ -113,6 +125,7 @@ const BASES = [
   },
   {
     id: 'platform', from: 15000, mo: 1200,
+    product: 'Several teams, one platform',
     chip: 'Several systems at once',
     name: 'Several systems, several teams, and the reporting across all of it',
     say: 'several systems, several teams, and reporting that crosses all of them',
