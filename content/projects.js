@@ -510,7 +510,112 @@ function mayLink(item) {
   return Boolean(item.own || item.client?.named || CLIENT_NAMING === 'named');
 }
 
+
+/* --- the public front end of each project ------------------------------------
+   Added 2026-08-18, and it exists because the site was describing only half of
+   what it builds. Every case study here documents a BACK OFFICE; none of them
+   recorded that there is a public website in front of it, and zero of six
+   carried a URL. That is why "we also build websites" looked like a gap in the
+   business when it was really a gap in the data.
+
+   The claim this unlocks is not "we do websites too" — that is a commodity and
+   a race to the bottom. It is "the public site your customers use and the system
+   your staff run, from one team", which almost nobody can say: a web shop cannot
+   build the back office, and a dev shop farms the front end out.
+
+   THREE SHAPES, and they are not equally strong:
+
+     cms: true   the back office EDITS the public site. One system, one login.
+                 Horse & Harmony is the proof — its sidebar carries Hero, Site
+                 Images, Website Texts, Gallery, FAQ and Testimonials beside
+                 Bookings and Clients. This is the strongest version of the claim.
+     cms: false  separate site, separate system, both ours. Still front-and-back,
+                 but two things rather than one.
+     cms: null   not yet confirmed.
+
+   PUBLISH IS A CONSENT FLAG, NOT A PREFERENCE. false means the project may not
+   be named or linked on the site yet. Every MORE_WORK client entry has always
+   been anonymous (CLIENT_NAMING = 'anonymous'), so adding a URL to one of them
+   would name a client the site has deliberately not named. The front-and-back
+   argument works fine anonymously — "a Hebrew-first booking site with a live
+   lesson flow, in front of the scheduling platform" names nobody and proves
+   everything — so nothing here is blocked on the asks going out.
+
+   Screenshots: <shot>-front.jpg and <shot>-front-m.jpg in assets/shots/, taken
+   from PRODUCTION by scripts/shoot-front.js, because these pages are public and
+   the client published them. That is the opposite of the back-office shots,
+   which must always come from a local instance on invented data.
+   -------------------------------------------------------------------------- */
+const FRONT_ENDS = {
+  /* --- case studies --- */
+  'mortgage-broker-client-portal': {
+    url: 'http://bridgemtg.com/',
+    kind: 'marketing',
+    what: 'The brokerage\u2019s public site: who they are, and the form an enquiry arrives through.',
+    cms: false,
+    shot: 'bridgemtg',
+    publish: false, /* third party; naming, screenshots and linking all unasked */
+  },
+  'multi-campus-engagement-platform': {
+    url: 'https://olamiherzliya.org/',
+    kind: 'community',
+    what: 'The public student site: events, ticketing, trips and sign-ups, in English and Spanish, feeding the same database the staff CRM runs on.',
+    cms: null, /* the back office carries a "View site" button; whether it EDITS the site is unconfirmed */
+    shot: 'olami',
+    publish: true, /* in-house, naming is free */
+  },
+  'bilingual-booking-platform': {
+    url: 'https://horseandharmonyil.com/',
+    kind: 'booking',
+    what: 'The public Hebrew-and-English site with a live Book-a-Session flow \u2014 and the same back office edits its hero, gallery, FAQ and texts.',
+    cms: true, /* THE strongest pair in the portfolio */
+    shot: 'horseharmony',
+    publish: false, /* third party; and its hero photograph is of two children */
+  },
+  'torah-tracker': {
+    url: 'https://torahtracker.app/',
+    kind: 'product',
+    what: 'The app\u2019s public page and store links.',
+    cms: false,
+    shot: null,
+    publish: null, /* case study says named:true but records no client name */
+  },
+  /* community-lending-ledger (PCG) and msp-time-compliance-portal: no public
+     front end supplied yet. */
+
+  /* --- MORE_WORK, keyed by name --- */
+  'Davenen': {
+    url: 'https://davenen.org/', kind: 'community',
+    what: 'The public platform: live activity, prayer categories, sign-ups.',
+    cms: false, shot: 'davenen', publish: true, /* our own */
+  },
+  'Kartov': {
+    url: 'https://kartov.app/', kind: 'product',
+    what: 'The app\u2019s public site: features, pricing and store links.',
+    cms: false, shot: 'kartov', publish: true, /* our own */
+  },
+  'Investment firm site': {
+    url: 'https://richmountcapital.com/', kind: 'marketing',
+    what: 'A fund\u2019s public face: thesis, strategy, team, and a gated investor-deck request. No system behind it \u2014 this one is the website.',
+    cms: false, shot: 'richmount',
+    publish: false, /* currently anonymous by policy; naming needs their yes */
+  },
+  /* 'Advocacy campaign platform': no URL supplied yet. */
+};
+
+/** The front end of a project, or null. Keyed by slug for case studies and by
+ *  name for MORE_WORK, because those two collections identify things
+ *  differently and inventing a shared key would mean editing both. */
+const frontFor = (key) => FRONT_ENDS[key] || null;
+
+/** Projects where ONE system runs both the public site and the back office.
+ *  This is the list the front-and-back claim should lead with. */
+const cmsPairs = () => Object.keys(FRONT_ENDS).filter((k) => FRONT_ENDS[k].cms === true);
+
 module.exports = {
+  FRONT_ENDS,
+  frontFor,
+  cmsPairs,
   CLIENT_NAMING,
   PRACTICE_AREAS,
   CASE_STUDIES,
