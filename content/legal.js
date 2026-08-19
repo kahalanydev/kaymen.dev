@@ -66,7 +66,7 @@ const PRIVACY = {
       p: [
         'If you have not opted out, we record: the pages you open and their titles, the site you arrived from, any campaign tags in the URL, your screen and window size, your time zone and browser language, roughly how long you were actively reading, and your IP address and browser user-agent string.',
         'Two identifiers are stored in your own browser. A <b>visitor id</b> in <code>localStorage</code> (<code>_k_vid</code>) which persists so returning visits can be counted as returning rather than new, and a <b>session id</b> in <code>sessionStorage</code> which disappears when you close the tab. Neither is a cookie and neither is shared with anyone.',
-        'We do not run advertising trackers, we do not embed third-party analytics, and we do not sell or share this data with anyone for marketing.',
+        'We do not run advertising trackers, we do not embed third-party analytics, and we do not sell or share this data with anyone for marketing. Two third parties do see something, and they are named below rather than buried.',
       ],
     },
     {
@@ -75,6 +75,19 @@ const PRIVACY = {
         'To turn an IP address into an approximate location, we send it to <b>ip-api.com</b>, which returns a country, region, city, approximate latitude and longitude, time zone and network operator. That request is made from our server, not your browser.',
         '<b>Two things about that are worth stating plainly.</b> It is sent over plain HTTP, not HTTPS, because that is what their free tier allows — so anyone able to observe traffic between our server and theirs could see the IP and the location that comes back. And ip-api.com is an independent company with its own privacy policy that we do not control.',
         'If that is not acceptable to you, setting Do Not Track prevents it entirely, because nothing is recorded to look up.',
+      ],
+    },
+    {
+      h: 'The fonts on this page come from Google',
+      p: [
+        'The typefaces are loaded from Google\'s font service, which means your browser requests them from Google directly and Google receives your IP address on every page you open here. That happens before any of our own tracking, and setting Do Not Track does <b>not</b> prevent it, because it is your browser fetching a file rather than us recording anything.',
+        'We are not happy about it either. Self-hosting the fonts removes Google from the process entirely and makes the page load faster; it is on the list.',
+      ],
+    },
+    {
+      h: 'Signing in with Google',
+      p: [
+        'Client portal accounts can optionally sign in with a Google account. If you choose that, Google tells us your name, email address and Google account id, and Google knows you signed in here. If you would rather not, use an email address and password instead — the option exists for convenience, not because we need it.',
       ],
     },
     {
@@ -233,7 +246,14 @@ const LEGAL_OPEN = [
   'Governing law and venue for the terms of use',
   'Whether GDPR / UK GDPR / CCPA / Israeli Privacy Protection Law apply',
   'Whether a written data processing agreement is offered to clients as standard',
-  'Whether analytics consent (a banner) is required for EU visitors, or whether Do Not Track plus self-hosting is considered sufficient',
+  /* Three things trigger the consent question today. ALL THREE ARE REMOVABLE,
+     which is why the recommendation is to remove them rather than to build a
+     banner: a banner costs conversion on every visit forever, and the fixes are
+     an afternoon each.
+       1. the persistent `_k_vid` identifier in localStorage
+       2. the visitor IP sent to ip-api.com
+       3. Google Fonts, fetched by the visitor browser from Google on every page */
+  'Whether analytics consent (a banner) is needed for EU visitors, or whether to remove the three things that raise the question: the localStorage identifier, the ip-api.com lookup, and Google Fonts',
   'Legal review of all three pages before they are relied on',
 ];
 
