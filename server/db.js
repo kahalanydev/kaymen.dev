@@ -6,9 +6,13 @@ const bcrypt = require('bcryptjs');
 
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 const DB_PATH = path.join(DATA_DIR, 'analytics.db');
+const PREV_PATH = `${DB_PATH}.prev`;
+const BACKUP_DIR = path.join(DATA_DIR, 'backups');
+const BACKUP_KEEP_DAYS = 14;
 
 let wrapper = null;
 let saveTimer = null;
+let lastBackupDay = null;
 
 // Wrapper that provides better-sqlite3-like API over sql.js
 class DbWrapper {
@@ -71,15 +75,139 @@ function scheduleSave() {
   }, 1000);
 }
 
+/* The whole database is one file, rewritten end to end on every save, so the
+   write itself is the risk. `fs.writeFileSync` truncates the target first and
+   then fills it: a crash, an OOM kill or a container stop in between leaves
+   analytics.db TRUNCATED rather than stale, which is the one failure a restart
+   cannot walk back. Write a sibling, force it down to the platter, then rename
+   - rename within a directory is atomic, so an interrupted save leaves either
+   the whole old file or the whole new one and never a half of either. */
+function writeAtomic(file, buf) {
+  const tmp = `${file}.tmp`;
+  const fd = fs.openSync(tmp, 'w');
+  try {
+    fs.writeSync(fd, buf);
+    fs.fsyncSync(fd); // the bytes, not merely the page cache that reports them
+  } finally {
+    fs.closeSync(fd);
+  }
+  fs.renameSync(tmp, file);
+}
+
+/* Same guarantee as writeAtomic, plus one generation kept back. The daily copy
+   below can be up to a day old, which was fine when this file held nothing but
+   analytics and is not fine now that it holds client records. Moving the
+   outgoing file aside is a rename, so a generation costs no I/O per save and
+   .prev is never more than one save (30s) behind.
+
+   There is an instant between the two renames where analytics.db does not
+   exist. That is why loadDatabase() must be reached even when the live file is
+   MISSING - treating absent-file as "new install" here would build an empty
+   database and save it straight over the good one. */
+function commitLive(buf) {
+  const tmp = `${DB_PATH}.tmp`;
+  const fd = fs.openSync(tmp, 'w');
+  try {
+    fs.writeSync(fd, buf);
+    fs.fsyncSync(fd);
+  } finally {
+    fs.closeSync(fd);
+  }
+  try {
+    if (fs.existsSync(DB_PATH)) fs.renameSync(DB_PATH, PREV_PATH);
+  } catch {
+    /* Losing the spare generation must not lose the save it was spare to. */
+  }
+  fs.renameSync(tmp, DB_PATH);
+}
+
+const BACKUP_RE = /^analytics-(\d{4}-\d{2}-\d{2})\.db$/;
+
+/* Newest first, so recovery reaches for the least-old copy it has. */
+function listBackups() {
+  try {
+    return fs.readdirSync(BACKUP_DIR)
+      .filter((f) => BACKUP_RE.test(f))
+      .sort()
+      .reverse()
+      .map((f) => path.join(BACKUP_DIR, f));
+  } catch {
+    return [];
+  }
+}
+
+/* Atomic writes survive a crash. They do nothing about a bad migration, a wrong
+   DELETE or a schema change that drops a column, because all three are written
+   down perfectly faithfully. One copy a day is the version history a single
+   file does not otherwise have. It lives on the same volume, so it is NOT
+   off-site backup and does not pretend to be - it is the difference between
+   losing an afternoon and losing everything. */
+function rollDailyBackup(buf) {
+  const day = new Date().toISOString().slice(0, 10);
+  if (lastBackupDay === day) return;
+
+  if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  const target = path.join(BACKUP_DIR, `analytics-${day}.db`);
+  if (!fs.existsSync(target)) writeAtomic(target, buf);
+  lastBackupDay = day;
+
+  for (const file of listBackups()) {
+    const stamp = BACKUP_RE.exec(path.basename(file))[1];
+    const age = (Date.parse(day) - Date.parse(stamp)) / 86400000;
+    if (age >= BACKUP_KEEP_DAYS) fs.unlinkSync(file);
+  }
+}
+
 function saveToDisk() {
   if (!wrapper) return;
+
+  let buf;
   try {
     if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-    const data = wrapper._db.export();
-    fs.writeFileSync(DB_PATH, Buffer.from(data));
+    buf = Buffer.from(wrapper._db.export());
+    commitLive(buf);
   } catch (e) {
     console.error('Failed to save database:', e.message);
+    return;
   }
+
+  /* Kept apart on purpose. A full disk or a bad permission under backups/ must
+     not print "Failed to save database" about a save that already succeeded,
+     and must never be able to take the save down with it. */
+  try {
+    rollDailyBackup(buf);
+  } catch (e) {
+    console.error('Failed to write daily database backup:', e.message);
+  }
+}
+
+/* Opening a corrupt file must not silently produce an EMPTY one. That is the
+   only recovery here that destroys evidence: a fresh database would be written
+   over the damaged file within a second by the very next save, and the damaged
+   file is the thing a human would want. Try the live file, then each daily
+   backup newest first, and refuse to start if none of them read. */
+function loadDatabase(SQL) {
+  let firstError = null;
+
+  for (const file of [DB_PATH, PREV_PATH, ...listBackups()]) {
+    if (!fs.existsSync(file)) {
+      /* Worth naming: "did not read (null)" is a bad thing to meet at 3am. */
+      if (file === DB_PATH && !firstError) firstError = new Error('file is missing');
+      continue;
+    }
+    try {
+      const db = new SQL.Database(fs.readFileSync(file));
+      db.exec('SELECT count(*) FROM sqlite_master'); // opening lies; reading does not
+      if (file !== DB_PATH) {
+        console.error(`analytics.db did not read (${firstError && firstError.message}) - recovered from ${path.basename(file)}`);
+      }
+      return db;
+    } catch (e) {
+      if (!firstError) firstError = e;
+    }
+  }
+
+  throw new Error(`analytics.db is unreadable and no backup could be used: ${firstError && firstError.message}`);
 }
 
 // Must be called once at startup (async)
@@ -88,9 +216,11 @@ async function initDb() {
 
   const SQL = await initSqlJs();
 
-  if (fs.existsSync(DB_PATH)) {
-    const buffer = fs.readFileSync(DB_PATH);
-    wrapper = new DbWrapper(new SQL.Database(buffer));
+  /* Deliberately not `existsSync(DB_PATH)`. A missing live file means a crash
+     landed in commitLive()'s rename window far more often than it means a first
+     boot, and the two must not be answered the same way. */
+  if (fs.existsSync(DB_PATH) || fs.existsSync(PREV_PATH) || listBackups().length) {
+    wrapper = new DbWrapper(loadDatabase(SQL));
   } else {
     if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
     wrapper = new DbWrapper(new SQL.Database());
