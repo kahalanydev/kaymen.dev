@@ -242,9 +242,10 @@
       if (e.key === 'Escape' && !askPop.hidden) askPopClose();
     });
 
-    var askRender = function () {
-      var r = ASK.filter(function (x) { return x.id === askSel; })[0];
-      if (!r) return;
+    /* The sentence, the note and the pilot's ticks — everything above the pills
+       that changes with the rung. Split out of askRender() so askReserve() can
+       drive it without also touching the pills, the estimate and the grid. */
+    var askHead = function (r) {
       askSay.textContent = r.say;
       document.getElementById('askNote').textContent = r.note;
       /* These ticks are also the grid's ticks, so showing both printed the same
@@ -258,10 +259,115 @@
       askTicks.innerHTML = inGrid ? '' : r.ticks.map(function (t) {
         return '<li>' + askEsc(t) + '</li>';
       }).join('');
+    };
+
+    /* The two figures either side of the slash: build once, monthly forever.
+       Split out for the same reason as askHead — askReserve() needs to set it
+       without touching anything else. */
+    var askMoney = function (r) {
       document.getElementById('askBuild').innerHTML =
         askEsc(r.n1) + '<span>' + askEsc(r.s1) + '</span>';
       document.getElementById('askMonthly').innerHTML =
         askEsc(r.n2) + '<span>' + askEsc(r.s2) + '</span>';
+    };
+
+    /* HOLD THE HEIGHT OF EVERYTHING ABOVE THE CARDS.
+       This is the SECOND way picking a rung moved the page, and it survived the
+       removal of the scroll because it is not a scroll — it is a reflow. The
+       sentence and the note are different lengths per rung, and .ask-say and
+       .ask-note sit ABOVE the pill row, so choosing a pill changed the height of
+       the thing above it and the pills moved out from under the finger that had
+       just tapped them. Measured on the live page before this landed:
+
+           360px   running 146px  ...  tool 227px     81px of travel
+           430px   running 146px  ...  unsure 246px   100px
+          1400px   identical for all four packages      0px
+
+       Which is why it was invisible on a desktop and obvious on a phone.
+
+       Measured rather than declared. A min-height in px would be wrong at the
+       next width, and one in `lh` cannot express "three lines here, four lines
+       there" — the longest phrase wraps to three lines below 560px and two above
+       it. So: render every rung once, keep the tallest, put it back. The browser
+       does not paint inside a synchronous loop, so nothing flickers.
+
+       Re-measured on resize because the answer is width-dependent, and cleared
+       first so the old floor cannot hold the new measurement up.
+
+       TWO BLOCKS, NOT ONE. Fixing .ask-head alone still left "Not sure yet"
+       moving the cards 73px, because the estimate below the pills varies too —
+       every rung's caption is "a month after that" except the pilot's, which is
+       "only if you want a working prototype too, credited in full" and wraps to
+       three lines. Anything above the cards that changes with the rung has to be
+       held, or the fix just moves the jump down the page.
+
+       ONLY .ask-out, NOT .ask-head. Reserving the heading block was tried twice
+       and both versions were worse than the bug. The sentence is two lines for
+       one rung and three for another, and the entry rung's note is four lines at
+       390px against two for "Keep it running" — so holding the tallest left a
+       110–180px hole under the heading on a phone whenever a shorter rung was
+       chosen. It read as a broken layout.
+
+       The heading is handled by askAnchor() below instead, which costs no space
+       at all. .ask-out still gets a floor because it sits BETWEEN the pills and
+       the cards: anchoring on the pills cannot absorb something below them, and
+       the pilot's caption ("only if you want a working prototype too, credited
+       in full") wraps to three lines where every rung's is one. That floor is
+       free for the four packages — their estimates are all the same height — and
+       costs two lines only because the pilot exists. */
+    var askBoxes = [document.querySelector('.ask-out')].filter(Boolean);
+    var askReserve = function () {
+      if (!askBoxes.length) return;
+      var keep = askSel;
+      askBoxes.forEach(function (el) { el.style.minHeight = ''; });
+      var max = askBoxes.map(function () { return 0; });
+      ASK.forEach(function (r) {
+        askHead(r); askMoney(r);
+        askBoxes.forEach(function (el, i) { max[i] = Math.max(max[i], el.offsetHeight); });
+      });
+      var back = ASK.filter(function (x) { return x.id === keep; })[0];
+      askHead(back); askMoney(back);
+      askBoxes.forEach(function (el, i) { el.style.minHeight = max[i] + 'px'; });
+    };
+
+    /* KEEP THE THING YOU JUST TAPPED WHERE IT WAS.
+       The sentence and the note live ABOVE the pills and are a different height
+       for every rung, so choosing a pill re-flowed the block above it and the
+       pill row moved out from under the thumb that had just tapped it. Measured
+       on the live page, viewport-relative, at 390px: -79px for "Something that
+       exists", -47px for "Several systems at once", +73px for "Not sure yet".
+       At 1400px it was 0 — which is exactly why it was never noticed here and
+       was the first thing noticed on a phone.
+
+       Browsers do their own scroll anchoring for this, and it did not fire: the
+       change is driven by a click rather than by layout arriving late, and the
+       resized block is often partly in view. So do it explicitly — measure the
+       pill row before and after, and give back the difference. It costs no
+       layout space, which is the whole reason this is not another min-height.
+
+       Anchored on the PILLS rather than the cards because the pills are what
+       the finger is on. Everything below them moves with them, so the cards are
+       held too — provided nothing between the two changes height, which is what
+       the .ask-out floor above is for.
+
+       Guarded by askReady so the first render on load cannot scroll the page. */
+    var askAnchor = function (mutate) {
+      if (!askReady) return mutate();
+      var before = askChips.getBoundingClientRect().top;
+      mutate();
+      var after = askChips.getBoundingClientRect().top;
+      /* behavior:'instant', NOT the two-argument scrollBy. styles.css sets
+         html{scroll-behavior:smooth} for the rail links, and that applies to
+         programmatic scrolling too — so the correction ANIMATED, which is the
+         jump followed by a slide rather than no jump at all. The object form is
+         the only way to opt a single call out of it. */
+      if (after !== before) window.scrollBy({ top: after - before, behavior: 'instant' });
+    };
+
+    var askRender = function () {
+      var r = ASK.filter(function (x) { return x.id === askSel; })[0];
+      if (!r) return;
+      askAnchor(function () { askHead(r); askMoney(r); });
       askChips.querySelectorAll('.ask-chip').forEach(function (c) {
         var on = c.dataset.id === askSel;
         c.classList.toggle('on', on);
@@ -293,6 +399,16 @@
       askReady = true;
     };
     askRender();
+    askReserve();
+    /* Webfonts land after first paint and change every one of these heights, so
+       a floor measured before Sora arrives is measured against the fallback and
+       is too short by a line. Re-measure once the real faces are in. */
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(askReserve);
+    var askResizeT;
+    window.addEventListener('resize', function () {
+      clearTimeout(askResizeT);
+      askResizeT = setTimeout(askReserve, 160);
+    });
   }
 
   /* ---- one source, spreading ------------------------------------------------

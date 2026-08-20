@@ -444,9 +444,16 @@ function askSection() {
      package — server-rendered hidden because the default rung IS one. */
   const ticks = cur.axes ? '' : cur.ticks.map((t) => `<li>${esc(t)}</li>`).join('');
 
-  return `<h2 class="ask-say rv">I need <button class="pick" id="askSay" aria-haspopup="listbox">${esc(cur.say)}</button></h2>
-      <p class="ask-note rv" id="askNote">${esc(cur.note)}</p>
-      <ul class="ask-ticks rv" id="askTicks"${cur.axes ? ' hidden' : ''}>${ticks}</ul>
+  /* .ask-head groups everything above the pills that changes with the rung, so
+     script.js can hold ONE floor under all of it. Without the wrapper, picking a
+     pill changed the height of the sentence sitting above the pills and the pill
+     row moved out from under the finger that had just tapped it — 81px of travel
+     at 360px, none at all on a desktop. See askReserve() in script.js. */
+  return `<div class="ask-head">
+        <h2 class="ask-say rv">I need <button class="pick" id="askSay" aria-haspopup="listbox">${esc(cur.say)}</button></h2>
+        <p class="ask-note rv" id="askNote">${esc(cur.note)}</p>
+        <ul class="ask-ticks rv" id="askTicks"${cur.axes ? ' hidden' : ''}>${ticks}</ul>
+      </div>
 
       <p class="ask-hint rv">or pick the closest</p>
       <div class="ask-chips rv" id="askChips" role="listbox" aria-label="What you need">${chips}</div>

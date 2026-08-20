@@ -246,6 +246,48 @@ const check = (name, ok, detail) => {
     });
     fs.writeFileSync(path.join(outDir, `ask-${w}.png`), Buffer.from(shot.result.data, 'base64'));
     check(`${w}px: section fits its layout's ceiling (${CEILING[w]}px)`, h < CEILING[w], h + 'px');
+
+    /* THE SECOND JUMP — a reflow, not a scroll, which is why removing the
+       scrollIntoView did not fix it and why it was invisible on a desktop. The
+       sentence, the note and the pilot's estimate caption are all different
+       lengths per rung and all sit ABOVE the cards, so picking a pill changed
+       the height of the block above the pills and the pill row moved out from
+       under the thumb that had just tapped it. Measured on the live page before
+       the fix, at 390px: -79px, -47px, +73px. At 1400px: 0px.
+
+       MEASURED IN THE VIEWPORT, NOT THE DOCUMENT. askAnchor() fixes this by
+       giving back the scroll difference rather than by reserving space, so the
+       document position of the cards legitimately DOES move — asserting on
+       rect.top + scrollY would fail against a page that is behaving perfectly.
+       What the user sees is rect.top alone.
+
+       And it waits: styles.css sets html{scroll-behavior:smooth}, so a
+       correction issued without behavior:'instant' animates. Reading straight
+       after the click measures mid-animation and passes a page that visibly
+       slides. Both mistakes were made here before this comment existed. */
+    const travel = await evalJs(`(function(){
+      var chips = document.getElementById('askChips'), grid = document.getElementById('askAll');
+      chips.scrollIntoView({block:'center'});
+      var vp = function(el){ return Math.round(el.getBoundingClientRect().top); };
+      return new Promise(function(done){
+        setTimeout(function(){
+          var c0 = vp(chips), g0 = vp(grid), worst = 0;
+          var all = Array.prototype.slice.call(document.querySelectorAll('.ask-chip'));
+          var step = function(i){
+            if (i >= all.length) return done(worst);
+            all[i].click();
+            setTimeout(function(){
+              worst = Math.max(worst, Math.abs(vp(chips) - c0), Math.abs(vp(grid) - g0));
+              step(i + 1);
+            }, 550);
+          };
+          step(0);
+        }, 700);
+      });
+    })()`);
+    /* 1px of tolerance for sub-pixel rounding, and no more — 2px would let a
+       real regression through at the widths where the travel used to be 23px. */
+    check(`${w}px: picking any rung moves nothing on screen`, travel <= 1, 'moved ' + travel + 'px');
   }
 
   check('no console errors', logs.length === 0, logs.join(' | '));
