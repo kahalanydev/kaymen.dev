@@ -22,6 +22,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
+    <!-- Reveal-on-scroll needs a no-JS escape hatch. .rv is opacity:0 until
+         script.js adds .in, so with scripting off the ENTIRE page body renders
+         blank — verified 2026-08-20, only the rail survived. That undoes the
+         point of server-rendering the price ladder: a consumer that applies CSS
+         but does not run JS (several AI crawlers, some link previewers, anyone
+         with JS disabled) gets a fully-formed document it then paints invisible.
+         <noscript> rather than @media (scripting: none) because it works in
+         every engine, not just recent ones. server/render.js layout() carries
+         the same block for the sub-pages — change both. -->
+    <noscript><style>.rv{opacity:1;transform:none}</style></noscript>
     <link rel="icon" href="/favicon.ico" sizes="32x32">
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <!-- iOS ignores an SVG here and screenshots the page instead, so this one has to be a PNG -->
@@ -171,38 +181,23 @@
   <section id="price">
     <div class="wrap">
       <p class="eyebrow rv">Start here</p>
-      <!-- No full stop after the button: the phrase is long enough to wrap, and
-           a trailing "." lands alone on the next line whenever the last word
-           fills the measure. The chevron terminates the sentence instead. -->
-      <h2 class="ask-say rv">I need <button class="pick" id="askSay" aria-haspopup="listbox"></button></h2>
-      <p class="ask-note rv" id="askNote"></p>
-      <ul class="ask-ticks rv" id="askTicks"></ul>
+      <!-- THE WHOLE PRICE LADDER, SERVER-RENDERED. Until 2026-08-20 every node in
+           here was an empty div that script.js filled from window.KD_PRICING on
+           load, so a browser saw four packages and a crawler saw nothing. The
+           only figure that reached the served HTML was one "$2,500 once, then
+           $300/mo" from the scale chart below — while that same chart put
+           $12,000, $21,000 and $63,000 of COMPETITORS' costs in front of any
+           machine reading the page, with nothing marking whose was whose.
+           Ariel, 2026-08-20: "the pricing is not readable for bots".
 
-      <p class="ask-hint rv">or pick the closest</p>
-      <div class="ask-chips rv" id="askChips" role="listbox" aria-label="What you need"></div>
+           askSection() in server/render.js now renders the sentence, the pills,
+           the estimate, the universals band and the four cards at the default
+           rung, plus JSON-LD Offers from the same ladder. script.js binds to
+           these nodes and mutates them; it no longer builds any of them.
 
-      <div class="ask-out rv">
-        <div class="n" id="askBuild"></div>
-        <div class="sep">/</div>
-        <div class="m" id="askMonthly"></div>
-        <a href="#talk" class="btn btn-primary" data-track="ask-talk">Talk it through →</a>
-      </div>
-
-      <!-- What every rung includes, all of it visible at once. The picker shows
-           one rung at a time, so comparing meant clicking and remembering —
-           Ariel, 2026-08-16: "we need a cleaner view of what each package
-           includes". This is deliberately NOT a tier table: it is ordered by the
-           situation you are in, the money is a small line at the foot of each
-           card, and it is a third way into the same askSel state rather than a
-           second pricing surface.
-
-           Rebuilt 2026-08-19, still not a table. A band of everything true of
-           all four sits above, and each card answers the same four questions
-           with a different answer — so the row can be read ACROSS without the
-           cards becoming columns. Filled by script.js; the words and the rule
-           that keeps them honest are in content/pricing.js, and
-           scripts/verify-ask.js fails if either drifts. -->
-      <div class="ask-all rv" id="askAll"></div>
+           Remove this token and the entire pricing section vanishes — only
+           server/index.js logs it. -->
+      <!--{{ASK}}-->
 
       <!-- The scale comparison. It sits AFTER the estimate on purpose: "is that
            good?" only arrives once somebody has seen a number, so arguing before

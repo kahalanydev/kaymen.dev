@@ -140,14 +140,22 @@
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
     };
 
-    /* Built once, then only classes and text change. Re-rendering the row on
-       every pick would throw focus off the control just used, which is merely
-       untidy with a mouse and unusable with a keyboard. */
-    askChips.innerHTML = ASK.map(function (r) {
-      return '<button class="ask-chip' + (r.id === 'unsure' ? ' alt' : '') + '"' +
-        ' data-id="' + r.id + '" role="option" aria-selected="false">' +
-        '<b>' + askEsc(r.chip) + '</b><span>' + askEsc(r.price) + '</span></button>';
-    }).join('');
+    /* NOTHING HERE BUILDS MARKUP ANY MORE. askSection() in server/render.js
+       emits the pills, the estimate, the universals band and the four cards from
+       the same content/pricing.js this file reads, at the same default rung, and
+       everything below only binds events and mutates text.
+
+       That changed on 2026-08-20 and it is not a refactor. This block used to
+       write both rows with innerHTML on load, which meant a browser saw four
+       packages and every crawler and AI assistant saw four empty divs — the only
+       price anywhere in the served HTML was one "$2,500 once, then $300/mo" from
+       the scale chart. Ariel: "the pricing is not readable for bots".
+
+       DO NOT REINTRODUCE A BUILDER HERE, even as a fallback. A second generator
+       for the same markup is the drift content/pricing.js exists to prevent, and
+       a fallback that only runs when the server one fails is a copy nobody looks
+       at. scripts/verify-crawl.js fails the build if the served HTML stops
+       carrying the ladder. */
     askChips.querySelectorAll('.ask-chip').forEach(function (c) {
       c.addEventListener('click', function () { askSel = c.dataset.id; askRender(); });
     });
@@ -156,50 +164,34 @@
        and the pills were already two, and this follows the same rule: nothing
        here owns askSel, so none of them can drift apart.
 
-       Only rungs with `axes` are shown. The pilot is not a package and quote()
+       Only rungs with `axes` are in it. The pilot is not a package and quote()
        does not know about it either, so putting it in a row of things you get
-       for a monthly fee would be the one card that lies about what it is.
-
-       THE HEADING IS `product`, NOT `chip`. A chip names the PROBLEM, which is
-       right in the pill row answering "which of these are you" and inverts the
-       moment it sits above a price — "Tools that do not talk · from $6,500"
-       reads as paying $6,500 for tools that do not talk.
-
-       THE BAND ABOVE CARRIES EVERYTHING UNIVERSAL, and it is what lets the cards
-       be comparable without becoming a table: each one now answers the same four
-       questions with a different answer, and nothing true of all four is stated
-       inside any of them. See the rule beside UNIVERSAL in content/pricing.js
-       before adding a row here.
-
-       Money is a single muted line at the FOOT of each card, never the heading.
-       The moment the price becomes the column header this stops being "what
-       changes as the business gets harder" and becomes a SaaS tier table — which
-       is the frame the whole page argues against, and it would put $15,000 on
-       screen before anyone has read a word. */
+       for a monthly fee would be the one card that lies about what it is. That
+       filter lives in askSection() now; `askPkgs` is still needed here because
+       askRender() uses it to decide whether the chosen rung has a card to show
+       its ticks, or needs the row above the pills instead. */
     var askAll = document.getElementById('askAll');
     var askPkgs = ASK.filter(function (r) { return r.axes; });
     if (askAll) {
-      askAll.innerHTML =
-        '<p class="ask-hint">or see what each one includes</p>' +
-        '<div class="ask-uni"><b>Every one of them includes</b><ul>' +
-          window.KD_PRICING.UNIVERSAL.map(function (u) { return '<li>' + askEsc(u) + '</li>'; }).join('') +
-        '</ul></div>' +
-        '<div class="ask-grid">' + askPkgs.map(function (r) {
-          return '<button class="ask-card" data-id="' + r.id + '" aria-pressed="false">' +
-            '<b>' + askEsc(r.product) + '</b>' +
-            '<ul>' + r.axes.map(function (a) {
-              return '<li><em>' + askEsc(a[0]) + '</em>' + askEsc(a[1]) + '</li>';
-            }).join('') + '</ul>' +
-            '<i class="mn">' + askEsc(r.money) + '</i>' +
-          '</button>';
-        }).join('') + '</div>';
       askAll.querySelectorAll('.ask-card').forEach(function (c) {
         c.addEventListener('click', function () {
           askSel = c.dataset.id;
           askRender();
-          /* Picked from down here, the answer is up there. Without this the page
-             looks like the click did nothing. */
-          document.querySelector('.ask-out').scrollIntoView({ block: 'center', behavior: 'smooth' });
+          /* NO SCROLL. This used to jump to .ask-out on every card click, on the
+             reasoning that the answer was up there and the click would otherwise
+             look like it did nothing.
+
+             Removed 2026-08-20 — Ariel: "every time u click one the scroll goes
+             up". He was clicking through all four to compare them, which is what
+             the cards are FOR, and .ask-out sits above them: every click yanked
+             the thing he was reading off the screen. Making it conditional on
+             .ask-out being off-screen does not help, because when you are looking
+             at the cards it always is.
+
+             The premise was also wrong by then. The card takes the selected
+             styling on click, and it carries its own price on the last line, so
+             both "did that register" and "what does it cost" are answered where
+             the finger already is. There is nothing up there worth the jump. */
         });
       });
     }

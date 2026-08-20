@@ -90,7 +90,7 @@ const check = (name, ok, detail) => {
   const finish = (code) => { try { ws.close(); } catch (e) { /* gone */ }
     chrome.kill(); setTimeout(() => process.exit(code), 60); };
   const evalJs = async (expr) => {
-    const r = await send('Runtime.evaluate', { expression: expr, returnByValue: true });
+    const r = await send("Runtime.evaluate", { expression: expr, returnByValue: true, awaitPromise: true });
     if (r.result?.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description || 'page threw');
     return r.result?.result?.value;
   };
@@ -195,6 +195,28 @@ const check = (name, ok, detail) => {
             document.getElementById('askBuild').textContent.indexOf('$15,000') === 0].join(',');
   })()`);
   check('clicking a card moves the pill row and the estimate', wired === 'true,true,true,true', String(wired));
+
+  /* Ariel, 2026-08-20: "every time u click one the scroll goes up". Comparing
+     the four cards means clicking all four, and .ask-out sits ABOVE them, so the
+     old scrollIntoView yanked the cards off screen on every click. Smooth
+     scrolling is async, hence the wait — asserting immediately would pass
+     against the very bug this is here to catch. */
+  const moved = await evalJs(`(function(){
+    var cards = document.querySelectorAll('.ask-card');
+    cards[cards.length - 1].scrollIntoView({block:'center'});
+    /* Let the SETUP scroll land before taking the baseline. Reading scrollY on
+       the next line returns 0 — scrollIntoView has not applied yet — so the
+       check would then blame the click for the 1,189px it caused itself, and
+       fail against a page that is behaving. */
+    return new Promise(function(res){
+      setTimeout(function(){
+        var before = window.scrollY;
+        cards[0].click();
+        setTimeout(function(){ res(Math.abs(window.scrollY - before)); }, 900);
+      }, 1200);
+    });
+  })()`);
+  check('clicking a card does not scroll the page', moved === 0, 'moved ' + moved + 'px');
 
   /* ---------- widths ---------- */
   const outDir = path.resolve('.shots');

@@ -137,7 +137,7 @@ app.use('/portal', express.static(path.join(__dirname, '..', 'portal'), {
 // per-page OG tags. Templates are cached in production and re-read in dev so
 // editing content doesn't need a restart.
 const fs = require('fs');
-const { homeSections, scaleChart, liveCount, caseStudyPage, workIndexPage, legalPage, notFoundPage } = require('./render');
+const { homeSections, askSection, scaleChart, liveCount, caseStudyPage, workIndexPage, legalPage, notFoundPage } = require('./render');
 
 const IS_DEV = process.env.NODE_ENV !== 'production';
 const HOME_TEMPLATE_PATH = path.join(__dirname, '..', 'index.html');
@@ -151,6 +151,10 @@ const PLACEHOLDERS = [
   /* The hero panel slot was emptied on 2026-08-18 - see the comment where the
      token used to be in index.html. rentPanel() stays exported from render.js;
      put this line back to restore it. */
+  /* The price ladder. Required, and the one placeholder whose absence is worse
+     than a missing block: without it the section renders as a bare heading and
+     the site stops quoting a price to anyone, human or machine. */
+  { token: '<!--{{ASK}}-->', render: askSection, required: true },
   // three years against seven CRMs, at the visitor's headcount
   { token: '<!--{{SCALE}}-->', render: scaleChart, required: true },
   // live-systems count, from the Coolify API at last stats refresh

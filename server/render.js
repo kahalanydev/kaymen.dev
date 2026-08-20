@@ -226,6 +226,16 @@ function layout({ title, description, path, ogImage, ogType = 'article', body, d
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
+    <!-- Reveal-on-scroll needs a no-JS escape hatch. .rv is opacity:0 until
+         script.js adds .in, so with scripting off the ENTIRE page body renders
+         blank — verified 2026-08-20, only the rail survived. That undoes the
+         point of server-rendering the price ladder: a consumer that applies CSS
+         but does not run JS (several AI crawlers, some link previewers, anyone
+         with JS disabled) gets a fully-formed document it then paints invisible.
+         <noscript> rather than @media (scripting: none) because it works in
+         every engine, not just recent ones. server/render.js layout() carries
+         the same block for the sub-pages — change both. -->
+    <noscript><style>.rv{opacity:1;transform:none}</style></noscript>
 ${demos ? '    <link rel="stylesheet" href="/assets/demos.css">\n' : ''}    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 </head>
 <body>
@@ -378,6 +388,169 @@ function rentPanel() {
  *
  * Every figure comes from content/pricing.js. Nothing here computes a price.
  */
+/* The price ladder, server-rendered.
+ *
+ * WHY THIS EXISTS. Until 2026-08-20 the whole of #price was empty divs in the
+ * served HTML — script.js built the sentence, the pills, the estimate and the
+ * four cards from window.KD_PRICING on load. A browser saw everything; a
+ * crawler, a social scraper and every AI assistant saw nothing. Checked against
+ * the live page: the only figure that leaked was one "$2,500 once, then
+ * $300/mo" from the scale chart's own row.
+ *
+ * That is worse than it sounds, and worse than "our pricing is missing". The
+ * numbers that WERE in the HTML are the comparison chart's — $12,000, $21,000,
+ * $63,000, $47,383 — which are what Monday, Salesforce and HubSpot cost. A
+ * machine reading that page finds a dozen five-figure sums and one $2,500, with
+ * nothing marking whose is whose. Ariel, 2026-08-20: "the pricing is not
+ * readable for bots".
+ *
+ * So the server renders the DEFAULT state (the `tool` rung, same one script.js
+ * opens on) and script.js switches from building the markup to mutating it —
+ * exactly the arrangement scaleChart() and the seat slider already use. There
+ * is no second copy of the ladder anywhere: this and the browser both read
+ * content/pricing.js.
+ *
+ * IF YOU EVER MOVE THIS BACK CLIENT-SIDE, the site silently stops being
+ * quotable and nothing fails. scripts/verify-crawl.js is the guard.
+ */
+function askSection() {
+  const P = PRICING;
+  const rows = P.routes();
+  const sel = 'tool';
+  const cur = rows.find((r) => r.id === sel);
+  const pkgs = rows.filter((r) => r.axes);
+
+  const chips = rows.map((r) => {
+    const on = r.id === sel;
+    return `<button class="ask-chip${r.id === 'unsure' ? ' alt' : ''}${on ? ' on' : ''}"`
+      + ` data-id="${esc(r.id)}" role="option" aria-selected="${on}">`
+      + `<b>${esc(r.chip)}</b><span>${esc(r.price)}</span></button>`;
+  }).join('');
+
+  const band = `<div class="ask-uni"><b>Every one of them includes</b><ul>`
+    + P.UNIVERSAL.map((u) => `<li>${esc(u)}</li>`).join('')
+    + `</ul></div>`;
+
+  const cards = pkgs.map((r) => {
+    const on = r.id === sel;
+    return `<button class="ask-card${on ? ' on' : ''}" data-id="${esc(r.id)}" aria-pressed="${on}">`
+      + `<b>${esc(r.product)}</b><ul>`
+      + r.axes.map((a) => `<li><em>${esc(a[0])}</em>${esc(a[1])}</li>`).join('')
+      + `</ul><i class="mn">${esc(r.money)}</i></button>`;
+  }).join('');
+
+  /* The pilot has no `axes`, so its three ticks have nowhere to go in the grid.
+     script.js shows them in this row instead whenever the chosen rung is not a
+     package — server-rendered hidden because the default rung IS one. */
+  const ticks = cur.axes ? '' : cur.ticks.map((t) => `<li>${esc(t)}</li>`).join('');
+
+  return `<h2 class="ask-say rv">I need <button class="pick" id="askSay" aria-haspopup="listbox">${esc(cur.say)}</button></h2>
+      <p class="ask-note rv" id="askNote">${esc(cur.note)}</p>
+      <ul class="ask-ticks rv" id="askTicks"${cur.axes ? ' hidden' : ''}>${ticks}</ul>
+
+      <p class="ask-hint rv">or pick the closest</p>
+      <div class="ask-chips rv" id="askChips" role="listbox" aria-label="What you need">${chips}</div>
+
+      <div class="ask-out rv">
+        <div class="n" id="askBuild">${esc(cur.n1)}<span>${esc(cur.s1)}</span></div>
+        <div class="sep">/</div>
+        <div class="m" id="askMonthly">${esc(cur.n2)}<span>${esc(cur.s2)}</span></div>
+        <a href="#talk" class="btn btn-primary" data-track="ask-talk">Talk it through &rarr;</a>
+      </div>
+
+      <div class="ask-all rv" id="askAll">
+        <p class="ask-hint">or see what each one includes</p>
+        ${band}
+        <div class="ask-grid">${cards}</div>
+      </div>
+      ${pricingLd()}`;
+}
+
+/* Structured pricing, from the same ladder.
+ *
+ * The visible cards answer a human asking "which of these am I"; this answers a
+ * machine asking "what does kaymen.dev charge", which until now had no answer at
+ * all. Generated rather than written for the usual reason — a hand-kept copy
+ * would be the third place the numbers live and the first one to go stale.
+ *
+ * Every build fee is a FROM price, so it is `minPrice` on a PriceSpecification
+ * rather than `price`. Stating 6500 as the price would publish a figure the site
+ * itself declines to promise, and machine-readable is only worth having if it is
+ * also true. The `running` rung has no build fee at all and gets no build spec.
+ */
+function pricingLd() {
+  const P = PRICING;
+  const offers = P.routes().filter((r) => r.axes).map((r) => {
+    const b = P.BASES.find((x) => x.id === r.id);
+    const specs = [];
+    if (b.from) {
+      specs.push({
+        '@type': 'PriceSpecification',
+        name: 'Build, once',
+        minPrice: b.from,
+        priceCurrency: 'USD',
+        valueAddedTaxIncluded: false,
+      });
+    }
+    specs.push({
+      '@type': 'UnitPriceSpecification',
+      name: 'Service, monthly',
+      price: b.mo,
+      priceCurrency: 'USD',
+      /* Per month, and per ENGAGEMENT rather than per seat. The page's whole
+         argument is that this number does not move with headcount, so leaving
+         the unit off would surrender the one claim that distinguishes it. */
+      referenceQuantity: { '@type': 'QuantitativeValue', value: 1, unitCode: 'MON' },
+    });
+    return {
+      '@type': 'Offer',
+      name: r.product,
+      description: b.note,
+      category: b.name,
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+      priceSpecification: specs,
+      itemOffered: {
+        '@type': 'Service',
+        name: r.product,
+        description: b.note,
+        serviceType: 'Custom business software',
+      },
+    };
+  });
+
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name: 'Custom business software, built and run',
+    provider: {
+      '@type': 'Organization',
+      name: 'kaymen.dev',
+      url: SITE,
+      logo: SITE + '/assets/brand/kaymen-mark-512.png',
+      email: LEGAL.LEGAL_EMAIL,
+    },
+    serviceType: 'Custom business software',
+    description: 'Software your business owns, on your own infrastructure, with '
+      + 'logins for everyone and no per-seat licence.',
+    termsOfService: SITE + '/terms-of-use',
+    /* Said once here too, for the same reason the band above the cards exists:
+       these are true of every offer, so stating them per-offer would imply the
+       ones that omitted them lacked them. */
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'What it costs',
+      itemListElement: offers,
+    },
+  };
+
+  /* "</script>" inside a JSON string would close the tag early and dump the rest
+     of the ladder into the document as markup. Escaping "<" is the whole guard. */
+  return '<script type="application/ld+json">'
+    + JSON.stringify(ld).replace(/</g, '\\u003c')
+    + '</script>';
+}
+
 function scaleChart() {
   const P = PRICING;
   const seats = P.SCALE_DEFAULT_SEATS;
@@ -1050,6 +1223,7 @@ module.exports = {
   fleetPanel,
   rentPanel,
   scaleChart,
+  askSection,
   legalPage,
   liveCount: () => String(STATS.LIVE.running),
   caseStudyPage,
