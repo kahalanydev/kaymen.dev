@@ -2,7 +2,13 @@
 
 ## On Every New Conversation
 
-- **Always** read `HANDOFF-SECURITY-2026-08-17.md` first — it is the **active** build
+- **Always** read `HANDOFF-BACKEND-MONEY-2026-08-20.md` first — it is now the **active**
+  build document. The marketing-site work in its §1 is finished and live; the open thread is
+  the back office, and specifically the money side. Its §2 holds four facts verified on
+  production (the client tables are empty, there is no money in the schema, `server/db.js`
+  rewrites the live DB file in place, and nothing backs it up) — do not re-derive them. Its
+  §4 traps include the two that are invisible to any visual check.
+- Then read `HANDOFF-SECURITY-2026-08-17.md` — the previous **active** build
   document (the security & tracking centre: the request shield, the threat engine, daily
   rollups and retention, the rebuilt Security and Traffic panels). Its §4 holds the traps,
   including the two that are invisible to a CSS sweep and the one about summing unique
