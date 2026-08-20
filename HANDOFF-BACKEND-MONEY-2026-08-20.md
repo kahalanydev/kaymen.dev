@@ -91,22 +91,32 @@ Do not re-derive these; they were checked on production, not read from a doc.
 - **There is no money anywhere in the system.** `organizations` holds name / logo / email / notes
   and nothing more. A grep of the whole server and both SPAs for invoice / billing / retainer /
   subscription / payment returns **one** hit, and it is marketing copy in `server/render.js`.
-- **`server/db.js:79` rewrites the live database file in place** — `fs.writeFileSync(DB_PATH, …)`
-  on a 1s debounce and a 30s interval. No temp file, no rename, no fsync. A crash mid-write
-  leaves `analytics.db` **truncated, not stale**.
-- **It is not backed up.** The host's nightly 03:00 `/opt/backups/backup.sh` covers MySQL and
-  Coolify's Postgres, and writes a *list* of Docker volume names "for reference during restore".
-  It never copies the volume contents. There is no copy of `analytics.db` anywhere.
+- ~~**`server/db.js:79` rewrites the live database file in place**~~ — **FIXED `c9712c0`, live.**
+  It was `fs.writeFileSync(DB_PATH, …)` on a 1s debounce and a 30s interval, with no temp file,
+  no rename and no fsync, so a crash mid-write left `analytics.db` **truncated, not stale**.
+- ~~**It is not backed up.**~~ — **PARTLY ANSWERED, `c9712c0`.** The host's nightly 03:00
+  `/opt/backups/backup.sh` still covers only MySQL and Coolify's Postgres, and still writes a
+  *list* of Docker volume names "for reference during restore" without ever copying the volume
+  contents. **The host still holds no copy of `analytics.db` — see §5.** What exists now is
+  on-volume version history, which is a different thing and does not replace it.
 
 ### The recommended order
 
-1. **Durability first — before any financial record exists.** Temp file → fsync → `rename`
-   (atomic; a crash leaves the old file or the new one, never a broken one), plus a rolling daily
-   copy so a bad migration is recoverable too. ~30 lines in `server/db.js`. It protects the
-   traffic, security and contact data already in there, so it earns its keep either way.
-2. **Load the real clients into what already works.** No code. The delivery side is finished and
-   unused; filling it gives Ariel something to show and tells us what the money layer needs
-   before we guess. Adding agreements later does not mean re-entering any of it.
+1. ~~**Durability first**~~ — **DONE 2026-08-20, `c9712c0`, verified live.** Saves write a
+   sibling, fsync it, then `rename`. Two recovery generations sit behind that: `analytics.db.prev`
+   (a rename, so it costs no I/O and is never more than one save behind) and a daily copy under
+   `data/backups/`, kept 14 days. Boot goes through `loadDatabase()` — live file, then `.prev`,
+   then each daily copy newest first — and **refuses to start if none read**, because a corrupt
+   file silently becoming an *empty* one would be written over the evidence within a second.
+   A **missing** live file is no longer treated as a first boot; it usually means a crash landed
+   in the rename window. Verified on production: `.prev` and `backups/analytics-2026-08-20.db`
+   both present. **Same volume — this is version history, not off-site backup.**
+2. **Load the real clients into what already works.** — **BUILT, `1bfcecb`.** It did need code,
+   because the repo is public: `scripts/load-clients.js` is a generic idempotent loader and the
+   client list lives in **`data/clients.json`**, gitignored. Thrive / OLAMI, BridgeMortgage and
+   Horse & Harmony are written up there from `content/projects.js` — 3 orgs, 3 projects, 17
+   milestones, verified against a clean local instance. **Not yet run against production**: it
+   needs `ADMIN_PASSWORD`, which only Ohav has.
 3. **Then the money layer.**
 
 ### The shape (three tables, not three columns on `organizations`)
@@ -199,6 +209,18 @@ serves old code and you will misdiagnose correct work.
 
 ## 5. Open — carried forward, needs Ohav
 
+- **Run the client loader against production.** Everything is ready and tested; it needs the one
+  thing that cannot be in the repo or in a chat log:
+  `$env:ADMIN_PASSWORD='…'; node scripts/load-clients.js https://kaymen.dev`
+  (`--dry-run` first if you want to see it before it writes). Safe to run twice.
+- **Three placeholder contact addresses.** `data/clients.json` carries
+  `contact-unknown@…​.invalid` for all three clients because nobody recorded the real ones.
+  `.invalid` is reserved by RFC 2606 and can never resolve, so a stray email fails instead of
+  reaching a stranger — but **no portal invite can go out until these are real.** Fix in `/admin`
+  or in the JSON before loading.
+- **`analytics.db` still has no off-site copy.** `c9712c0` gave it atomic writes and on-volume
+  version history; both die with the volume. Now that it holds client records, the host's
+  `/opt/backups/backup.sh` should copy `data/` off the box like it does MySQL.
 - **The `tool` card says changes are "quoted as they come"** while the other three include them.
   Faithful to the recorded terms — it is the only rung whose monthly never promised change work,
   and it is half the reason $300 sits below $450. **Commercial call, deliberately not guessed.**
